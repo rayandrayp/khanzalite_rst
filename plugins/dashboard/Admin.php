@@ -143,8 +143,9 @@ class Admin extends AdminModule
         $tahun_lalu = date('Y', strtotime(date('Y-m-d') . " -1 month"));
         $shift = $_GET['shift'];
 
-        $idpeg          = $this->db('barcode')->where('barcode', $barcode)->oneArray();
-        $jam_jaga       = $this->db('jam_jaga')->join('pegawai', 'pegawai.departemen = jam_jaga.dep_id')->where('pegawai.id', $idpeg['id'])->where('jam_jaga.shift', $shift)->oneArray();
+        //$idpeg          = $this->db('barcode')->where('barcode', $barcode)->oneArray();
+        $idpeg          = $this->db('pegawai')->where('nik', $barcode)->oneArray();
+        $jam_jaga       = $this->db('jam_jaga')->join('pegawai', 'pegawai.departemen = jam_jaga.dep_id')->where('pegawai.nik', $idpeg['nik'])->where('jam_jaga.shift', $shift)->oneArray();
         $jadwal_pegawai = $this->db('jadwal_pegawai')->where('id', $idpeg['id'])->where('h' . $hari, $shift)->where('bulan', $bulan)->where('tahun', $tahun)->oneArray();
 
         if (!$jadwal_pegawai) {
@@ -179,7 +180,8 @@ class Admin extends AdminModule
             $jadwal_tambahan = $this->db('jadwal_tambahan')->where('id', $idpeg['id'])->where('h' . $bulan_kurang, $shift)->where('bulan', $bulan_lalu)->where('tahun', $tahun_lalu)->oneArray();
           }
 
-          if ((!empty($idpeg['id'])) && (!empty($jam_jaga['shift'])) && ($jadwal_tambahan) && (!$valid)) {
+          // if ((!empty($idpeg['id'])) && (!empty($jam_jaga['shift'])) && ($jadwal_tambahan) && (!$valid)) {
+          if ((!empty($idpeg['id'])) && (!empty($jam_jaga['shift'])) && (!$valid)) { //remove jadwal_tambahan karena belum dibutuhkan/tabel masih kosong
             $cek = $this->db('temporary_presensi')->where('id', $idpeg['id'])->oneArray();
 
             if (!$cek) {

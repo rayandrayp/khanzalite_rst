@@ -1,0 +1,6 @@
+Khanza Lite Change log
+
+18/01/2022
+- admin.php (plugins/dashboard/Admin.php)
+    line 48-51
+        Mengganti parameter pegawai ID dengan pegawai NIK untuk mendapatkan waktu shift
