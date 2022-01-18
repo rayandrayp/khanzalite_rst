@@ -4,3 +4,9 @@ Khanza Lite Change log
 - admin.php (plugins/dashboard/Admin.php)
     line 48-51
         Mengganti parameter pegawai ID dengan pegawai NIK untuk mendapatkan waktu shift
+    
+    line 147 & line 148
+        Mengganti parameter pegawai ID menjadi pegawai NIK
+
+    line 184
+        Menghapus parameter $jadwaltambahan karena masih belum dibutuhkan (tabel masih kosong)
