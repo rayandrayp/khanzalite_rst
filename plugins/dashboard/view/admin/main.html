@@ -140,14 +140,17 @@
       <div class="halo">
         <b>Halo {$nama}</b>
       </div>
-      <i class="fa fa-thumbs-up"></i>  Anda Sudah Absen
+      <i class="fa fa-thumbs-up"></i>  Anda Sudah Absen untuk Shift {$cek_presensi['shift']}<br>
+      Check in : {$cek_presensi['jam_datang']}
     </div>
     {elseif: $cek_rekap}
     <div class="alert alert-info coba" role="alert">
       <div class="halo">
         <b>Halo {$nama}</b>
       </div>
-      <i class="fa fa-check-square"></i>  Anda Sudah Presensi Pulang Hari Ini
+      <i class="fa fa-check-square"></i>  Anda Sudah Presensi Pulang Hari Ini <br>
+      Check in : {$cek_rekap['jam_datang']} <br>
+      Check out : {$cek_rekap['jam_pulang']}
     </div>
     {else}
     <div class="alert alert-warning coba" role="alert">
@@ -169,13 +172,21 @@
       <!-- Modal body -->
       <div class="modal-body">
         <center>
-          <div id="camera"></div><br>
+          <!-- <div id="camera"></div><br> -->
           <h4>Pilih Shift</h4>
           <select class="form-control" id="shift" style="width:240px;">
             <!-- <option>Pilih Shift</option> -->
-            {loop: $jam_jaga}
-            <option value="{$value.shift}"><i>{$value.shift}</i> : {$value.jam_masuk} - {$value.jam_pulang}</option>
-            {/loop}
+            {if: $cek_presensi} 
+            <!-- If sudah absen awal -->
+              {loop: $jam_jaga2}
+              <option value="{$value.shift}"><i>{$value.shift}</i> : {$value.jam_masuk} - {$value.jam_pulang}</option>
+              {/loop}
+            {else}
+            <!-- If belum absen, show all shift -->
+              {loop: $jam_jaga}
+              <option value="{$value.shift}"><i>{$value.shift}</i> : {$value.jam_masuk} - {$value.jam_pulang}</option>
+              {/loop}
+            {/if}
           </select><br><br>
           <input type="button" class="btn btn-info" value="{if: empty($cek_presensi)}Presensi Masuk{else}Presensi Pulang{/if}" data-dismiss="modal">
           <input type="hidden" name="image" id="image-tag">
@@ -203,16 +214,17 @@
               alert('Geolocation is not supported by this browser');
           }
 
-          Webcam.set({
-              width:240,
-              height:240,
-              image_format:'jpeg',
-              jpeg_quality:90,
-              facingMode: {
-                exact: 'environment'
-              }
-          });
-          Webcam.attach('#camera');
+          // Webcam.set({
+          //     width:240,
+          //     height:240,
+          //     image_format:'jpeg',
+          //     jpeg_quality:90,
+          //     facingMode: {
+          //       exact: 'environment'
+          //     }
+          // });
+          
+          // Webcam.attach('#camera');
       });
       $("#myModal").on("hidden.bs.modal", function () {
 
@@ -222,16 +234,24 @@
           shutter.src = navigator.userAgent.match(/Firefox/) ? '{?=url()?}/plugins/dashboard/audio/shutter.ogg' : '{?=url()?}/plugins/dashboard/audio/shutter.mp3';
           shutter.play();
 
-          Webcam.snap(function(data_uri){
-              document.getElementById('results').innerHTML = '<img id="imageprev" src="'+data_uri+'"/>';
-          });
+          // Webcam.snap(function(data_uri){
+          //     document.getElementById('results').innerHTML = '<img id="imageprev" src="'+data_uri+'"/>';
+          // });
 
-          var base64image = document.getElementById("imageprev").src;
+          // var base64image = document.getElementById("imageprev").src;
 
-          Webcam.upload(base64image, '{?=url(ADMIN.'/dashboard/upload/')?}&shift=' + getshift, function(code, text) {
-          });
+          // Webcam.upload(base64image, '{?=url(ADMIN.'/dashboard/upload/')?}&shift=' + getshift, function(code, text) {
+          // });
 
-          Webcam.reset();
+          // Webcam.reset();
+
+          
+          // contruct use AJAX object
+          // this function replace webcam.js function upload
+          var http = new XMLHttpRequest();
+          http.open("POST", '{?=url(ADMIN.'/dashboard/upload/')?}&shift=' + getshift, true);
+          http.send('form');
+
 
           navigator.geolocation.getCurrentPosition(
               function(position) {

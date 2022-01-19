@@ -10,3 +10,26 @@ Khanza Lite Change log
 
     line 184
         Menghapus parameter $jadwaltambahan karena masih belum dibutuhkan (tabel masih kosong)
+
+19/01/2022
+- main.html (plugins/dashboard/view/admin/main.html)
+    line 144 && line 152-153
+        Menambahkan informasi waktu check in & check out
+
+    line 209-219 && line 229-238
+        Menonaktifkan fungsi webcam
+    
+    line 241-245
+        Menambahkan fungsi httprequest
+
+    line 179-185
+        Menambahkan fungsi If untuk hanya menampilkan shift yang aktif (dipilih saat presensi awal) di presensi keluar
+
+- admin.php (plugins/dashboard/Admin.php)
+    function postUpload
+        Menonaktifkan fungsi upload img
+        Melakukan Bypass untuk menyimpan data
+
+- site.php (plugins/anjungan/Site.php)
+    function getDisplayAPM
+        Menambahkan where clause pada variable $penjab

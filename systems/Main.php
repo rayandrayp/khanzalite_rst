@@ -25,7 +25,7 @@ abstract class Main
     {
         $this->setSession();
 
-        QueryWrapper::connect("mysql:host=".DBHOST.";port=".DBPORT.";dbname=".DBNAME."", DBUSER, DBPASS);
+        QueryWrapper::connect("mysql:host=" . DBHOST . ";port=" . DBPORT . ";dbname=" . DBNAME . "", DBUSER, DBPASS);
 
         $check_db = $this->db()->pdo()->query("SHOW TABLES LIKE 'mlite_modules'");
         $check_db->execute();
@@ -39,49 +39,49 @@ abstract class Main
             mkdir(UPLOADS, 0777);
         }
 
-        if (!is_dir(WEBAPPS_PATH."/berkasrawat")) {
-            mkdir(WEBAPPS_PATH."/berkasrawat", 0777);
+        if (!is_dir(WEBAPPS_PATH . "/berkasrawat")) {
+            mkdir(WEBAPPS_PATH . "/berkasrawat", 0777);
         }
 
-        if (!is_dir(WEBAPPS_PATH."/berkasrawat/pages")) {
-            mkdir(WEBAPPS_PATH."/berkasrawat/pages", 0777);
+        if (!is_dir(WEBAPPS_PATH . "/berkasrawat/pages")) {
+            mkdir(WEBAPPS_PATH . "/berkasrawat/pages", 0777);
         }
 
-        if (!is_dir(WEBAPPS_PATH."/berkasrawat/pages/upload")) {
-            mkdir(WEBAPPS_PATH."/berkasrawat/pages/upload", 0777);
+        if (!is_dir(WEBAPPS_PATH . "/berkasrawat/pages/upload")) {
+            mkdir(WEBAPPS_PATH . "/berkasrawat/pages/upload", 0777);
         }
 
-        if (!is_dir(WEBAPPS_PATH."/presensi")) {
-            mkdir(WEBAPPS_PATH."/presensi", 0777);
+        if (!is_dir(WEBAPPS_PATH . "/presensi")) {
+            mkdir(WEBAPPS_PATH . "/presensi", 0777);
         }
 
-        if (!is_dir(WEBAPPS_PATH."/penggajian")) {
-            mkdir(WEBAPPS_PATH."/penggajian", 0777);
+        if (!is_dir(WEBAPPS_PATH . "/penggajian")) {
+            mkdir(WEBAPPS_PATH . "/penggajian", 0777);
         }
 
-        if (!is_dir(WEBAPPS_PATH."/photopasien")) {
-            mkdir(WEBAPPS_PATH."/photopasien", 0777);
+        if (!is_dir(WEBAPPS_PATH . "/photopasien")) {
+            mkdir(WEBAPPS_PATH . "/photopasien", 0777);
         }
 
-        if (!is_dir(WEBAPPS_PATH."/penggajian/pages")) {
-            mkdir(WEBAPPS_PATH."/penggajian/pages", 0777);
+        if (!is_dir(WEBAPPS_PATH . "/penggajian/pages")) {
+            mkdir(WEBAPPS_PATH . "/penggajian/pages", 0777);
         }
 
-        if (!is_dir(WEBAPPS_PATH."/penggajian/pages/pegawai")) {
-            mkdir(WEBAPPS_PATH."/penggajian/pages/pegawai", 0777);
+        if (!is_dir(WEBAPPS_PATH . "/penggajian/pages/pegawai")) {
+            mkdir(WEBAPPS_PATH . "/penggajian/pages/pegawai", 0777);
         }
 
-        if (!is_dir(WEBAPPS_PATH."/penggajian/pages/pegawai/photo")) {
-            mkdir(WEBAPPS_PATH."/penggajian/pages/pegawai/photo", 0777);
+        if (!is_dir(WEBAPPS_PATH . "/penggajian/pages/pegawai/photo")) {
+            mkdir(WEBAPPS_PATH . "/penggajian/pages/pegawai/photo", 0777);
         }
 
-        if (!is_dir(UPLOADS."/settings")) {
-            mkdir(UPLOADS."/settings", 0777);
+        if (!is_dir(UPLOADS . "/settings")) {
+            mkdir(UPLOADS . "/settings", 0777);
         }
 
-        copy(THEMES.'/admin/img/logo.png', UPLOADS.'/settings/logo.png');
+        copy(THEMES . '/admin/img/logo.png', UPLOADS . '/settings/logo.png');
 
-        if(empty($check_db)) {
+        if (empty($check_db)) {
             $this->freshInstall();
         }
 
@@ -117,7 +117,7 @@ abstract class Main
     {
         ini_set('session.use_only_cookies', 1);
         session_name('mlite');
-        session_set_cookie_params(0, (mlite_dir() === '/' ? '/' : mlite_dir().'/'));
+        session_set_cookie_params(0, (mlite_dir() === '/' ? '/' : mlite_dir() . '/'));
         session_start();
     }
 
@@ -163,7 +163,7 @@ abstract class Main
 
     public function append($string, $location)
     {
-        $this->appends[$location][] = $string."\n";
+        $this->appends[$location][] = $string . "\n";
     }
 
     public static function verifyLicense($buffer)
@@ -179,8 +179,8 @@ abstract class Main
         $license = License::verify($core->settings->get('settings.license'));
         if (($license == License::UNREGISTERED) && $isHTML && (!$hasBacklink || !$hasHeader)) {
             return '<center><strong>Ciluk baaa......</strong><br />Menghapus trade mark saya yaa....! Upsss....</center>';
-        //} elseif ($license == License::TIME_OUT) {
-        //    return $buffer.'<script>alert("Upstream Server\nCan\'t connect to server and verify it.");</script>';
+            //} elseif ($license == License::TIME_OUT) {
+            //    return $buffer.'<script>alert("Upstream Server\nCan\'t connect to server and verify it.");</script>';
         } elseif ($license == License::ERROR) {
             return '<strong>Upstream Server</strong><br />The server is not valid. Please correct it or go to settings module and save.';
         }
@@ -214,14 +214,14 @@ abstract class Main
                     if (time() - $row['expiry'] > 0) {
                         $this->db('mlite_remember_me')->delete(['id' => $row['token_id']]);
                     } else {
-                        $_SESSION['mlite_user']= $row['id'];
+                        $_SESSION['mlite_user'] = $row['id'];
                         $_SESSION['token']      = bin2hex(openssl_random_pseudo_bytes(6));
                         $_SESSION['userAgent']  = $_SERVER['HTTP_USER_AGENT'];
                         $_SESSION['IPaddress']  = $_SERVER['REMOTE_ADDR'];
 
-                        $this->db('mlite_remember_me')->where('remember_me.user_id', $token[0])->where('remember_me.token', $token[1])->save(['expiry' => time()+60*60*24*30]);
+                        $this->db('mlite_remember_me')->where('remember_me.user_id', $token[0])->where('remember_me.token', $token[1])->save(['expiry' => time() + 60 * 60 * 24 * 30]);
 
-                        if (strpos($_SERVER['SCRIPT_NAME'], '/'.ADMIN.'/') !== false) {
+                        if (strpos($_SERVER['SCRIPT_NAME'], '/' . ADMIN . '/') !== false) {
                             redirect(url([ADMIN, 'dashboard', 'main']));
                         }
 
@@ -248,12 +248,13 @@ abstract class Main
         return self::$userCache[$field];
     }
 
-    public function getEnum($table_name, $column_name) {
-      $result = $this->db()->pdo()->prepare("SHOW COLUMNS FROM $table_name LIKE '$column_name'");
-      $result->execute();
-      $result = $result->fetch();
-      $result = explode("','",preg_replace("/(enum|set)\('(.+?)'\)/","\\2", $result[1]));
-      return $result;
+    public function getEnum($table_name, $column_name)
+    {
+        $result = $this->db()->pdo()->prepare("SHOW COLUMNS FROM $table_name LIKE '$column_name'");
+        $result->execute();
+        $result = $result->fetch();
+        $result = explode("','", preg_replace("/(enum|set)\('(.+?)'\)/", "\\2", $result[1]));
+        return $result;
     }
 
     public function getDokterInfo($field, $kd_dokter)
@@ -317,11 +318,11 @@ abstract class Main
         $last_no_rawat = $this->db()->pdo()->prepare("SELECT ifnull(MAX(CONVERT(RIGHT(no_rawat,6),signed)),0) FROM reg_periksa WHERE tgl_registrasi = '$date'");
         $last_no_rawat->execute();
         $last_no_rawat = $last_no_rawat->fetch();
-        if(empty($last_no_rawat[0])) {
-          $last_no_rawat[0] = '000000';
+        if (empty($last_no_rawat[0])) {
+            $last_no_rawat[0] = '000000';
         }
         $next_no_rawat = sprintf('%06s', ($last_no_rawat[0] + 1));
-        $next_no_rawat = str_replace("-","/",$date).'/'.$next_no_rawat;
+        $next_no_rawat = str_replace("-", "/", $date) . '/' . $next_no_rawat;
 
         return $next_no_rawat;
     }
@@ -329,11 +330,11 @@ abstract class Main
     public function setNoReg($kd_dokter, $kd_poli = null)
     {
         $max_id = $this->db('reg_periksa')->select(['no_reg' => 'ifnull(MAX(CONVERT(RIGHT(no_reg,3),signed)),0)'])->where('kd_poli', $kd_poli)->where('tgl_registrasi', date('Y-m-d'))->desc('no_reg')->limit(1)->oneArray();
-        if($this->settings->get('settings.dokter_ralan_per_dokter') == 'true') {
-          $max_id = $this->db('reg_periksa')->select(['no_reg' => 'ifnull(MAX(CONVERT(RIGHT(no_reg,3),signed)),0)'])->where('kd_poli', $kd_poli)->where('kd_dokter', $kd_dokter)->where('tgl_registrasi', date('Y-m-d'))->desc('no_reg')->limit(1)->oneArray();
+        if ($this->settings->get('settings.dokter_ralan_per_dokter') == 'true') {
+            $max_id = $this->db('reg_periksa')->select(['no_reg' => 'ifnull(MAX(CONVERT(RIGHT(no_reg,3),signed)),0)'])->where('kd_poli', $kd_poli)->where('kd_dokter', $kd_dokter)->where('tgl_registrasi', date('Y-m-d'))->desc('no_reg')->limit(1)->oneArray();
         }
-        if(empty($max_id['no_reg'])) {
-          $max_id['no_reg'] = '000';
+        if (empty($max_id['no_reg'])) {
+            $max_id['no_reg'] = '000';
         }
         $_next_no_reg = sprintf('%03s', ($max_id['no_reg'] + 1));
 
@@ -345,8 +346,8 @@ abstract class Main
         $last_no_reg = $this->db()->pdo()->prepare("SELECT ifnull(MAX(CONVERT(RIGHT(no_reg,3),signed)),0) FROM booking_registrasi WHERE tanggal_periksa = '$date' AND kd_dokter = '$kd_dokter'");
         $last_no_reg->execute();
         $last_no_reg = $last_no_reg->fetch();
-        if(empty($last_no_reg[0])) {
-          $last_no_reg[0] = '000';
+        if (empty($last_no_reg[0])) {
+            $last_no_reg[0] = '000';
         }
         $next_no_reg = sprintf('%03s', ($last_no_reg[0] + 1));
 
@@ -359,11 +360,11 @@ abstract class Main
         $last_no_resep = $this->db()->pdo()->prepare("SELECT ifnull(MAX(CONVERT(RIGHT(no_resep,6),signed)),0) FROM resep_obat WHERE tgl_peresepan = '$date'");
         $last_no_resep->execute();
         $last_no_resep = $last_no_resep->fetch();
-        if(empty($last_no_resep[0])) {
-          $last_no_resep[0] = '000000';
+        if (empty($last_no_resep[0])) {
+            $last_no_resep[0] = '000000';
         }
         $next_no_resep = sprintf('%06s', ($last_no_resep[0] + 1));
-        $next_no_resep = date('Ymd').''.$next_no_resep;
+        $next_no_resep = date('Ymd') . '' . $next_no_resep;
 
         return $next_no_resep;
     }
@@ -374,11 +375,11 @@ abstract class Main
         $last_no_order = $this->db()->pdo()->prepare("SELECT ifnull(MAX(CONVERT(RIGHT(noorder,4),signed)),0) FROM permintaan_lab WHERE tgl_permintaan = '$date'");
         $last_no_order->execute();
         $last_no_order = $last_no_order->fetch();
-        if(empty($last_no_order[0])) {
-          $last_no_order[0] = '0000';
+        if (empty($last_no_order[0])) {
+            $last_no_order[0] = '0000';
         }
         $next_no_order = sprintf('%04s', ($last_no_order[0] + 1));
-        $next_no_order = 'PL'.date('Ymd').''.$next_no_order;
+        $next_no_order = 'PL' . date('Ymd') . '' . $next_no_order;
 
         return $next_no_order;
     }
@@ -389,11 +390,11 @@ abstract class Main
         $last_no_order = $this->db()->pdo()->prepare("SELECT ifnull(MAX(CONVERT(RIGHT(noorder,4),signed)),0) FROM permintaan_lab WHERE tgl_permintaan = '$date'");
         $last_no_order->execute();
         $last_no_order = $last_no_order->fetch();
-        if(empty($last_no_order[0])) {
-          $last_no_order[0] = '0000';
+        if (empty($last_no_order[0])) {
+            $last_no_order[0] = '0000';
         }
         $next_no_order = sprintf('%04s', ($last_no_order[0] + 1));
-        $next_no_order = 'PR'.date('Ymd').''.$next_no_order;
+        $next_no_order = 'PR' . date('Ymd') . '' . $next_no_order;
 
         return $next_no_order;
     }
@@ -404,8 +405,8 @@ abstract class Main
         $last_no = $this->db()->pdo()->prepare("SELECT ifnull(MAX(CONVERT(RIGHT(no_antrian,6),signed)),0) FROM skdp_bpjs WHERE tahun = '$year'");
         $last_no->execute();
         $last_no = $last_no->fetch();
-        if(empty($last_no[0])) {
-          $last_no[0] = '000000';
+        if (empty($last_no[0])) {
+            $last_no[0] = '000000';
         }
         $next_no = sprintf('%06s', ($last_no[0] + 1));
         return $next_no;
@@ -417,11 +418,11 @@ abstract class Main
         $last_no = $this->db()->pdo()->prepare("SELECT ifnull(MAX(CONVERT(RIGHT(no_nota,6),signed)),0) FROM nota_jalan WHERE left(tanggal,7) = '$date'");
         $last_no->execute();
         $last_no = $last_no->fetch();
-        if(empty($last_no[0])) {
-          $last_no[0] = '000000';
+        if (empty($last_no[0])) {
+            $last_no[0] = '000000';
         }
         $next_no = sprintf('%06s', ($last_no[0] + 1));
-        $next_no = date('Y').'/'.date('m').'/RJ/'.$next_no;
+        $next_no = date('Y') . '/' . date('m') . '/RJ/' . $next_no;
         return $next_no;
     }
 
@@ -434,14 +435,14 @@ abstract class Main
 
     private function freshInstall()
     {
-        QueryWrapper::connect("mysql:host=".DBHOST.";port=".DBPORT.";dbname=".DBNAME."",DBUSER, DBPASS);
+        QueryWrapper::connect("mysql:host=" . DBHOST . ";port=" . DBPORT . ";dbname=" . DBNAME . "", DBUSER, DBPASS);
         $pdo = QueryWrapper::pdo();
 
         $core = $this;
 
         $modules = unserialize(BASIC_MODULES);
         foreach ($modules as $module) {
-            $file = MODULES.'/'.$module.'/Info.php';
+            $file = MODULES . '/' . $module . '/Info.php';
 
             if (file_exists($file)) {
                 $info = include($file);

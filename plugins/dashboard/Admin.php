@@ -16,7 +16,7 @@ class Admin extends AdminModule
 
   public function getMain()
   {
-    $this->core->addJS(url(MODULES . '/dashboard/js/admin/webcam.js?v={$mlite.version}'));
+    // $this->core->addJS(url(MODULES . '/dashboard/js/admin/webcam.js?v={$mlite.version}'));
     $settings = $this->settings('settings');
 
     $day = array(
@@ -49,6 +49,7 @@ class Admin extends AdminModule
       $cek_presensi = $this->db('temporary_presensi')->where('id', $idpeg['id'])->oneArray();
       $cek_rekap = $this->db('rekap_presensi')->where('id', $idpeg['id'])->like('jam_datang', '%' . date('Y-m-d') . '%')->oneArray();
       $jam_jaga = $this->db('jam_jaga')->join('pegawai', 'pegawai.departemen = jam_jaga.dep_id')->where('pegawai.nik', $idpeg['nik'])->toArray();
+      $jam_jaga2 = $this->db('jam_jaga')->select(['jam_jaga.shift', 'jam_jaga.jam_masuk', 'jam_jaga.jam_pulang'])->join('pegawai', 'pegawai.departemen = jam_jaga.dep_id')->join('temporary_presensi', 'temporary_presensi.shift = jam_jaga.shift')->where('pegawai.nik', $idpeg['nik'])->toArray();
     }
 
     return $this->draw('main.html', [
@@ -57,6 +58,7 @@ class Admin extends AdminModule
       'cek_presensi' => $cek_presensi,
       'cek_rekap' => $cek_rekap,
       'jam_jaga' => $jam_jaga,
+      'jam_jaga2' => $jam_jaga2,
       'presensi' => $presensi,
       'nama' => $nama_pegawai,
       'notif_presensi' => $this->settings('settings', 'notif_presensi')
@@ -112,249 +114,266 @@ class Admin extends AdminModule
 
   public function postUpload()
   {
-    if ($photo = isset_or($_FILES['webcam']['tmp_name'], false)) {
-      $img = new \Systems\Lib\Image;
-      if ($img->load($photo)) {
-        if ($img->getInfos('width') < $img->getInfos('height')) {
-          $img->crop(0, 0, $img->getInfos('width'), $img->getInfos('width'));
-        } else {
-          $img->crop(0, 0, $img->getInfos('height'), $img->getInfos('height'));
-        }
+    // if ($photo = isset_or($_FILES['webcam']['tmp_name'], false)) {
+    //   $img = new \Systems\Lib\Image;
+    //   if ($img->load($photo)) {
+    //     if ($img->getInfos('width') < $img->getInfos('height')) {
+    //       $img->crop(0, 0, $img->getInfos('width'), $img->getInfos('width'));
+    //     } else {
+    //       $img->crop(0, 0, $img->getInfos('height'), $img->getInfos('height'));
+    //     }
 
-        if ($img->getInfos('width') > 512) {
-          $img->resize(512, 512);
-        }
-        $gambar = uniqid('photo') . "." . $img->getInfos('type');
+    //     if ($img->getInfos('width') > 512) {
+    //       $img->resize(512, 512);
+    //     }
+    //     $gambar = uniqid('photo') . "." . $img->getInfos('type');
+    //   }
+
+    //   if (isset($img) && $img->getInfos('width')) {
+
+    //     $img->save(WEBAPPS_PATH . "/presensi/" . $gambar);
+
+    //     //=========post code placed here================
+
+    //   } else {
+    //     $this->notify('failure', 'Image not found');
+    //   }
+    // } else {
+    //   $this->notify('failure', 'Photo files not found');
+    // }
+
+    //==========post code============
+    $urlnya         = "-"; //WEBAPPS_URL . '/presensi/' . $gambar;
+    $barcode        = $this->core->getUserInfo('username', null, true);
+
+    $bulan = date('m');
+    $tahun = date('y');
+    $hari = date('j');
+    $hari_kurang = $hari - 1;
+    $bulan_kurang = date('j', strtotime(date('Y-m-d') . " -1 month"));
+    $bulan_lalu = date('m', strtotime(date('Y-m-d') . " -1 month"));
+    $tahun_lalu = date('Y', strtotime(date('Y-m-d') . " -1 month"));
+    $shift = $_GET['shift'];
+
+    //$idpeg          = $this->db('barcode')->where('barcode', $barcode)->oneArray();
+    $idpeg          = $this->db('pegawai')->where('nik', $barcode)->oneArray();
+    $jam_jaga       = $this->db('jam_jaga')->join('pegawai', 'pegawai.departemen = jam_jaga.dep_id')->where('pegawai.nik', $idpeg['nik'])->where('jam_jaga.shift', $shift)->oneArray();
+    $jadwal_pegawai = $this->db('jadwal_pegawai')->where('id', $idpeg['id'])->where('h' . $hari, $shift)->where('bulan', $bulan)->where('tahun', $tahun)->oneArray();
+
+    if (!$jadwal_pegawai) {
+      $jadwal_pegawai = $this->db('jadwal_pegawai')->where('id', $idpeg['id'])->where('h' . $hari_kurang, $shift)->where('bulan', $bulan)->where('tahun', $tahun)->oneArray();
+    }
+    if (!$jadwal_pegawai && $hari == '1') {
+      $jadwal_pegawai = $this->db('jadwal_pegawai')->where('id', $idpeg['id'])->where('h' . $bulan_kurang, $shift)->where('bulan', $bulan_lalu)->where('tahun', $tahun)->oneArray();
+    }
+    if (!$jadwal_pegawai && $bulan == '01') {
+      $jadwal_pegawai = $this->db('jadwal_pegawai')->where('id', $idpeg['id'])->where('h' . $bulan_kurang, $shift)->where('bulan', $bulan_lalu)->where('tahun', $tahun_lalu)->oneArray();
+    }
+
+    $set_keterlambatan  = $this->db('set_keterlambatan')->toArray();
+    $toleransi      = $set_keterlambatan['toleransi'];
+    $terlambat1     = $set_keterlambatan['terlambat1'];
+    $terlambat2     = $set_keterlambatan['terlambat2'];
+
+    $valid = $this->db('rekap_presensi')->where('id', $idpeg['id'])->where('shift', $jam_jaga['shift'])->like('jam_datang', '%' . date('Y-m-d') . '%')->oneArray();
+
+    $valid_2 = $this->db('rekap_presensi')->where('id', $idpeg['id'])->like('jam_datang', '%' . date('Y-m-d') . '%')->oneArray();
+
+    if (($valid_2) || (!$jadwal_pegawai)) {
+      $jadwal_tambahan = $this->db('jadwal_tambahan')->where('id', $idpeg['id'])->where('h' . $hari, $shift)->where('bulan', $bulan)->where('tahun', $tahun)->oneArray();
+
+      if (!$jadwal_tambahan) {
+        $jadwal_tambahan = $this->db('jadwal_tambahan')->where('id', $idpeg['id'])->where('h' . $hari_kurang, $shift)->where('bulan', $bulan)->where('tahun', $tahun)->oneArray();
+      }
+      if (!$jadwal_tambahan && $hari == '1') {
+        $jadwal_tambahan = $this->db('jadwal_tambahan')->where('id', $idpeg['id'])->where('h' . $bulan_kurang, $shift)->where('bulan', $bulan_lalu)->where('tahun', $tahun)->oneArray();
+      }
+      if (!$jadwal_tambahan && $bulan == '01') {
+        $jadwal_tambahan = $this->db('jadwal_tambahan')->where('id', $idpeg['id'])->where('h' . $bulan_kurang, $shift)->where('bulan', $bulan_lalu)->where('tahun', $tahun_lalu)->oneArray();
       }
 
-      if (isset($img) && $img->getInfos('width')) {
+      // if ((!empty($idpeg['id'])) && (!empty($jam_jaga['shift'])) && ($jadwal_tambahan) && (!$valid)) {
+      if ((!empty($idpeg['id'])) && (!empty($jam_jaga['shift'])) && (!$valid)) { //remove jadwal_tambahan karena belum dibutuhkan/tabel masih kosong
+        $cek = $this->db('temporary_presensi')->where('id', $idpeg['id'])->oneArray();
 
-        $img->save(WEBAPPS_PATH . "/presensi/" . $gambar);
+        if (!$cek) {
+          if (empty($urlnya)) {
+            $this->notify('failure', 'Pilih shift dulu...!!!!');
+          } else {
 
-        $urlnya         = WEBAPPS_URL . '/presensi/' . $gambar;
-        $barcode        = $this->core->getUserInfo('username', null, true);
+            $status = 'Tepat Waktu';
 
-        $bulan = date('m');
-        $tahun = date('y');
-        $hari = date('j');
-        $hari_kurang = $hari - 1;
-        $bulan_kurang = date('j', strtotime(date('Y-m-d') . " -1 month"));
-        $bulan_lalu = date('m', strtotime(date('Y-m-d') . " -1 month"));
-        $tahun_lalu = date('Y', strtotime(date('Y-m-d') . " -1 month"));
-        $shift = $_GET['shift'];
+            if ((strtotime(date('Y-m-d H:i:s')) - strtotime(date('Y-m-d') . ' ' . $jam_jaga['jam_masuk'])) > ($toleransi * 60)) {
+              $status = 'Terlambat Toleransi';
+            }
+            if ((strtotime(date('Y-m-d H:i:s')) - strtotime(date('Y-m-d') . ' ' . $jam_jaga['jam_masuk'])) > ($terlambat1 * 60)) {
+              $status = 'Terlambat I';
+            }
+            if ((strtotime(date('Y-m-d H:i:s')) - strtotime(date('Y-m-d') . ' ' . $jam_jaga['jam_masuk'])) > ($terlambat2 * 60)) {
+              $status = 'Terlambat II';
+            }
 
-        //$idpeg          = $this->db('barcode')->where('barcode', $barcode)->oneArray();
-        $idpeg          = $this->db('pegawai')->where('nik', $barcode)->oneArray();
-        $jam_jaga       = $this->db('jam_jaga')->join('pegawai', 'pegawai.departemen = jam_jaga.dep_id')->where('pegawai.nik', $idpeg['nik'])->where('jam_jaga.shift', $shift)->oneArray();
-        $jadwal_pegawai = $this->db('jadwal_pegawai')->where('id', $idpeg['id'])->where('h' . $hari, $shift)->where('bulan', $bulan)->where('tahun', $tahun)->oneArray();
-
-        if (!$jadwal_pegawai) {
-          $jadwal_pegawai = $this->db('jadwal_pegawai')->where('id', $idpeg['id'])->where('h' . $hari_kurang, $shift)->where('bulan', $bulan)->where('tahun', $tahun)->oneArray();
-        }
-        if (!$jadwal_pegawai && $hari == '1') {
-          $jadwal_pegawai = $this->db('jadwal_pegawai')->where('id', $idpeg['id'])->where('h' . $bulan_kurang, $shift)->where('bulan', $bulan_lalu)->where('tahun', $tahun)->oneArray();
-        }
-        if (!$jadwal_pegawai && $bulan == '01') {
-          $jadwal_pegawai = $this->db('jadwal_pegawai')->where('id', $idpeg['id'])->where('h' . $bulan_kurang, $shift)->where('bulan', $bulan_lalu)->where('tahun', $tahun_lalu)->oneArray();
-        }
-
-        $set_keterlambatan  = $this->db('set_keterlambatan')->toArray();
-        $toleransi      = $set_keterlambatan['toleransi'];
-        $terlambat1     = $set_keterlambatan['terlambat1'];
-        $terlambat2     = $set_keterlambatan['terlambat2'];
-
-        $valid = $this->db('rekap_presensi')->where('id', $idpeg['id'])->where('shift', $jam_jaga['shift'])->like('jam_datang', '%' . date('Y-m-d') . '%')->oneArray();
-
-        $valid_2 = $this->db('rekap_presensi')->where('id', $idpeg['id'])->like('jam_datang', '%' . date('Y-m-d') . '%')->oneArray();
-
-        if (($valid_2) || (!$jadwal_pegawai)) {
-          $jadwal_tambahan = $this->db('jadwal_tambahan')->where('id', $idpeg['id'])->where('h' . $hari, $shift)->where('bulan', $bulan)->where('tahun', $tahun)->oneArray();
-
-          if (!$jadwal_tambahan) {
-            $jadwal_tambahan = $this->db('jadwal_tambahan')->where('id', $idpeg['id'])->where('h' . $hari_kurang, $shift)->where('bulan', $bulan)->where('tahun', $tahun)->oneArray();
-          }
-          if (!$jadwal_tambahan && $hari == '1') {
-            $jadwal_tambahan = $this->db('jadwal_tambahan')->where('id', $idpeg['id'])->where('h' . $bulan_kurang, $shift)->where('bulan', $bulan_lalu)->where('tahun', $tahun)->oneArray();
-          }
-          if (!$jadwal_tambahan && $bulan == '01') {
-            $jadwal_tambahan = $this->db('jadwal_tambahan')->where('id', $idpeg['id'])->where('h' . $bulan_kurang, $shift)->where('bulan', $bulan_lalu)->where('tahun', $tahun_lalu)->oneArray();
-          }
-
-          // if ((!empty($idpeg['id'])) && (!empty($jam_jaga['shift'])) && ($jadwal_tambahan) && (!$valid)) {
-          if ((!empty($idpeg['id'])) && (!empty($jam_jaga['shift'])) && (!$valid)) { //remove jadwal_tambahan karena belum dibutuhkan/tabel masih kosong
-            $cek = $this->db('temporary_presensi')->where('id', $idpeg['id'])->oneArray();
-
-            if (!$cek) {
-              if (empty($urlnya)) {
-                $this->notify('failure', 'Pilih shift dulu...!!!!');
-              } else {
-
-                $status = 'Tepat Waktu';
-
-                if ((strtotime(date('Y-m-d H:i:s')) - strtotime(date('Y-m-d') . ' ' . $jam_jaga['jam_masuk'])) > ($toleransi * 60)) {
-                  $status = 'Terlambat Toleransi';
-                }
-                if ((strtotime(date('Y-m-d H:i:s')) - strtotime(date('Y-m-d') . ' ' . $jam_jaga['jam_masuk'])) > ($terlambat1 * 60)) {
-                  $status = 'Terlambat I';
-                }
-                if ((strtotime(date('Y-m-d H:i:s')) - strtotime(date('Y-m-d') . ' ' . $jam_jaga['jam_masuk'])) > ($terlambat2 * 60)) {
-                  $status = 'Terlambat II';
-                }
-
-                if (strtotime(date('Y-m-d H:i:s')) - (date('Y-m-d') . ' ' . $jam_jaga['jam_masuk']) > ($toleransi * 60)) {
-                  $awal  = new \DateTime(date('Y-m-d') . ' ' . $jam_jaga['jam_masuk']);
-                  $akhir = new \DateTime();
-                  $diff = $akhir->diff($awal, true); // to make the difference to be always positive.
-                  $keterlambatan = $diff->format('%H:%I:%S');
-                }
-
-                $insert = $this->db('temporary_presensi')
-                  ->save([
-                    'id' => $idpeg['id'],
-                    'shift' => $jam_jaga['shift'],
-                    'jam_datang' => date('Y-m-d H:i:s'),
-                    'jam_pulang' => NULL,
-                    'status' => $status,
-                    'keterlambatan' => $keterlambatan,
-                    'durasi' => '',
-                    'photo' => $urlnya
-                  ]);
-
-                if ($insert) {
-                  $this->notify('success', 'Presensi Masuk jam ' . $jam_jaga['jam_masuk'] . ' ' . $status . ' ' . $keterlambatan);
-                }
-              }
-            } elseif ($cek) {
-
-              $status = $cek['status'];
-              if ((strtotime(date('Y-m-d H:i:s')) - strtotime(date('Y-m-d') . ' ' . $jam_jaga['jam_pulang'])) < 0) {
-                $status = $cek['status'] . ' & PSW';
-              }
-
-              $awal  = new \DateTime($cek['jam_datang']);
+            if (strtotime(date('Y-m-d H:i:s')) - (date('Y-m-d') . ' ' . $jam_jaga['jam_masuk']) > ($toleransi * 60)) {
+              $awal  = new \DateTime(date('Y-m-d') . ' ' . $jam_jaga['jam_masuk']);
               $akhir = new \DateTime();
               $diff = $akhir->diff($awal, true); // to make the difference to be always positive.
-              $durasi = $diff->format('%H:%I:%S');
-
-              $ubah = $this->db('temporary_presensi')
-                ->where('id', $idpeg['id'])
-                ->save([
-                  'jam_pulang' => date('Y-m-d H:i:s'),
-                  'status' => $status,
-                  'durasi' => $durasi
-                ]);
-
-              if ($ubah) {
-                $presensi = $this->db('temporary_presensi')->where('id', $cek['id'])->oneArray();
-                $insert = $this->db('rekap_presensi')
-                  ->save([
-                    'id' => $presensi['id'],
-                    'shift' => $presensi['shift'],
-                    'jam_datang' => $presensi['jam_datang'],
-                    'jam_pulang' => $presensi['jam_pulang'],
-                    'status' => $presensi['status'],
-                    'keterlambatan' => $presensi['keterlambatan'],
-                    'durasi' => $presensi['durasi'],
-                    'keterangan' => '-',
-                    'photo' => $presensi['photo']
-                  ]);
-                if ($insert) {
-                  $this->notify('success', 'Presensi pulang telah disimpan');
-                  $this->db('temporary_presensi')->where('id', $cek['id'])->delete();
-                }
-              }
-            }
-          } else {
-            $this->notify('failure', 'Anda sudah presensi untuk tanggal ' . date('Y-m-d'));
-          }
-        } elseif ((!empty($idpeg['id'])) && (!empty($jam_jaga['shift'])) && ($jadwal_pegawai) && (!$valid)) {
-          $cek = $this->db('temporary_presensi')->where('id', $idpeg['id'])->oneArray();
-
-          if (!$cek) {
-            if (empty($urlnya)) {
-              $this->notify('failure', 'Pilih shift dulu...!!!!');
-            } else {
-
-              $status = 'Tepat Waktu';
-
-              if ((strtotime(date('Y-m-d H:i:s')) - strtotime(date('Y-m-d') . ' ' . $jam_jaga['jam_masuk'])) > ($toleransi * 60)) {
-                $status = 'Terlambat Toleransi';
-              }
-              if ((strtotime(date('Y-m-d H:i:s')) - strtotime(date('Y-m-d') . ' ' . $jam_jaga['jam_masuk'])) > ($terlambat1 * 60)) {
-                $status = 'Terlambat I';
-              }
-              if ((strtotime(date('Y-m-d H:i:s')) - strtotime(date('Y-m-d') . ' ' . $jam_jaga['jam_masuk'])) > ($terlambat2 * 60)) {
-                $status = 'Terlambat II';
-              }
-
-              if (strtotime(date('Y-m-d H:i:s')) - (date('Y-m-d') . ' ' . $jam_jaga['jam_masuk']) > ($toleransi * 60)) {
-                $awal  = new \DateTime(date('Y-m-d') . ' ' . $jam_jaga['jam_masuk']);
-                $akhir = new \DateTime();
-                $diff = $akhir->diff($awal, true); // to make the difference to be always positive.
-                $keterlambatan = $diff->format('%H:%I:%S');
-              }
-
-              $insert = $this->db('temporary_presensi')
-                ->save([
-                  'id' => $idpeg['id'],
-                  'shift' => $jam_jaga['shift'],
-                  'jam_datang' => date('Y-m-d H:i:s'),
-                  'jam_pulang' => NULL,
-                  'status' => $status,
-                  'keterlambatan' => $keterlambatan,
-                  'durasi' => '',
-                  'photo' => $urlnya
-                ]);
-
-              if ($insert) {
-                $this->notify('success', 'Presensi Masuk jam ' . $jam_jaga['jam_masuk'] . ' ' . $status . ' ' . $keterlambatan);
-              }
-            }
-          } elseif ($cek) {
-
-            $status = $cek['status'];
-            if ((strtotime(date('Y-m-d H:i:s')) - strtotime(date('Y-m-d') . ' ' . $jam_jaga['jam_pulang'])) < 0) {
-              $status = $cek['status'] . ' & PSW';
+              $keterlambatan = $diff->format('%H:%I:%S');
             }
 
-            $awal  = new \DateTime($cek['jam_datang']);
-            $akhir = new \DateTime();
-            $diff = $akhir->diff($awal, true); // to make the difference to be always positive.
-            $durasi = $diff->format('%H:%I:%S');
-
-            $ubah = $this->db('temporary_presensi')
-              ->where('id', $idpeg['id'])
+            $insert = $this->db('temporary_presensi')
               ->save([
-                'jam_pulang' => date('Y-m-d H:i:s'),
+                'id' => $idpeg['id'],
+                'shift' => $jam_jaga['shift'],
+                'jam_datang' => date('Y-m-d H:i:s'),
+                'jam_pulang' => NULL,
                 'status' => $status,
-                'durasi' => $durasi
+                'keterlambatan' => $keterlambatan,
+                'durasi' => '',
+                'photo' => $urlnya
               ]);
 
-            if ($ubah) {
-              $presensi = $this->db('temporary_presensi')->where('id', $cek['id'])->oneArray();
-              $insert = $this->db('rekap_presensi')
-                ->save([
-                  'id' => $presensi['id'],
-                  'shift' => $presensi['shift'],
-                  'jam_datang' => $presensi['jam_datang'],
-                  'jam_pulang' => $presensi['jam_pulang'],
-                  'status' => $presensi['status'],
-                  'keterlambatan' => $presensi['keterlambatan'],
-                  'durasi' => $presensi['durasi'],
-                  'keterangan' => '-',
-                  'photo' => $presensi['photo']
-                ]);
-              if ($insert) {
-                $this->notify('success', 'Presensi pulang telah disimpan');
-                $this->db('temporary_presensi')->where('id', $cek['id'])->delete();
-              }
+            if ($insert) {
+              $this->notify('success', 'Presensi Masuk jam ' . $jam_jaga['jam_masuk'] . ' ' . $status . ' ' . $keterlambatan);
+            } else {
+              $this->notify('failure', 'Query Insert1 is failed');
             }
           }
+        } elseif ($cek) {
+
+          $status = $cek['status'];
+          if ((strtotime(date('Y-m-d H:i:s')) - strtotime(date('Y-m-d') . ' ' . $jam_jaga['jam_pulang'])) < 0) {
+            $status = $cek['status'] . ' & PSW';
+          }
+
+          $awal  = new \DateTime($cek['jam_datang']);
+          $akhir = new \DateTime();
+          $diff = $akhir->diff($awal, true); // to make the difference to be always positive.
+          $durasi = $diff->format('%H:%I:%S');
+
+          $ubah = $this->db('temporary_presensi')
+            ->where('id', $idpeg['id'])
+            ->save([
+              'jam_pulang' => date('Y-m-d H:i:s'),
+              'status' => $status,
+              'durasi' => $durasi
+            ]);
+
+          if ($ubah) {
+            $presensi = $this->db('temporary_presensi')->where('id', $cek['id'])->oneArray();
+            $insert = $this->db('rekap_presensi')
+              ->save([
+                'id' => $presensi['id'],
+                'shift' => $presensi['shift'],
+                'jam_datang' => $presensi['jam_datang'],
+                'jam_pulang' => $presensi['jam_pulang'],
+                'status' => $presensi['status'],
+                'keterlambatan' => $presensi['keterlambatan'],
+                'durasi' => $presensi['durasi'],
+                'keterangan' => '-',
+                'photo' => $presensi['photo']
+              ]);
+            if ($insert) {
+              $this->notify('success', 'Presensi pulang telah disimpan');
+              $this->db('temporary_presensi')->where('id', $cek['id'])->delete();
+            } else {
+              $this->notify('failure', 'Query Insert2 is failed');
+            }
+          }
+        }
+      } else {
+        $this->notify('failure', 'Anda sudah presensi untuk tanggal ' . date('Y-m-d'));
+      }
+    } elseif ((!empty($idpeg['id'])) && (!empty($jam_jaga['shift'])) && ($jadwal_pegawai) && (!$valid)) {
+      $cek = $this->db('temporary_presensi')->where('id', $idpeg['id'])->oneArray();
+
+      if (!$cek) {
+        if (empty($urlnya)) {
+          $this->notify('failure', 'Pilih shift dulu...!!!!');
         } else {
-          $this->notify('failure', 'ID Pegawai atau jadwal shift tidak sesuai. Silahkan pilih berdasarkan shift departemen anda!');
+
+          $status = 'Tepat Waktu';
+
+          if ((strtotime(date('Y-m-d H:i:s')) - strtotime(date('Y-m-d') . ' ' . $jam_jaga['jam_masuk'])) > ($toleransi * 60)) {
+            $status = 'Terlambat Toleransi';
+          }
+          if ((strtotime(date('Y-m-d H:i:s')) - strtotime(date('Y-m-d') . ' ' . $jam_jaga['jam_masuk'])) > ($terlambat1 * 60)) {
+            $status = 'Terlambat I';
+          }
+          if ((strtotime(date('Y-m-d H:i:s')) - strtotime(date('Y-m-d') . ' ' . $jam_jaga['jam_masuk'])) > ($terlambat2 * 60)) {
+            $status = 'Terlambat II';
+          }
+
+          if (strtotime(date('Y-m-d H:i:s')) - (date('Y-m-d') . ' ' . $jam_jaga['jam_masuk']) > ($toleransi * 60)) {
+            $awal  = new \DateTime(date('Y-m-d') . ' ' . $jam_jaga['jam_masuk']);
+            $akhir = new \DateTime();
+            $diff = $akhir->diff($awal, true); // to make the difference to be always positive.
+            $keterlambatan = $diff->format('%H:%I:%S');
+          }
+
+          $insert = $this->db('temporary_presensi')
+            ->save([
+              'id' => $idpeg['id'],
+              'shift' => $jam_jaga['shift'],
+              'jam_datang' => date('Y-m-d H:i:s'),
+              'jam_pulang' => NULL,
+              'status' => $status,
+              'keterlambatan' => $keterlambatan,
+              'durasi' => '',
+              'photo' => $urlnya
+            ]);
+
+          if ($insert) {
+            $this->notify('success', 'Presensi Masuk jam ' . $jam_jaga['jam_masuk'] . ' ' . $status . ' ' . $keterlambatan);
+          } else {
+            $this->notify('failure', 'Query Insert3 is failed');
+          }
+        }
+      } elseif ($cek) {
+
+        $status = $cek['status'];
+        if ((strtotime(date('Y-m-d H:i:s')) - strtotime(date('Y-m-d') . ' ' . $jam_jaga['jam_pulang'])) < 0) {
+          $status = $cek['status'] . ' & PSW';
+        }
+
+        $awal  = new \DateTime($cek['jam_datang']);
+        $akhir = new \DateTime();
+        $diff = $akhir->diff($awal, true); // to make the difference to be always positive.
+        $durasi = $diff->format('%H:%I:%S');
+
+        $ubah = $this->db('temporary_presensi')
+          ->where('id', $idpeg['id'])
+          ->save([
+            'jam_pulang' => date('Y-m-d H:i:s'),
+            'status' => $status,
+            'durasi' => $durasi
+          ]);
+
+        if ($ubah) {
+          $presensi = $this->db('temporary_presensi')->where('id', $cek['id'])->oneArray();
+          $insert = $this->db('rekap_presensi')
+            ->save([
+              'id' => $presensi['id'],
+              'shift' => $presensi['shift'],
+              'jam_datang' => $presensi['jam_datang'],
+              'jam_pulang' => $presensi['jam_pulang'],
+              'status' => $presensi['status'],
+              'keterlambatan' => $presensi['keterlambatan'],
+              'durasi' => $presensi['durasi'],
+              'keterangan' => '-',
+              'photo' => $presensi['photo']
+            ]);
+          if ($insert) {
+            $this->notify('success', 'Presensi pulang telah disimpan');
+            $this->db('temporary_presensi')->where('id', $cek['id'])->delete();
+          } else {
+            $this->notify('failure', 'Query Insert4 is failed');
+          }
         }
       }
+    } else {
+      $this->notify('failure', 'ID Pegawai atau jadwal shift tidak sesuai. Silahkan pilih berdasarkan shift departemen anda!');
     }
+    //==========end of post code============
 
     exit();
   }
@@ -362,7 +381,7 @@ class Admin extends AdminModule
   public function postGeolocation()
   {
 
-    $idpeg = $this->db('barcode')->where('barcode', $this->core->getUserInfo('username', null, true))->oneArray();
+    $idpeg = $this->db('pegawai')->where('nik', $this->core->getUserInfo('username', null, true))->oneArray();
 
     if (isset($_POST['lat'], $_POST['lng'])) {
       if (!$this->db('mlite_geolocation_presensi')->where('id', $idpeg['id'])->where('tanggal', date('Y-m-d'))->oneArray()) {
