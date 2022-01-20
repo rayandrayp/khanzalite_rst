@@ -33,3 +33,12 @@ Khanza Lite Change log
 - site.php (plugins/anjungan/Site.php)
     function getDisplayAPM
         Menambahkan where clause pada variable $penjab
+
+20/01/2022
+- main.html (plugins/dashboard/view/admin/main.html)
+    Menambahkan label dan textarea untuk alasan keterlambatan/pulang sebelum waktunya
+    Menambahkan fungsi JS untuk show/hide form alasan
+
+- admin.php (plugins/dashboard/Admin.php)
+    Menambahkan code untuk menyimpan alasan ke dalam DB
+    PS: untuk sementara, saya menggunakan kolom Photo di tabel temporary_presensi untuk menyimpan alasan. Mohon dipikirkan kembali jika webcam diaktifkan. Ehe..

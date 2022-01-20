@@ -173,9 +173,9 @@
       <div class="modal-body">
         <center>
           <!-- <div id="camera"></div><br> -->
-          <h4>Pilih Shift</h4>
+          <!-- <h4>Pilih Shift</h4> -->
           <select class="form-control" id="shift" style="width:240px;">
-            <!-- <option>Pilih Shift</option> -->
+            <option selected="true" disabled="true">Pilih Shift</option>
             {if: $cek_presensi} 
             <!-- If sudah absen awal -->
               {loop: $jam_jaga2}
@@ -187,7 +187,13 @@
               <option value="{$value.shift}"><i>{$value.shift}</i> : {$value.jam_masuk} - {$value.jam_pulang}</option>
               {/loop}
             {/if}
-          </select><br><br>
+          </select><br>
+          <div class="form-group" visibility="hidden" id="group_telat">
+            <label class="text-danger" id="text_telat"></label><br>
+            <label >Silahkan masukkan alasan anda</label>
+            <textarea class="form-control" id="alasan" rows="1"></textarea>
+          </div>
+          <br><br>
           <input type="button" class="btn btn-info" value="{if: empty($cek_presensi)}Presensi Masuk{else}Presensi Pulang{/if}" data-dismiss="modal">
           <input type="hidden" name="image" id="image-tag">
           <div id="results"></div>
@@ -197,11 +203,50 @@
   </div>
 </div>
 <script>
+  
+  document.getElementById("group_telat").style.visibility = "hidden";
   $(document).ready(function() {
       $('#shift').selectator('destroy');
 
       $('#shift').on('change', function() {
         var shift = this.value;
+        var today = new Date();
+
+        //fungsi show/hide form alasan
+        var jam_sekarang = parseInt(today.getHours());
+        var telat = false;
+        
+        //get jam datang dan jam pulang
+        var shiftSelect = document.getElementById("shift");
+        var shiftText = shiftSelect.options[shiftSelect.selectedIndex].text;
+        var jam_datang = parseInt(shiftText.substr(shiftText.length-19, 2));
+        var jam_pulang = parseInt(shiftText.substr(shiftText.length-8, 2));
+
+        {if: $cek_presensi} 
+        //sudah absen awal  
+          if (jam_pulang - jam_sekarang > 0){ //if pulang sebelum waktunya
+            document.getElementById("text_telat").innerHTML = "Oops, anda pulang sebelum waktunya. Silahkan masukkan alasan anda.";
+            telat = true;
+          } else {
+            telat = false;
+          }
+        {else}
+        //belum absen awal
+          if (jam_sekarang - jam_datang > 0){ //if terlambat
+            document.getElementById("text_telat").innerHTML = "Oops, anda terlambat. Silahkan masukkan alasan anda.";
+            telat = true;
+          } else {
+            telat = false;
+          }
+        {/if}
+        
+        if (telat == true){
+          document.getElementById("group_telat").style.visibility = "visible";
+        } else {
+          document.getElementById("group_telat").style.visibility = "hidden";
+        }
+        //end of fungsi show/hide form alasan
+
         //alert(shift);
       });
 
@@ -248,10 +293,10 @@
           
           // contruct use AJAX object
           // this function replace webcam.js function upload
+          var alasanStr = document.getElementById('alasan').value;
           var http = new XMLHttpRequest();
-          http.open("POST", '{?=url(ADMIN.'/dashboard/upload/')?}&shift=' + getshift, true);
+          http.open("POST", '{?=url(ADMIN.'/dashboard/upload/')?}&shift=' + getshift + '&alasan=' + alasanStr, true);
           http.send('form');
-
 
           navigator.geolocation.getCurrentPosition(
               function(position) {

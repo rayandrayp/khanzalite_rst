@@ -154,6 +154,13 @@ class Admin extends AdminModule
     $bulan_lalu = date('m', strtotime(date('Y-m-d') . " -1 month"));
     $tahun_lalu = date('Y', strtotime(date('Y-m-d') . " -1 month"));
     $shift = $_GET['shift'];
+    $keterangan = '';
+    if ($_GET['alasan'] != '') {
+      $keterangan = $_GET['alasan'];
+    } else {
+      $keterangan = '-';
+    }
+
 
     //$idpeg          = $this->db('barcode')->where('barcode', $barcode)->oneArray();
     $idpeg          = $this->db('pegawai')->where('nik', $barcode)->oneArray();
@@ -196,7 +203,7 @@ class Admin extends AdminModule
       if ((!empty($idpeg['id'])) && (!empty($jam_jaga['shift'])) && (!$valid)) { //remove jadwal_tambahan karena belum dibutuhkan/tabel masih kosong
         $cek = $this->db('temporary_presensi')->where('id', $idpeg['id'])->oneArray();
 
-        if (!$cek) {
+        if (!$cek) { //Absensi datang
           if (empty($urlnya)) {
             $this->notify('failure', 'Pilih shift dulu...!!!!');
           } else {
@@ -229,7 +236,7 @@ class Admin extends AdminModule
                 'status' => $status,
                 'keterlambatan' => $keterlambatan,
                 'durasi' => '',
-                'photo' => $urlnya
+                'photo' => $keterangan //$urlnya untuk sementara menggunakan kolom foto untuk menyimpan alasan
               ]);
 
             if ($insert) {
@@ -238,7 +245,7 @@ class Admin extends AdminModule
               $this->notify('failure', 'Query Insert1 is failed');
             }
           }
-        } elseif ($cek) {
+        } elseif ($cek) {  //Absensi pulang
 
           $status = $cek['status'];
           if ((strtotime(date('Y-m-d H:i:s')) - strtotime(date('Y-m-d') . ' ' . $jam_jaga['jam_pulang'])) < 0) {
@@ -269,8 +276,8 @@ class Admin extends AdminModule
                 'status' => $presensi['status'],
                 'keterlambatan' => $presensi['keterlambatan'],
                 'durasi' => $presensi['durasi'],
-                'keterangan' => '-',
-                'photo' => $presensi['photo']
+                'keterangan' => 'Alasan terlambat: ' . $presensi['photo'] . '; Alasan PSW: ' . $keterangan,
+                'photo' => '-' //$presensi['photo']
               ]);
             if ($insert) {
               $this->notify('success', 'Presensi pulang telah disimpan');
@@ -286,7 +293,7 @@ class Admin extends AdminModule
     } elseif ((!empty($idpeg['id'])) && (!empty($jam_jaga['shift'])) && ($jadwal_pegawai) && (!$valid)) {
       $cek = $this->db('temporary_presensi')->where('id', $idpeg['id'])->oneArray();
 
-      if (!$cek) {
+      if (!$cek) { //Absensi datang
         if (empty($urlnya)) {
           $this->notify('failure', 'Pilih shift dulu...!!!!');
         } else {
@@ -319,7 +326,7 @@ class Admin extends AdminModule
               'status' => $status,
               'keterlambatan' => $keterlambatan,
               'durasi' => '',
-              'photo' => $urlnya
+              'photo' => $keterangan //$urlnya untuk sementara menggunakan kolom foto untuk menyimpan alasan
             ]);
 
           if ($insert) {
@@ -328,7 +335,7 @@ class Admin extends AdminModule
             $this->notify('failure', 'Query Insert3 is failed');
           }
         }
-      } elseif ($cek) {
+      } elseif ($cek) { //Absensi pulang
 
         $status = $cek['status'];
         if ((strtotime(date('Y-m-d H:i:s')) - strtotime(date('Y-m-d') . ' ' . $jam_jaga['jam_pulang'])) < 0) {
@@ -359,8 +366,8 @@ class Admin extends AdminModule
               'status' => $presensi['status'],
               'keterlambatan' => $presensi['keterlambatan'],
               'durasi' => $presensi['durasi'],
-              'keterangan' => '-',
-              'photo' => $presensi['photo']
+              'keterangan' => 'Alasan terlambat: ' . $presensi['photo'] . '; Alasan PSW: ' . $keterangan,
+              'photo' => '-' //$presensi['photo']
             ]);
           if ($insert) {
             $this->notify('success', 'Presensi pulang telah disimpan');
