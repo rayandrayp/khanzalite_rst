@@ -57,7 +57,7 @@
             {if: !empty($value.selanjutnya)}
               {loop: $value.selanjutnya as $data}
                 - {$data.nm_pasien} (<strong>{$data.no_reg}</strong>)
-                <!--- {$data.nm_pasien} (<strong>{$data.no_reg} - {$value.jam_mulai}</strong>)-->
+                <!-- - {$data.nm_pasien} (<strong>{$data.no_reg} - {$value.jam_mulai}</strong>) -->
               {/loop}
             {/if}
           </marquee>
@@ -65,13 +65,21 @@
       </tr>
       {/loop}
     </tbody>
+    <tfoot class="bg-primary">
+      <tr>
+        <th>Dokter/Klinik</th>
+        <th>Dalam Pemeriksaan</th>
+        <th>Nomor Urut Berikutnya</th>
+      </tr>
+    </tfoot>
   </table>
-  <div class="row" style="bottom:0;position:absolute;width:100%;background-color:#fff;color:#ff0000;margin-top:20px;margin-bottom:40px;">
-    <h3 class="display-6"><marquee>{$running_text}</marquee></h3>
-  </div>
+  
 </div>
 <footer class="visible-lg visible-md bg-primary" style="padding:10px;z-index:1000;">
   <div class="canvas">
+    <!-- <div class="row" style="bottom:0;position:absolute;width:100%;background-color:#fff;color:#ff0000;margin-top:20px;margin-bottom:40px;">
+      <h3 class="display-6"><marquee>{$running_text}</marquee></h3>
+    </div> -->
     <p class="pull-right">
       Made with <i class="fa fa-heart text-danger"></i> by <a href="https://basoro.id/" target="_blank"><b>drg. F. Basoro</b>.</a>
       {$powered}.

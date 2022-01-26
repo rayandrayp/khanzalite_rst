@@ -131,9 +131,11 @@ class Site extends SiteModule
     $hari = $day[$tentukan_hari];
 
     $poliklinik = str_replace(",", "','", $this->settings->get('anjungan.display_poli'));
-    $query = $this->db()->pdo()->prepare("SELECT a.kd_dokter, a.kd_poli, b.nm_poli, c.nm_dokter, a.jam_mulai, a.jam_selesai FROM jadwal a, poliklinik b, dokter c WHERE a.kd_poli = b.kd_poli AND a.kd_dokter = c.kd_dokter AND a.hari_kerja = '$hari'  AND a.kd_poli IN ('$poliklinik')");
+    $strQuery = "SELECT a.kd_dokter, a.kd_poli, b.nm_poli, c.nm_dokter, a.jam_mulai, a.jam_selesai FROM jadwal a, poliklinik b, dokter c WHERE a.kd_poli = b.kd_poli AND a.kd_dokter = c.kd_dokter AND a.hari_kerja = '$hari'  AND a.kd_poli IN ('$poliklinik')";
+    // echo "<script>console.log($strQuery)</script>";
+    $query = $this->db()->pdo()->prepare($strQuery);
     $query->execute();
-    $rows = $query->fetchAll(\PDO::FETCH_ASSOC);;
+    $rows = $query->fetchAll(\PDO::FETCH_ASSOC);
 
     $result = [];
     if (count($rows)) {
@@ -195,8 +197,8 @@ class Site extends SiteModule
           $interval = $row['interval'];
         }
         foreach ($row['selanjutnya'] as $value) {
-          //$minutes = $value['no_reg'] * $interval;
-          //$row['jam_mulai'] = date('H:i',strtotime('+10 minutes',strtotime($row['jam_mulai'])));
+          // $minutes = $value['no_reg'] * $interval;
+          // $row['jam_mulai'] = date('H:i', strtotime('+10 minutes', strtotime($row['jam_mulai'])));
         }
 
         $result[] = $row;
@@ -419,6 +421,7 @@ class Site extends SiteModule
           'display' => $display
         ]);
         break;
+
       case "panggil_loket":
         $display = 'Panggil Loket';
 
@@ -492,6 +495,7 @@ class Site extends SiteModule
           'display' => $display
         ]);
         break;
+
       case "panggil_cs":
         $display = 'Panggil CS';
         $loket = explode(",", $this->settings->get('anjungan.antrian_cs'));
@@ -706,11 +710,11 @@ class Site extends SiteModule
 
     $date = date('Y-m-d');
     $sql = $this->db()->pdo()->prepare("SELECT * FROM mlite_antrian_loket WHERE status = 1 AND postdate = '$date' ORDER BY noantrian ASC");
-
-    if ($sql) {
+    $sql->execute();
+    $data = $sql->fetchAll(\PDO::FETCH_OBJ);
+    if ($data) {
       //$data  = $query->fetch_object();
-      $sql->execute();
-      $data = $sql->fetchAll(\PDO::FETCH_OBJ);;
+
       //print_r($data);
       // code...
       switch (strtolower($data[0]->type)) {
@@ -804,14 +808,22 @@ class Site extends SiteModule
     switch ($show) {
       default:
         break;
+
       case "tampilloket":
         $result = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'Loket')->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
-        $noantrian = $result['noantrian'];
+
+        if ($result) {
+          $noantrian = $result['noantrian'];
+        } else {
+          $noantrian = 0;
+        }
+
         if ($noantrian > 0) {
           $next_antrian = $noantrian + 1;
         } else {
           $next_antrian = 1;
         }
+
         echo '<div id="nomernya" align="center">';
         echo '<h1 class="display-1">';
         echo 'A' . $next_antrian;
@@ -820,9 +832,16 @@ class Site extends SiteModule
         echo '</div>';
         echo '<br>';
         break;
+
       case "printloket":
         $result = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'Loket')->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
-        $noantrian = $result['noantrian'];
+
+        if ($result) {
+          $noantrian = $result['noantrian'];
+        } else {
+          $noantrian = 0;
+        }
+
         if ($noantrian > 0) {
           $next_antrian = $noantrian + 1;
         } else {
@@ -856,8 +875,10 @@ class Site extends SiteModule
             });
           })
         </script>
+
       <?php
         break;
+
       case "simpanloket":
         $this->db('mlite_antrian_loket')
           ->save([
@@ -870,9 +891,14 @@ class Site extends SiteModule
           ]);
         //redirect(url('anjungan/pasien'));
         break;
+
       case "tampilcs":
         $result = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'CS')->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
-        $noantrian = $result['noantrian'];
+        if ($result) {
+          $noantrian = $result['noantrian'];
+        } else {
+          $noantrian = 0;
+        }
         if ($noantrian > 0) {
           $next_antrian = $noantrian + 1;
         } else {
@@ -886,9 +912,16 @@ class Site extends SiteModule
         echo '</div>';
         echo '<br>';
         break;
+
       case "printcs":
         $result = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'CS')->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
-        $noantrian = $result['noantrian'];
+
+        if ($result) {
+          $noantrian = $result['noantrian'];
+        } else {
+          $noantrian = 0;
+        }
+
         if ($noantrian > 0) {
           $next_antrian = $noantrian + 1;
         } else {
@@ -924,6 +957,7 @@ class Site extends SiteModule
         </script>
 <?php
         break;
+
       case "simpancs":
         $this->db('mlite_antrian_loket')
           ->save([
@@ -936,11 +970,13 @@ class Site extends SiteModule
           ]);
         //redirect(url('anjungan/pasien'));
         break;
+
       case "loket":
         //$antrian = $this->db('antriloket')->oneArray();
         //echo $antrian['loket'];
         echo $this->settings->get('anjungan.panggil_loket');
         break;
+
       case "antriloket":
         //$antrian = $this->db('antriloket')->oneArray();
         //$antrian = $antrian['antrian'] - 1;
@@ -951,11 +987,13 @@ class Site extends SiteModule
           echo $antrian;
         }
         break;
+
       case "cs":
         //$antrian = $this->db('antrics')->oneArray();
         //echo $antrian['loket'];
         echo $this->settings->get('anjungan.panggil_cs');
         break;
+
       case "antrics":
         //$antrian = $this->db('antrics')->oneArray();
         //$antrian = $antrian['antrian'] - 1;
@@ -966,6 +1004,7 @@ class Site extends SiteModule
           echo $antrian;
         }
         break;
+
       case "get-skdp":
         if (!empty($_POST['no_rkm_medis'])) {
           $data = array();
@@ -1018,18 +1057,23 @@ class Site extends SiteModule
             $tentukan_hari = date('D', strtotime($tanggal));
             $day = array('Sun' => 'AKHAD', 'Mon' => 'SENIN', 'Tue' => 'SELASA', 'Wed' => 'RABU', 'Thu' => 'KAMIS', 'Fri' => 'JUMAT', 'Sat' => 'SABTU');
             $hari = $day[$tentukan_hari];
-            $query = $this->db('jadwal')
-              ->select(['kd_poli' => 'jadwal.kd_poli'])
-              ->select(['nm_poli' => 'poliklinik.nm_poli'])
-              ->select(['jam_mulai' => 'jadwal.jam_mulai'])
-              ->select(['jam_selesai' => 'jadwal.jam_selesai'])
-              ->join('poliklinik', 'poliklinik.kd_poli = jadwal.kd_poli')
-              ->join('dokter', 'dokter.kd_dokter = jadwal.kd_dokter')
-              ->like('jadwal.hari_kerja', $hari)
-              ->toArray();
-            if (!empty($query)) {
+
+            $strQuery = "SELECT * FROM poliklinik WHERE kd_poli IN (SELECT DISTINCT kd_poli FROM jadwal WHERE hari_kerja LIKE '$hari')";
+            $query = $this->db()->pdo()->prepare($strQuery);
+            $query->execute();
+            $rows = $query->fetchAll(\PDO::FETCH_ASSOC);
+            // $query = $this->db('jadwal')
+            //   ->select(['kd_poli' => 'jadwal.kd_poli'])
+            //   ->select(['nm_poli' => 'poliklinik.nm_poli'])
+            //   ->select(['jam_mulai' => 'jadwal.jam_mulai'])
+            //   ->select(['jam_selesai' => 'jadwal.jam_selesai'])
+            //   ->join('poliklinik', 'poliklinik.kd_poli = jadwal.kd_poli')
+            //   ->join('dokter', 'dokter.kd_dokter = jadwal.kd_dokter')
+            //   ->like('jadwal.hari_kerja', $hari)
+            //   ->toArray();
+            if (!empty($rows)) {
               $data['status'] = 'ok';
-              $data['result'] = $query;
+              $data['result'] = $rows;
             } else {
               $data['status'] = 'err';
               $data['result'] = '';
@@ -1038,6 +1082,7 @@ class Site extends SiteModule
           }
         }
         break;
+
       case "get-dokter":
         if (!empty($_POST['kd_poli'])) {
           $tanggal = $_POST['tgl_registrasi'];
@@ -1084,6 +1129,7 @@ class Site extends SiteModule
           }
         }
         break;
+
       case "get-namapoli":
         //$_POST['kd_poli'] = 'INT';
         if (!empty($_POST['kd_poli'])) {
@@ -1099,6 +1145,7 @@ class Site extends SiteModule
           echo json_encode($data);
         }
         break;
+
       case "get-namadokter":
         //$_POST['kd_dokter'] = 'DR001';
         if (!empty($_POST['kd_dokter'])) {
@@ -1114,8 +1161,10 @@ class Site extends SiteModule
           echo json_encode($data);
         }
         break;
+
       case "post-registrasi":
         if (!empty($_POST['no_rkm_medis'])) {
+
           $data = array();
           $date = date('Y-m-d');
 
@@ -1163,10 +1212,11 @@ class Site extends SiteModule
               $sttsumur = "Hr";
             }
           }
+
           $_POST['umurdaftar'] = $umur;
           $_POST['sttsumur'] = $sttsumur;
           $_POST['status_lanjut']   = 'Ralan';
-          $_POST['kd_pj']           = $this->settings->get('anjungan.carabayar_umum');
+          // $_POST['kd_pj']           = $this->settings->get('anjungan.carabayar_umum');
           $_POST['status_bayar']    = 'Belum Bayar';
           $_POST['no_rawat'] = $this->core->setNoRawat($date);
           $_POST['jam_reg'] = date('H:i:s');
@@ -1198,7 +1248,7 @@ class Site extends SiteModule
             $data['result'] = $result;
           } else {
             $data['status'] = 'err';
-            $data['result'] = '';
+            $data['result'] = 'Registrasi gagal.';
           }
           echo json_encode($data);
         }
@@ -1684,7 +1734,7 @@ class Site extends SiteModule
     $data = json_encode($data);
 
     $url = $this->api_url . 'SEP/1.1/insert';
-    $output = BpjsService::post($url, $data, $this->consid, $this->secretkey);
+    $output = BpjsService::post($url, $data, $this->consid, $this->secretkey, $this->user_key);
     $data = json_decode($output, true);
 
     if ($data == NULL) {

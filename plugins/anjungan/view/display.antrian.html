@@ -287,7 +287,7 @@
               <div class="form-row">
                 <div class="col form-group">
                   <label>Cara Bayar</label>
-                  <select class="form-control" name="kd_pj" id="kdpj">
+                  <select class="form-control" name="kd_pj" id="kd_pj">
                     <option value="" selected >Pilih Cara Bayar</option>
                     {loop: $penjab}
                     <option value="{$value.kd_pj}">{$value.png_jawab}</option>
@@ -318,28 +318,23 @@
             <div class="tab-pane fade" id="reviewPrint" role="tabpanel">
               <h4>Cetak Bukti Daftar</h4>
               <div style="width: 200px; font-family: Tahoma; margin: 0 auto; font-size: 11px !important;">
-
-
-                      <div class="block-header">
-                          <div style="font-size:12px; font-weight: bold; text-align: center;">
-                            {$settings.nama_instansi}<br>
-                            {$settings.alamat}<br>
-                            {$settings.nomor_telepon}<br>
-                          <hr>
-                          BUKTI PENDAFTARAN<br>
-                          ANJUNGAN PASIEN MANDIRI<br>
-                          </div>
+                  <div class="block-header">
+                      <div style="font-size:12px; font-weight: bold; text-align: center;">
+                        {$settings.nama_instansi}<br>
+                        {$settings.alamat}<br>
+                        {$settings.nomor_telepon}<br>
+                      <hr>
+                      BUKTI PENDAFTARAN<br>
+                      ANJUNGAN PASIEN MANDIRI<br>
                       </div>
-
-
-
+                  </div>
+              </div>
               <hr>
-              <div style="width: 50px; display: inline-block;">Tanggal</div>: <span id="tgl_registrasi_cetak"></span><br>
-              <div style="width: 50px; display: inline-block;">No. RM</div>: <span id="no_rkm_medis_cetak"></span><br>
-              <div style="width: 50px; display: inline-block;">Nama</div>: <span id="nm_pasien_cetak"></span><br>
-              <div style="width: 50px; display: inline-block;">Klinik</div>: <span id="nm_poli_cetak"></span><br>
-              <div style="width: 50px; display: inline-block;">Dokter</div>: <span id="nm_dokter_cetak"></span><br>
-
+              <div style="width: 70px; display: inline-block;">Tanggal</div>: <span id="tgl_registrasi_cetak"></span><br>
+              <div style="width: 70px; display: inline-block;">No. RM</div>: <span id="no_rkm_medis_cetak"></span><br>
+              <div style="width: 70px; display: inline-block;">Nama</div>: <span id="nm_pasien_cetak"></span><br>
+              <div style="width: 70px; display: inline-block;">Klinik</div>: <span id="nm_poli_cetak"></span><br>
+              <div style="width: 70px; display: inline-block;">Dokter</div>: <span id="nm_dokter_cetak"></span><br>
               <div style="text-align: center;">
                 <hr>
                 Terima Kasih Atas kepercayaan Anda.<br>
@@ -350,42 +345,43 @@
 
               <div id="printDaftar" style="display: none;" class="cetak">
                 <section style="margin: 20px; width: 170px; font-family: Tahoma; font-size: 11px !important;">
-                <div class="block-header">
-                    <div style="font-size:12px; font-weight: bold; text-align: center;">
-                      {$settings.nama_instansi}<br>
-                      {$settings.alamat}<br>
-                      {$settings.nomor_telepon}<br>
-                    <hr>
-                    BUKTI PENDAFTARAN<br>
-                    ANJUNGAN PASIEN MANDIRI<br>
-                    </div>
-                </div>
-                <br>
-                <div style="width: 50px; display: inline-block;">Tanggal </div>:<span id="tgl_registrasi_final"></span><br>
-                <div style="width: 50px; display: inline-block;">Antrian </div>: <span id="no_reg_final"></span><br>
-                <div style="width: 50px; display: inline-block;">Nama </div>: <span id="nm_pasien_final"></span><br>
-                <div style="width: 50px; display: inline-block;">No. RM </div>: <span id="no_rkm_medis_final"></span><br>
-                <div style="width: 50px; display: inline-block;">Alamat </div>: <span id="alamat_final"></span><br>
-                <div style="width: 50px; display: inline-block;">Ruang </div>: <span id="nm_poli_final"></span><br>
-                <div style="width: 50px; display: inline-block;">Dokter </div>: <span id="nm_dokter_final"></span><br>
-                <div style="width: 50px; display: inline-block;">Cara Bayar </div>: <span id="cara_bayar_final"></span><br>
+                  <div class="block-header">
+                      <div style="font-size:12px; font-weight: bold; text-align: center;">
+                        {$settings.nama_instansi}<br>
+                        {$settings.alamat}<br>
+                        {$settings.nomor_telepon}<br>
+                      <hr>
+                      BUKTI PENDAFTARAN<br>
+                      ANJUNGAN PASIEN MANDIRI<br>
+                      </div>
+                  </div>
+                  <br>
+                  <div style="width: 70px; display: inline-block;">Tanggal </div>:<span id="tgl_registrasi_final"></span><br>
+                  <div style="width: 70px; display: inline-block;">Antrian </div>: <span id="no_reg_final"></span><br>
+                  <div style="width: 70px; display: inline-block;">Nama </div>: <span id="nm_pasien_final"></span><br>
+                  <div style="width: 70px; display: inline-block;">No. RM </div>: <span id="no_rkm_medis_final"></span><br>
+                  <div style="width: 70px; display: inline-block;">Alamat </div>: <span id="alamat_final"></span><br>
+                  <div style="width: 70px; display: inline-block;">Ruang </div>: <span id="nm_poli_final"></span><br>
+                  <div style="width: 70px; display: inline-block;">Dokter </div>: <span id="nm_dokter_final"></span><br>
+                  <div style="width: 70px; display: inline-block;">Cara Bayar </div>: <span id="cara_bayar_final"></span><br>
 
-              <div style="text-align: center;">
-                <hr>
-                Terima Kasih Atas kepercayaan Anda.<br>
-                Bawalah kartu Berobat anda dan datang 30 menit sebelumnya.<br>
-                <hr>
-                Bawalah surat rujukan atau surat kontrol asli dan tunjukkan pada petugas di Lobby resepsionis.<br><br>
-              </div>
-              </section>
+                  <div style="text-align: center;">
+                    <hr>
+                    Terima Kasih Atas kepercayaan Anda.<br>
+                    Bawalah kartu Berobat anda dan datang 30 menit sebelumnya.<br>
+                    <hr>
+                    Bawalah surat rujukan atau surat kontrol asli dan tunjukkan pada petugas di Lobby resepsionis.<br><br>
+                  </div>
+                </section>
               </div>
               <button class="btn btn-primary btn-block" onclick="printDiv('printDaftar');">Cetak</button>
-              </div>
             </div>
           </div>
+        
           <div class="progress mt-5">
             <div class="progress-bar" role="progressbar" style="width: 35%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">Step 1 of 3</div>
           </div>
+
         </div>
 
         <div class="modal-footer">
@@ -580,7 +576,7 @@
           success:function(data){
             if(data.status == 'ok'){
               $("#pilih_poli_daftar").empty();
-              var div_data = '<option value="">Pilih Poli</option>';
+              var div_data = '<option value="" disabled selected="true">Pilih Poli</option>';
               $.each(data.result,function(i,data) {
                 div_data +="<option value="+data.kd_poli+">"+data.nm_poli+"</option>";
               });
@@ -630,6 +626,7 @@
       var tgl_registrasi_daftar = $('#tgl_registrasi_daftar').val();
       var kd_poli_daftar = $('#pilih_poli_daftar').val();
       var kd_dokter_daftar = $('#pilih_dokter_daftar').val();
+      var kd_pj = $('#kd_pj').val();
 
       $('#no_rkm_medis_cetak').text(no_rkm_medis_daftar);
       $('#nm_pasien_cetak').text(nm_pasien_daftar);
@@ -649,7 +646,7 @@
            if(data.status == 'ok'){
              $('#nm_poli_cetak').text(data.result.nm_poli);
            } else {
-             alert('error');
+            console.log("Error get nama poli.");
            }
          }
       });
@@ -665,7 +662,7 @@
            if(data.status == 'ok'){
              $('#nm_dokter_cetak').text(data.result.nm_dokter);
            } else {
-             alert('error');
+            console.log("Error get nama dokter.");
            }
          }
       });
@@ -678,21 +675,32 @@
               no_rkm_medis:no_rkm_medis_daftar,
               tgl_registrasi:tgl_registrasi_daftar,
               kd_poli:kd_poli_daftar,
-              kd_dokter:kd_dokter_daftar
+              kd_dokter:kd_dokter_daftar,
+              kd_pj:kd_pj
           },
          success:function(data){
            if(data.status == 'ok'){
-             $('#tgl_registrasi_final').text(data.result.tgl_registrasi);
-             $('#jam_reg_final').text(data.result.jam_reg);
-             $('#no_reg_final').text(data.result.no_reg);
-             $('#nm_pasien_final').text(data.result.nm_pasien);
-             $('#no_rkm_medis_final').text(data.result.no_rkm_medis);
-             $('#alamat_final').text(data.result.alamat);
-             $('#nm_dokter_final').text(data.result.nm_dokter);
-             $('#nm_poli_final').text(data.result.nm_poli);
-             $('#cara_bayar_final').text(data.result.png_jawab);
+              console.log("status OK");
+              console.log("data.result.tgl_registrasi " + data.result.tgl_registrasi);
+              console.log("data.result.jam_reg " + data.result.jam_reg);
+              console.log("data.result.no_reg " + data.result.no_reg);
+              console.log("data.result.nm_pasien " + data.result.nm_pasien);
+              console.log("data.result.alamat " + data.result.alamat);
+              console.log("data.result.nm_dokter " + data.result.nm_dokter);
+              console.log("data.result.nm_poli " + data.result.nm_poli);
+              console.log("data.result.png_jawab " + data.result.png_jawab);
+
+              $('#tgl_registrasi_final').text(data.result.tgl_registrasi);
+              $('#jam_reg_final').text(data.result.jam_reg);
+              $('#no_reg_final').text(data.result.no_reg);
+              $('#nm_pasien_final').text(data.result.nm_pasien);
+              $('#no_rkm_medis_final').text(data.result.no_rkm_medis);
+              $('#alamat_final').text(data.result.alamat);
+              $('#nm_dokter_final').text(data.result.nm_dokter);
+              $('#nm_poli_final').text(data.result.nm_poli);
+              $('#cara_bayar_final').text(data.result.png_jawab);
            } else {
-             alert('error');
+              console.log("Error saving data.");
            }
          }
       });

@@ -1,6 +1,6 @@
 Khanza Lite Change log
 
-18/01/2022
+01/18/2022
 - admin.php (plugins/dashboard/Admin.php)
     line 48-51
         Mengganti parameter pegawai ID dengan pegawai NIK untuk mendapatkan waktu shift
@@ -11,7 +11,7 @@ Khanza Lite Change log
     line 184
         Menghapus parameter $jadwaltambahan karena masih belum dibutuhkan (tabel masih kosong)
 
-19/01/2022
+01/19/2022
 - main.html (plugins/dashboard/view/admin/main.html)
     line 144 && line 152-153
         Menambahkan informasi waktu check in & check out
@@ -34,7 +34,7 @@ Khanza Lite Change log
     function getDisplayAPM
         Menambahkan where clause pada variable $penjab
 
-20/01/2022
+01/20/2022
 - main.html (plugins/dashboard/view/admin/main.html)
     Menambahkan label dan textarea untuk alasan keterlambatan/pulang sebelum waktunya
     Menambahkan fungsi JS untuk show/hide form alasan
@@ -42,3 +42,23 @@ Khanza Lite Change log
 - admin.php (plugins/dashboard/Admin.php)
     Menambahkan code untuk menyimpan alasan ke dalam DB
     PS: untuk sementara, saya menggunakan kolom Photo di tabel temporary_presensi untuk menyimpan alasan. Mohon dipikirkan kembali jika webcam diaktifkan. Ehe..
+
+01/24/2022
+- DB table mlite_settings
+    Update data (
+        module => anjungan
+        field => display_poli
+        value => AKP,ANA,AND,ANT,APT,BDA,BDM,BDP,BED,BSY,BTK,GER,GIG,GIZ,GND,GOR,GPR,GRD,HDL,INT,IRM,JAN,JIW,KDK,KDN,KDO,KDP,KEMO,KLT,KON,KOR,MAT,OBG,ORT,PAR,PNM,SAR,THT,UGD,VCT
+    )
+    Untuk memunculkan poli pada menu Anjungan->Antrian Poliklinik
+
+01/25/2022
+- site.php (plugins/anjungan/Site.php)
+    Menambahkan pengecekan nomor antrian pada Function getAjax() 
+    Mengganti format query menjadi prepare query (menulis query secara manual) untuk mengambil kode dan nama poli dengan cara DISTINCT pada Function getAjax(), case get-poli
+    Nilai $_POST['kd_pj'] diambil dari display.antrian.html, sebelumnya dari fungsi '$this->settings->get('anjungan.carabayar_umum')' 
+
+- display.antrian.html (plugins/dashboard/view/display.antrian.html)
+    Menambahkan kd_pj di #finish
+
+
