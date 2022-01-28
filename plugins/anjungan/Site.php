@@ -404,6 +404,18 @@ class Site extends SiteModule
     $_username = $this->core->getUserInfo('fullname', null, true);
     $tanggal       = getDayIndonesia(date('Y-m-d')) . ', ' . dateIndonesia(date('Y-m-d'));
     $username      = !empty($_username) ? $_username : $this->core->getUserInfo('username');
+    $loket = explode(",", $this->settings->get('anjungan.antrian_loket'));
+    $data_loket = array();
+
+    foreach ($loket as $l) {
+      $loket_antrian_query = $this->db('mlite_antrian_loket')->select('noantrian')->where('loket', $l)->where('postdate', date('Y-m-d'))->oneArray();
+      if (!empty($loket_antrian_query['noantrian'])) {
+        $loket_antrian = $loket_antrian_query['noantrian'];
+      } else {
+        $loket_antrian = '-';
+      }
+      $data_loket[] = array('loket' => $l, 'noantrian' => $loket_antrian);
+    }
 
     $show = isset($_GET['show']) ? $_GET['show'] : "";
     switch ($show) {
@@ -416,6 +428,7 @@ class Site extends SiteModule
           'username' => $username,
           'tanggal' => $tanggal,
           'show' => $show,
+          'loket' => $data_loket,
           'vidio' => $this->settings->get('anjungan.vidio'),
           'running_text' => $this->settings->get('anjungan.text_loket'),
           'display' => $display
@@ -430,13 +443,13 @@ class Site extends SiteModule
         $username      = !empty($_username) ? $_username : $this->core->getUserInfo('username');
 
         $setting_antrian_loket = str_replace(",", "','", $this->settings->get('anjungan.antrian_loket'));
-        $loket = explode(",", $this->settings->get('anjungan.antrian_loket'));
         $get_antrian = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'Loket')->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
         $noantrian = 0;
         if (!empty($get_antrian['noantrian'])) {
           $noantrian = $get_antrian['noantrian'];
+        } else {
+          $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_loket_nomor')->save(['value' => 1]);
         }
-
         //$antriloket = $this->db('antriloket')->oneArray();
         //$tcounter = $antriloket['antrian'];
         $antriloket = $this->settings->get('anjungan.panggil_loket_nomor');
@@ -446,11 +459,16 @@ class Site extends SiteModule
           $_tcounter = $tcounter + 1;
         }
         if (isset($_GET['loket'])) {
+          $curr_loket = $_GET['loket'];
           $this->db('mlite_antrian_loket')
             ->where('type', 'Loket')
             ->where('noantrian', $tcounter)
             ->where('postdate', date('Y-m-d'))
-            ->save(['end_time' => date('H:i:s')]);
+            ->save([
+              'end_time' => date('H:i:s'),
+              'loket' => $curr_loket,
+              'status' => 1
+            ]);
           /*$this->db()->pdo()->exec("DELETE FROM `antriloket`");
               $this->db('antriloket')->save([
                 'loket' => $_GET['loket'],
@@ -467,6 +485,11 @@ class Site extends SiteModule
               ]);*/
           $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_loket')->save(['value' => $_GET['reset']]);
           $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_loket_nomor')->save(['value' => $_GET['antrian']]);
+        }
+        if (isset($_GET['no_loket'])) {
+          $no_loket = $_GET['no_loket'];
+        } else {
+          $no_loket = $_GET['loket'];
         }
         $hitung_antrian = $this->db('mlite_antrian_loket')
           ->where('type', 'Loket')
@@ -486,6 +509,7 @@ class Site extends SiteModule
           'tanggal' => $tanggal,
           'show' => $show,
           'loket' => $loket,
+          'no_loket' => $no_loket,
           'namaloket' => 'a',
           'panggil_loket' => 'panggil_loket',
           'antrian' => $tcounter,
@@ -709,7 +733,7 @@ class Site extends SiteModule
     $res = [];
 
     $date = date('Y-m-d');
-    $sql = $this->db()->pdo()->prepare("SELECT * FROM mlite_antrian_loket WHERE status = 1 AND postdate = '$date' ORDER BY noantrian ASC");
+    $sql = $this->db()->pdo()->prepare("SELECT * FROM mlite_antrian_loket WHERE status = 1 AND postdate = '$date' ORDER BY CAST(noantrian as int) ASC");
     $sql->execute();
     $data = $sql->fetchAll(\PDO::FETCH_OBJ);
     if ($data) {
@@ -733,16 +757,20 @@ class Site extends SiteModule
       $terbilang = strtolower(terbilang($data[0]->noantrian));
       $loket = strtolower(terbilang($data[0]->loket));
       $text = "antrian $kode $terbilang counter $loket";
-
       $res = [
-        'id' => $data[0]->kd,
         'status' => true,
-        'type' => $data[0]->type,
-        'kode' => $kode,
-        'noantrian' => $data[0]->noantrian,
-        'loket' => $data[0]->loket,
-        'panggil' => explode(" ", $text)
+        'data_loket' => $data
       ];
+      // $res = [
+      //   'id' => $data[0]->kd,
+      //   'status' => true,
+      //   'type' => $data[0]->type,
+      //   'kode' => $kode,
+      //   'noantrian' => $data[0]->noantrian,
+      //   'loket' => $data[0]->loket,
+      //   'no_loket' => $data[0]->loket,
+      //   'panggil' => explode(" ", $text)
+      // ];
     } else {
       $res = [
         'status' => false

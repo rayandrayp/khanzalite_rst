@@ -61,4 +61,12 @@ Khanza Lite Change log
 - display.antrian.html (plugins/dashboard/view/display.antrian.html)
     Menambahkan kd_pj di #finish
 
-
+01/28/2022
+- site.php (plugins/anjungan/Site.php)
+    Fungsi 'case : panggil_loket
+    Banyak lah, pokoknya terkait antrean online
+    
+- display.antrian.html (plugins/dashboard/view/display.antrian.html)
+    Ganti fungsi JS ke setInterval 1000 untuk refresh loket antrian
+    Ubah layout display loket antrian
+    Banyak lah, pokoknya terkait antrean online
