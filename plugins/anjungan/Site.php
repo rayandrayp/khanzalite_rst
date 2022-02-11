@@ -29,6 +29,8 @@ class Site extends SiteModule
     $this->route('anjungan/display/poli/(:str)', 'getDisplayAntrianPoliDisplay');
     $this->route('anjungan/display/poli/(:str)/(:str)', 'getDisplayAntrianPoliDisplay');
     $this->route('anjungan/laboratorium', 'getDisplayAntrianLaboratorium');
+    $this->route('anjungan/farmasi', 'getDisplayAntrianFarmasi');
+    $this->route('anjungan/farmasi-console', 'getDisplayConsoleFarmasi');
     $this->route('anjungan/apotek', 'getDisplayAntrianApotek');
     $this->route('anjungan/ajax', 'getAjax');
     $this->route('anjungan/panggilantrian', 'getPanggilAntrian');
@@ -660,6 +662,231 @@ class Site extends SiteModule
 
     return $rows;
   }
+  public function getDisplayConsoleFarmasi()
+  {
+    $title = 'Display Antrian Poliklinik';
+    $logo  = $this->settings->get('settings.logo');
+    $poliklinik = $this->db('poliklinik')->toArray();
+    $penjab = $this->db('penjab')->where('status', '1')->toArray();
+
+    $_username = $this->core->getUserInfo('fullname', null, true);
+    $tanggal       = getDayIndonesia(date('Y-m-d')) . ', ' . dateIndonesia(date('Y-m-d'));
+    $username      = !empty($_username) ? $_username : $this->core->getUserInfo('username');
+
+    $content = $this->draw('display.antrian.farmasi.console.html', [
+      'title' => $title,
+      'logo' => $logo,
+      'powered' => 'Powered by <a href="https://basoro.org/">KhanzaLITE</a>',
+      'username' => $username,
+      'tanggal' => $tanggal,
+      'running_text' => $this->settings->get('anjungan.text_anjungan'),
+      'poliklinik' => $poliklinik,
+      'penjab' => $penjab
+    ]);
+
+    $assign = [
+      'title' => $this->settings->get('settings.nama_instansi'),
+      'desc' => $this->settings->get('settings.alamat'),
+      'content' => $content
+    ];
+
+    $this->setTemplate("canvas.html");
+
+    $this->tpl->set('page', ['title' => $assign['title'], 'desc' => $assign['desc'], 'content' => $assign['content']]);
+  }
+  public function getDisplayAntrianFarmasi()
+  {
+    $title = 'Display Antrian Farmasi';
+    $logo  = $this->settings->get('settings.logo');
+    $display = '';
+
+    $_username = $this->core->getUserInfo('fullname', null, true);
+    $tanggal       = getDayIndonesia(date('Y-m-d')) . ', ' . dateIndonesia(date('Y-m-d'));
+    $username      = !empty($_username) ? $_username : $this->core->getUserInfo('username');
+
+    $show = isset($_GET['show']) ? $_GET['show'] : "";
+    switch ($show) {
+      default:
+        $display = 'Depan';
+        $content = $this->draw('display.antrian.farmasi.html', [
+          'title' => $title,
+          'logo' => $logo,
+          'powered' => 'Powered by <a href="https://basoro.org/">KhanzaLITE</a>',
+          'username' => $username,
+          'tanggal' => $tanggal,
+          'show' => $show,
+          'vidio' => $this->settings->get('anjungan.vidio'),
+          'running_text' => $this->settings->get('anjungan.text_loket'),
+          'display' => $display
+        ]);
+        break;
+
+      case "panggil_obat":
+        $display = 'Panggil Obat';
+
+        $_username = $this->core->getUserInfo('fullname', null, true);
+        $tanggal       = getDayIndonesia(date('Y-m-d')) . ', ' . dateIndonesia(date('Y-m-d'));
+        $username      = !empty($_username) ? $_username : $this->core->getUserInfo('username');
+
+        $setting_antrian_obat = str_replace(",", "','", $this->settings->get('anjungan.antrian_obat'));
+        $get_antrian = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'Obat')->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
+        $noantrian = 0;
+        if (!empty($get_antrian['noantrian'])) {
+          $noantrian = $get_antrian['noantrian'];
+        } else {
+          $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_obat_nomor')->save(['value' => 1]);
+        }
+        //$antriloket = $this->db('antriloket')->oneArray();
+        //$tcounter = $antriloket['antrian'];
+        $antriloket = $this->settings->get('anjungan.panggil_obat_nomor');
+        $tcounter = $antriloket;
+        $_tcounter = 1;
+        if (!empty($tcounter)) {
+          $_tcounter = $tcounter + 1;
+        }
+        if (isset($_GET['loket'])) {
+          $curr_loket = $_GET['loket'];
+          $this->db('mlite_antrian_loket')
+            ->where('type', 'Obat')
+            ->where('noantrian', $tcounter)
+            ->where('postdate', date('Y-m-d'))
+            ->save([
+              'end_time' => date('H:i:s'),
+              'loket' => $curr_loket,
+              'status' => 1
+            ]);
+          /*$this->db()->pdo()->exec("DELETE FROM `antriloket`");
+              $this->db('antriloket')->save([
+                'loket' => $_GET['loket'],
+                'antrian' => $_tcounter
+              ]);*/
+          $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_obat')->save(['value' => $_GET['loket']]);
+          $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_obat_nomor')->save(['value' => $_tcounter]);
+          redirect(url('anjungan/farmasi?show=panggil_obat'));
+        }
+        if (isset($_GET['antrian'])) {
+          /*$this->db()->pdo()->exec("DELETE FROM `antriloket`");
+              $this->db('antriloket')->save([
+                'loket' => $_GET['reset'],
+                'antrian' => $_GET['antrian']
+              ]);*/
+          $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_obat')->save(['value' => $_GET['reset']]);
+          $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_obat_nomor')->save(['value' => $_GET['antrian']]);
+          redirect(url('anjungan/farmasi?show=panggil_obat'));
+        }
+
+        $hitung_antrian = $this->db('mlite_antrian_loket')
+          ->where('type', 'Obat')
+          ->like('postdate', date('Y-m-d'))
+          ->toArray();
+        $counter = strlen($tcounter);
+        $xcounter = [];
+        for ($i = 0; $i < $counter; $i++) {
+          $xcounter[] = '<audio id="suarabel' . $i . '" src="{?=url()?}/plugins/anjungan/suara/' . substr($tcounter, $i, 1) . '.wav" ></audio>';
+        };
+
+        $content = $this->draw('display.antrian.farmasi.html', [
+          'title' => $title,
+          'logo' => $logo,
+          'powered' => 'Powered by <a href="https://basoro.org/">KhanzaLITE</a>',
+          'username' => $username,
+          'tanggal' => $tanggal,
+          'show' => $show,
+          'namaloket' => 'Obat',
+          'kodeloket' => 'A',
+          'panggil_loket' => 'panggil_obat',
+          'antrian' => $tcounter,
+          'hitung_antrian' => $hitung_antrian,
+          'xcounter' => $xcounter,
+          'noantrian' => $noantrian,
+          'display' => $display
+        ]);
+        break;
+
+      case "panggil_racikan":
+        $display = 'Panggil Racikan';
+        $loket = explode(",", $this->settings->get('anjungan.antrian_racikan'));
+        $get_antrian = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'Racikan')->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
+        $noantrian = 0;
+        if (!empty($get_antrian['noantrian'])) {
+          $noantrian = $get_antrian['noantrian'];
+        }
+
+        //$antriloket = $this->db('antrics')->oneArray();
+        //$tcounter = $antriloket['antrian'];
+        $antriloket = $this->settings->get('anjungan.panggil_racikan_nomor');
+        $tcounter = $antriloket;
+        $_tcounter = 1;
+        if (!empty($tcounter)) {
+          $_tcounter = $tcounter + 1;
+        }
+        if (isset($_GET['loket'])) {
+          $curr_loket = $_GET['loket'];
+          $this->db('mlite_antrian_loket')
+            ->where('type', 'Racikan')
+            ->where('noantrian', $tcounter)
+            ->where('postdate', date('Y-m-d'))
+            ->save([
+              'end_time' => date('H:i:s'),
+              'loket' => $curr_loket,
+              'status' => 1
+            ]);
+
+          $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_racikan')->save(['value' => $_GET['loket']]);
+          $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_racikan_nomor')->save(['value' => $_tcounter]);
+          redirect(url('anjungan/farmasi?show=panggil_racikan'));
+        }
+        if (isset($_GET['antrian'])) {
+          /*$this->db()->pdo()->exec("DELETE FROM `antrics`");
+              $this->db('antrics')->save([
+                'loket' => $_GET['reset'],
+                'antrian' => $_GET['antrian']
+              ]);*/
+          $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_racikan')->save(['value' => $_GET['reset']]);
+          $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_racikan_nomor')->save(['value' => $_GET['antrian']]);
+          redirect(url('anjungan/farmasi?show=panggil_racikan'));
+        }
+        $hitung_antrian = $this->db('mlite_antrian_loket')
+          ->where('type', 'Racikan')
+          ->like('postdate', date('Y-m-d'))
+          ->toArray();
+        $counter = strlen($tcounter);
+        $xcounter = [];
+        for ($i = 0; $i < $counter; $i++) {
+          $xcounter[] = '<audio id="suarabel' . $i . '" src="{?=url()?}/plugins/anjungan/suara/' . substr($tcounter, $i, 1) . '.wav" ></audio>';
+        };
+
+        $content = $this->draw('display.antrian.farmasi.html', [
+          'title' => $title,
+          'logo' => $logo,
+          'powered' => 'Powered by <a href="https://basoro.org/">KhanzaLITE</a>',
+          'username' => $username,
+          'tanggal' => $tanggal,
+          'show' => $show,
+          'namaloket' => 'Racikan',
+          'kodeloket' => 'B',
+          'panggil_loket' => 'panggil_racikan',
+          'antrian' => $tcounter,
+          'hitung_antrian' => $hitung_antrian,
+          'xcounter' => $xcounter,
+          'noantrian' => $noantrian,
+          'display' => $display
+        ]);
+        break;
+    }
+
+    $assign = [
+      'title' => $this->settings->get('settings.nama_instansi'),
+      'desc' => $this->settings->get('settings.alamat'),
+      'content' => $content
+    ];
+
+    $this->setTemplate("canvas.html");
+
+    $this->tpl->set('page', ['title' => $assign['title'], 'desc' => $assign['desc'], 'content' => $assign['content']]);
+
+    //exit();
+  }
 
   public function getDisplayAntrianApotek()
   {
@@ -983,7 +1210,7 @@ class Site extends SiteModule
             });
           })
         </script>
-<?php
+      <?php
         break;
 
       case "simpancs":
@@ -997,6 +1224,204 @@ class Site extends SiteModule
             'end_time' => '00:00:00'
           ]);
         //redirect(url('anjungan/pasien'));
+        break;
+
+      case "tampilobat":
+        $result = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'Obat')->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
+
+        if ($result) {
+          $noantrian = $result['noantrian'];
+        } else {
+          $noantrian = 0;
+        }
+
+        if ($noantrian > 0) {
+          $next_antrian = $noantrian + 1;
+        } else {
+          $next_antrian = 1;
+        }
+
+        echo '<div id="nomernya" align="center">';
+        echo '<h1 class="display-1">';
+        echo 'A' . $next_antrian;
+        echo '</h1>';
+        echo '[' . date('Y-m-d') . ']';
+        echo '</div>';
+        echo '<br>';
+        break;
+
+      case "printobat":
+        $result = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'Obat')->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
+
+        if ($result) {
+          $noantrian = $result['noantrian'];
+        } else {
+          $noantrian = 0;
+        }
+
+        if ($noantrian > 0) {
+          $next_antrian = $noantrian + 1;
+        } else {
+          $next_antrian = 1;
+        }
+        echo '<div id="nomernya" align="center">';
+        echo '<h1 class="display-1">';
+        echo 'A' . $next_antrian;
+        echo '</h1>';
+        echo '[' . date('Y-m-d') . ']';
+        echo '</div>';
+        echo '<br>';
+      ?>
+        <script>
+          $(document).ready(function() {
+            $("#btnKRMObat").on('click', function() {
+              $("#formobat").submit(function(e) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                $.ajax({
+                  url: "<?php echo url() . '/anjungan/ajax?show=simpanobat&noantrian=' . $next_antrian; ?>",
+                  type: "POST",
+                  data: $(this).serialize(),
+                  success: function(data) {
+                    setTimeout('$("#loading").hide()', 1000);
+                    //window.location.href = "{?=url('anjungan/pasien')?}";
+                  }
+                });
+                return false;
+              });
+            });
+          })
+        </script>
+      <?php
+        break;
+
+      case "simpanobat":
+        $this->db('mlite_antrian_loket')
+          ->save([
+            'kd' => NULL,
+            'type' => 'Obat',
+            'noantrian' => $_GET['noantrian'],
+            'postdate' => date('Y-m-d'),
+            'start_time' => date('H:i:s'),
+            'end_time' => '00:00:00'
+          ]);
+        //redirect(url('anjungan/pasien'));
+        break;
+
+      case "tampilracikan":
+        $result = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'Racikan')->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
+
+        if ($result) {
+          $noantrian = $result['noantrian'];
+        } else {
+          $noantrian = 0;
+        }
+
+        if ($noantrian > 0) {
+          $next_antrian = $noantrian + 1;
+        } else {
+          $next_antrian = 1;
+        }
+
+        echo '<div id="nomernya" align="center">';
+        echo '<h1 class="display-1">';
+        echo 'B' . $next_antrian;
+        echo '</h1>';
+        echo '[' . date('Y-m-d') . ']';
+        echo '</div>';
+        echo '<br>';
+        break;
+
+      case "printracikan":
+        $result = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'Racikan')->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
+
+        if ($result) {
+          $noantrian = $result['noantrian'];
+        } else {
+          $noantrian = 0;
+        }
+
+        if ($noantrian > 0) {
+          $next_antrian = $noantrian + 1;
+        } else {
+          $next_antrian = 1;
+        }
+        echo '<div id="nomernya" align="center">';
+        echo '<h1 class="display-1">';
+        echo 'B' . $next_antrian;
+        echo '</h1>';
+        echo '[' . date('Y-m-d') . ']';
+        echo '</div>';
+        echo '<br>';
+      ?>
+        <script>
+          $(document).ready(function() {
+            $("#btnKRMRacikan").on('click', function() {
+              $("#formracikan").submit(function(e) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                $.ajax({
+                  url: "<?php echo url() . '/anjungan/ajax?show=simpanracikan&noantrian=' . $next_antrian; ?>",
+                  type: "POST",
+                  data: $(this).serialize(),
+                  success: function(data) {
+                    setTimeout('$("#loading").hide()', 1000);
+                    //window.location.href = "{?=url('anjungan/pasien')?}";
+                  }
+                });
+                return false;
+              });
+            });
+          })
+        </script>
+<?php
+        break;
+
+      case "simpanracikan":
+        $this->db('mlite_antrian_loket')
+          ->save([
+            'kd' => NULL,
+            'type' => 'Racikan',
+            'noantrian' => $_GET['noantrian'],
+            'postdate' => date('Y-m-d'),
+            'start_time' => date('H:i:s'),
+            'end_time' => '00:00:00'
+          ]);
+        //redirect(url('anjungan/pasien'));
+        break;
+
+      case "obat":
+        //$antrian = $this->db('antriloket')->oneArray();
+        //echo $antrian['loket'];
+        echo $this->settings->get('anjungan.panggil_obat');
+        break;
+
+      case "antriobat":
+        //$antrian = $this->db('antriloket')->oneArray();
+        //$antrian = $antrian['antrian'] - 1;
+        $antrian = $this->settings->get('anjungan.panggil_obat_nomor') - 1;
+        if ($antrian == '-1') {
+          echo '0';
+        } else {
+          echo $antrian;
+        }
+        break;
+
+      case "racikan":
+        //$antrian = $this->db('antrics')->oneArray();
+        //echo $antrian['loket'];
+        echo $this->settings->get('anjungan.panggil_racikan');
+        break;
+
+      case "antriracikan":
+        //$antrian = $this->db('antrics')->oneArray();
+        //$antrian = $antrian['antrian'] - 1;
+        $antrian = $this->settings->get('anjungan.panggil_racikan_nomor') - 1;
+        if ($antrian == '-1') {
+          echo '0';
+        } else {
+          echo $antrian;
+        }
         break;
 
       case "loket":
@@ -1858,5 +2283,246 @@ class Site extends SiteModule
 
     echo $this->draw('cetak.sep.html', ['data_sep' => $data_sep]);
     exit();
+  }
+
+  //Begin code post data ke WS BPJS
+  public function updateJadwalDokter($kodepoli, $kodesubspesialis, $kodedokter, $hari, $buka, $tutup)
+  {
+    $request = '{
+                  "kodepoli": "' . $kodepoli . '",
+                  "kodesubspesialis": "' . $kodesubspesialis . '",
+                  "kodedokter": "' . $kodedokter . '",
+                  "jadwal": {
+                      "hari": "' . $hari . '",
+                      "buka": "' . $buka . '",
+                      "tutup": "' . $tutup . '"
+                    }
+                }';
+
+    return $request;
+  }
+
+  public function tambahAntrean(
+    $kodebooking,
+    $jenispasien,
+    $nomorkartu,
+    $nik,
+    $nohp,
+    $kodepoli,
+    $namapoli,
+    $pasienbaru,
+    $norm,
+    $tanggalperiksa,
+    $kodedokter,
+    $namadokter,
+    $jampraktek,
+    $jeniskunjungan,
+    $nomorreferensi,
+    $nomorantrean,
+    $angkaantrean,
+    $estimasidilayani,
+    $sisakuotajkn,
+    $kuotajkn,
+    $sisakuotanonjkn,
+    $kuotanonjkn,
+    $keterangan
+  ) {
+    $request = '{
+                    "kodebooking": "' . $kodebooking . '",
+                    "jenispasien": "' . $jenispasien . '",
+                    "nomorkartu": "' . $nomorkartu . '",
+                    "nik": "' . $nik . '",
+                    "nohp": "' . $nohp . '",
+                    "kodepoli": "' . $kodepoli . '",
+                    "namapoli": "' . $namapoli . '",
+                    "pasienbaru": ' . $pasienbaru . ',
+                    "norm": "' . $norm . '",
+                    "tanggalperiksa": "' . $tanggalperiksa . '",
+                    "kodedokter": ' . $kodedokter . ',
+                    "namadokter": "' . $namadokter . '",
+                    "jampraktek": "' . $jampraktek . '",
+                    "jeniskunjungan": ' . $jeniskunjungan . ',
+                    "nomorreferensi": "' . $nomorreferensi . '",
+                    "nomorantrean": "' . $nomorantrean . '",
+                    "angkaantrean": ' . $angkaantrean . ',
+                    "estimasidilayani": ' . $estimasidilayani . ',
+                    "sisakuotajkn": ' . $sisakuotajkn . ',
+                    "kuotajkn": ' . $kuotajkn . ',
+                    "sisakuotanonjkn": ' . $sisakuotanonjkn . ',
+                    "kuotanonjkn": ' . $kuotanonjkn . ',
+                    "keterangan": "' . $keterangan . '"
+                }';
+
+    return $request;
+  }
+
+  public function updateWaktuAntrean($kodebooking, $taskid)
+  {
+    $waktu = strtotime(date("Y-m-d h:i:s")) * 1000;
+    //   "taskid": {
+    //     1 (mulai waktu tunggu admisi), 
+    //     2 (akhir waktu tunggu admisi/mulai waktu layan admisi), 
+    //     3 (akhir waktu layan admisi/mulai waktu tunggu poli), 
+    //     4 (akhir waktu tunggu poli/mulai waktu layan poli),  
+    //     5 (akhir waktu layan poli/mulai waktu tunggu farmasi), 
+    //     6 (akhir waktu tunggu farmasi/mulai waktu layan farmasi membuat obat), 
+    //     7 (akhir waktu obat selesai dibuat),
+    //     99 (tidak hadir/batal)
+    // },
+    $request = '{
+                    "kodebooking": "' . $kodebooking . '",
+                    "taskid": ' . $taskid . ',
+                    "waktu": ' . $waktu . '
+                }';
+
+    return $request;
+  }
+
+  public function batalAntrean($kodebooking, $keterangan)
+  {
+    $request = '{
+                    "kodebooking": "' . $kodebooking . '",
+                    "keterangan": "' . $keterangan . '"
+                }';
+
+    return $request;
+  }
+  //end of WS BPJS
+
+  public function ambilAntrean($nomorkartu, $nik, $nohp, $kodepoli, $norm, $tanggalperiksa, $kodedokter, $jampraktek, $jeniskunjungan, $nomorreferensi)
+  {
+    $request = '{
+                  "nomorkartu": "' . $nomorkartu . '",
+                  "nik": "' . $nik . '",
+                  "nohp": "' . $nohp . '",
+                  "kodepoli": "' . $kodepoli . '",
+                  "norm": "' . $norm . '",
+                  "tanggalperiksa": "' . $tanggalperiksa . '",
+                  "kodedokter": "' . $kodedokter . '",
+                  "jampraktek": "' . $jampraktek . '",
+                  "jeniskunjungan": "' . $jeniskunjungan . '",
+                  "nomorreferensi": "' . $nomorreferensi . '"
+              }';
+
+    return $request;
+  }
+
+  public function getTokenWSRS()
+  {
+    $url = 'http://localhost/webapps/api-bpjsfktl/auth';
+    //$url = 'https://rssoepraoen.simkeskhanza.com/webapps/api-bpjsfktl/auth';
+    $header = array(
+      'x-username' => 'bridging_rstds',
+      'x-password' => 'RSTSoepraoen0341'
+    );
+
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_HEADER, true);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
+
+    $res = curl_exec($ch);
+    $result = file_get_contents($res);
+    $data = json_decode($result);
+    curl_close($ch);
+
+    return $data[0]->token;
+  }
+
+  public function sendDataWSRS($path, $data)
+  {
+    $token = $this->getTokenWSRS();
+    $username = "bridging_rstds";
+
+    //begin post data
+    // API URL
+    //$url = 'https://rssoepraoen.simkeskhanza.com/webapps/api-bpjsfktl/' . $path;
+    $url = 'http://localhost/webapps/api-bpjsfktl/' . $path;
+    // $payload = array(
+    //   'test' => 'data'
+    // );
+
+    $jsonData = urlencode(json_encode($data));
+
+    $header = array(
+      'x-token' => $token,
+      'x-username' => $username
+    );
+
+    $ch = curl_init($url);
+    // curl_setopt($ch, CURLOPT_VERBOSE, true);
+    // curl_setopt($ch, CURLOPT_STDERR, $fp);
+    // curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+    curl_setopt($ch, CURLOPT_HEADER, true);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonData);
+
+    $res = curl_exec($ch);
+    $result = file_get_contents($res);
+    $data = json_decode($result);
+    curl_close($ch);
+
+    return $data;
+  }
+
+  public function sendDataWSBPJS($path, $data)
+  {
+    $consid = "24722";
+    $secretKey = "2bF2C184BB";
+    $user_key = "39625d47ae7fc6c4db8d957ee4958fc5";
+
+    // Computes the timestamp
+    date_default_timezone_set('Asia/Jakarta');
+    $tStamp = strval(time() - strtotime('Y/m/d H:i:s'));
+    // Computes the signature by hashing the salt with the secret key as the key
+    $signature = hash_hmac('sha256', $consid . "&" . $tStamp, $secretKey, true);
+
+    // base64 encode
+    $encodedSignature = base64_encode($signature);
+
+    // urlencode
+    // $encodedSignature = urlencode($encodedSignature);
+
+    // echo "X-cons-id: " . $consid . " <br/> ";
+    // echo "X-timestamp:" . $tStamp . " <br/> ";
+    // echo "X-signature: " . $encodedSignature;
+
+    //begin post data
+    // API URL
+
+    $url = 'https://apijkn-dev.bpjs-kesehatan.go.id/antreanrs_dev/' . $path;
+    // $payload = array(
+    //   'test' => 'data'
+    // );
+
+    $jsonData = urlencode(json_encode($data));
+
+    $header = array(
+      'Content-Type:' => 'application/json',
+      'x-cons-id' => $consid,
+      'x-timestamp' => $tStamp,
+      'x-signature' => $encodedSignature,
+      'user_key' => $user_key
+    );
+
+    $ch = curl_init($url);
+    // curl_setopt($ch, CURLOPT_VERBOSE, true);
+    // curl_setopt($ch, CURLOPT_STDERR, $fp);
+    // curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+    curl_setopt($ch, CURLOPT_HEADER, true);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonData);
+
+    $res = curl_exec($ch);
+    $result = file_get_contents($res);
+    $data = json_decode($result);
+    curl_close($ch);
+
+    return $data;
   }
 }
