@@ -1273,9 +1273,6 @@ class Site extends SiteModule
         echo '<h1 class="display-1">';
         echo 'A' . $next_antrian;
         echo '</h1>';
-        echo '<h2 class="display-1">';
-        echo 'Kode Booking' . $_GET['kdbooking'];
-        echo '</h2>';
         echo '[' . date('Y-m-d') . ']';
         echo '</div>';
         echo '<br>';

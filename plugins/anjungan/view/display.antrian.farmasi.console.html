@@ -275,9 +275,10 @@
   })
 
   function printDiv(eleId){
-    var kdbooking = document.getElementById("kdbooking");
+    var kdbooking = document.getElementById("kdbooking").value;
+    console.log(kdbooking);
     var PW = window.open('', '_blank', 'Print content');
-    PW.document.write(document.getElementById(eleId).innerHTML);
+    PW.document.write(document.getElementById(eleId).innerHTML + '<br>Kode Booking: ' + kdbooking + '</p>');
     PW.document.close();
     PW.focus();
     PW.print();
