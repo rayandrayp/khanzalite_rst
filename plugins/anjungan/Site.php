@@ -744,6 +744,7 @@ class Site extends SiteModule
         if (!empty($tcounter)) {
           $_tcounter = $tcounter + 1;
         }
+        //if selesaikan nomor urut
         if (isset($_GET['loket'])) {
           $curr_loket = $_GET['loket'];
           $this->db('mlite_antrian_loket')
@@ -755,6 +756,8 @@ class Site extends SiteModule
               'loket' => $curr_loket,
               'status' => 1
             ]);
+          $kdbooking = $this->updateWaktuAntreanBPJS($_GET['kdbooking'],7);
+          $response = $this->sendDataWSBPJS('updatewaktu',$kdbooking);
           /*$this->db()->pdo()->exec("DELETE FROM `antriloket`");
               $this->db('antriloket')->save([
                 'loket' => $_GET['loket'],
@@ -795,7 +798,7 @@ class Site extends SiteModule
           'namaloket' => 'Obat',
           'kodeloket' => 'A',
           'panggil_loket' => 'panggil_obat',
-          'antrian' => $tcounter,
+          'antrian' => $tcounter - 1,
           'hitung_antrian' => $hitung_antrian,
           'xcounter' => $xcounter,
           'noantrian' => $noantrian,
@@ -831,7 +834,9 @@ class Site extends SiteModule
               'loket' => $curr_loket,
               'status' => 1
             ]);
-
+          $kdbooking = $this->updateWaktuAntreanBPJS($_GET['kdbooking'],7);
+          $response = $this->sendDataWSBPJS('updatewaktu',$kdbooking);
+          
           $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_racikan')->save(['value' => $_GET['loket']]);
           $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_racikan_nomor')->save(['value' => $_tcounter]);
           redirect(url('anjungan/farmasi?show=panggil_racikan'));
@@ -866,7 +871,7 @@ class Site extends SiteModule
           'namaloket' => 'Racikan',
           'kodeloket' => 'B',
           'panggil_loket' => 'panggil_racikan',
-          'antrian' => $tcounter,
+          'antrian' => $tcounter - 1,
           'hitung_antrian' => $hitung_antrian,
           'xcounter' => $xcounter,
           'noantrian' => $noantrian,
@@ -1268,6 +1273,9 @@ class Site extends SiteModule
         echo '<h1 class="display-1">';
         echo 'A' . $next_antrian;
         echo '</h1>';
+        echo '<h2 class="display-1">';
+        echo 'Kode Booking' . $_GET['kdbooking'];
+        echo '</h2>';
         echo '[' . date('Y-m-d') . ']';
         echo '</div>';
         echo '<br>';
@@ -2286,7 +2294,7 @@ class Site extends SiteModule
   }
 
   //Begin code post data ke WS BPJS
-  public function updateJadwalDokter($kodepoli, $kodesubspesialis, $kodedokter, $hari, $buka, $tutup)
+  public function updateJadwalDokterBPJS($kodepoli, $kodesubspesialis, $kodedokter, $hari, $buka, $tutup)
   {
     $request = '{
                   "kodepoli": "' . $kodepoli . '",
@@ -2302,7 +2310,7 @@ class Site extends SiteModule
     return $request;
   }
 
-  public function tambahAntrean(
+  public function tambahAntreanBPJS(
     $kodebooking,
     $jenispasien,
     $nomorkartu,
@@ -2356,7 +2364,7 @@ class Site extends SiteModule
     return $request;
   }
 
-  public function updateWaktuAntrean($kodebooking, $taskid)
+  public function updateWaktuAntreanBPJS($kodebooking, $taskid)
   {
     $waktu = strtotime(date("Y-m-d h:i:s")) * 1000;
     //   "taskid": {
@@ -2378,7 +2386,7 @@ class Site extends SiteModule
     return $request;
   }
 
-  public function batalAntrean($kodebooking, $keterangan)
+  public function batalAntreanBPJS($kodebooking, $keterangan)
   {
     $request = '{
                     "kodebooking": "' . $kodebooking . '",
@@ -2387,9 +2395,68 @@ class Site extends SiteModule
 
     return $request;
   }
+
+  public function sendDataWSBPJS($path, $data)
+  {
+    $consid = "24722";
+    $secretKey = "2bF2C184BB";
+    $user_key = "39625d47ae7fc6c4db8d957ee4958fc5";
+
+    // Computes the timestamp
+    date_default_timezone_set('Asia/Jakarta');
+    $tStamp = strval(time() - strtotime('Y/m/d H:i:s'));
+    // Computes the signature by hashing the salt with the secret key as the key
+    $signature = hash_hmac('sha256', $consid . "&" . $tStamp, $secretKey, true);
+
+    // base64 encode
+    $encodedSignature = base64_encode($signature);
+
+    // urlencode
+    // $encodedSignature = urlencode($encodedSignature);
+
+    // echo "X-cons-id: " . $consid . " <br/> ";
+    // echo "X-timestamp:" . $tStamp . " <br/> ";
+    // echo "X-signature: " . $encodedSignature;
+
+    //begin post data
+    // API URL
+
+    $url = 'https://apijkn-dev.bpjs-kesehatan.go.id/antreanrs_dev/' . $path;
+    // $payload = array(
+    //   'test' => 'data'
+    // );
+
+    $jsonData = urlencode(json_encode($data));
+
+    $header = array(
+      'Content-Type:' => 'application/json',
+      'x-cons-id' => $consid,
+      'x-timestamp' => $tStamp,
+      'x-signature' => $encodedSignature,
+      'user_key' => $user_key
+    );
+
+    $ch = curl_init($url);
+    // curl_setopt($ch, CURLOPT_VERBOSE, true);
+    // curl_setopt($ch, CURLOPT_STDERR, $fp);
+    // curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+    curl_setopt($ch, CURLOPT_HEADER, true);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonData);
+
+    $res = curl_exec($ch);
+    $result = file_get_contents($res);
+    $data = json_decode($result);
+    curl_close($ch);
+
+    return $data;
+  }
   //end of WS BPJS
 
-  public function ambilAntrean($nomorkartu, $nik, $nohp, $kodepoli, $norm, $tanggalperiksa, $kodedokter, $jampraktek, $jeniskunjungan, $nomorreferensi)
+  //start WS RS
+  public function ambilAntreanRS($nomorkartu, $nik, $nohp, $kodepoli, $norm, $tanggalperiksa, $kodedokter, $jampraktek, $jeniskunjungan, $nomorreferensi)
   {
     $request = '{
                   "nomorkartu": "' . $nomorkartu . '",
@@ -2407,6 +2474,26 @@ class Site extends SiteModule
     return $request;
   }
 
+  public function checkinAntreanRS ($kodebooking)
+  {
+    $waktu = strtotime(date("Y-m-d h:i:s")) * 1000;
+    $request = '{
+                  "kodebooking": "' . $kodebooking . '",
+                  "waktu": ' . $waktu . '
+              }';
+
+    return $request;
+  }
+
+  public function batalAntreanRS ($kodebooking, $keterangan)
+  {
+    $request = '{
+                  "kodebooking": "' . $kodebooking . '",
+                  "keterangan": ' . $keterangan . '
+              }';
+
+    return $request;
+  }
   public function getTokenWSRS()
   {
     $url = 'http://localhost/webapps/api-bpjsfktl/auth';
@@ -2448,64 +2535,6 @@ class Site extends SiteModule
     $header = array(
       'x-token' => $token,
       'x-username' => $username
-    );
-
-    $ch = curl_init($url);
-    // curl_setopt($ch, CURLOPT_VERBOSE, true);
-    // curl_setopt($ch, CURLOPT_STDERR, $fp);
-    // curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
-    curl_setopt($ch, CURLOPT_HEADER, true);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
-    curl_setopt($ch, CURLOPT_POST, 1);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonData);
-
-    $res = curl_exec($ch);
-    $result = file_get_contents($res);
-    $data = json_decode($result);
-    curl_close($ch);
-
-    return $data;
-  }
-
-  public function sendDataWSBPJS($path, $data)
-  {
-    $consid = "24722";
-    $secretKey = "2bF2C184BB";
-    $user_key = "39625d47ae7fc6c4db8d957ee4958fc5";
-
-    // Computes the timestamp
-    date_default_timezone_set('Asia/Jakarta');
-    $tStamp = strval(time() - strtotime('Y/m/d H:i:s'));
-    // Computes the signature by hashing the salt with the secret key as the key
-    $signature = hash_hmac('sha256', $consid . "&" . $tStamp, $secretKey, true);
-
-    // base64 encode
-    $encodedSignature = base64_encode($signature);
-
-    // urlencode
-    // $encodedSignature = urlencode($encodedSignature);
-
-    // echo "X-cons-id: " . $consid . " <br/> ";
-    // echo "X-timestamp:" . $tStamp . " <br/> ";
-    // echo "X-signature: " . $encodedSignature;
-
-    //begin post data
-    // API URL
-
-    $url = 'https://apijkn-dev.bpjs-kesehatan.go.id/antreanrs_dev/' . $path;
-    // $payload = array(
-    //   'test' => 'data'
-    // );
-
-    $jsonData = urlencode(json_encode($data));
-
-    $header = array(
-      'Content-Type:' => 'application/json',
-      'x-cons-id' => $consid,
-      'x-timestamp' => $tStamp,
-      'x-signature' => $encodedSignature,
-      'user_key' => $user_key
     );
 
     $ch = curl_init($url);

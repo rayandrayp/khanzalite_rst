@@ -210,16 +210,39 @@
             </div>
             <div class="panel-footer">
               <div class="btn-group btn-group-justified">
-                <a href="#" class="btn btn-primary" style="font-size:32px;">{$noantrian}</a>
-                <a href="#" class="btn btn-primary" style="font-size:32px;" onclick="panggil({$antrian})"><i class="fa fa-bullhorn"></i></a>
-                {if: $antrian > $noantrian}
-                <a  class="btn btn-primary" disabled="disabled"
-                  style="font-size:32px;"><i class="fa fa-forward"></i></a>
-                {else}
-                <a href="{?=url()?}/anjungan/farmasi?show={$panggil_loket}&loket={$namaloket}" class="btn btn-primary"
-                  style="font-size:32px;"><i class="fa fa-forward"></i></a>
-                {/if}
-                
+                <a href="#" class="btn btn-primary" style="font-size:32px;"><p style="font-size:15px;">Sisa Antrean {$noantrian}</p></a>
+                <a href="#" class="btn btn-primary" style="font-size:32px;" onclick="panggil({$antrian})"><p style="font-size:15px;">Panggil Ulang <i class="fa fa-bullhorn"></i></p></a>
+              </div>
+              <br>
+
+              <div class="btn-group btn-group-justified">
+                <a href="#" class="btn btn-warning" style="font-size:32px;"><p style="font-size:15px;">Lewati <i class="fa fa-pause"></i></p></a>
+                <a href="{?=url()?}/anjungan/farmasi?show={$panggil_loket}&loket={$namaloket}" class="btn btn-danger"
+                  style="font-size:32px;"><p style="font-size:15px;">Batal <i class="fa fa-times"></i></p></a>
+              </div>
+              <br>
+
+              <div class="row" style="padding-left: 15px; padding-right: 15px;">
+                <form action="{?=url()?}/anjungan/farmasi?show={$panggil_loket}&loket={$namaloket}" method="GET">
+                  <div class="input-group input-group-lg">
+                    <input type="text" class="form-control form-control-lg" name="kdbooking" id="kdbooking" placeholder="Kode Booking" value="">
+                    <span class="input-group-btn" style="margin:30px">
+                      <!-- Append button addon using class input-group-lg -->
+                      {if: $antrian > $noantrian}
+                      <input class="btn btn-primary" disabled="disabled" type="submit" value="Selesai &#9745">
+                      {else}
+                      <input class="btn btn-primary" type="submit" value="Selesai &#9745">
+                      {/if}
+                      <!-- {if: $antrian > $noantrian}
+                      <a  class="btn btn-primary" disabled="disabled"
+                        style="font-size:32px;"><p style="font-size:15px;">Selesai <i class="fa fa-forward"></i></p></a>
+                      {else}
+                      <a href="{?=url()?}/anjungan/farmasi?show={$panggil_loket}&loket={$namaloket}" class="btn btn-primary"
+                        style="font-size:32px;"><p style="font-size:15px;">Selesai <i class="fa fa-forward"></i></p></a>
+                      {/if} -->
+                    </span>
+                  </div>
+                </form>
               </div>
             </div>
           </div>
@@ -270,6 +293,7 @@
 
   {if: !$show}
   <script type="text/javascript">
+
     function showTime() {
       var a_p = "";
       var today = new Date();
@@ -300,8 +324,7 @@
       return i;
     }
     setInterval(showTime, 500);
-  </script>
-  <script>
+
     $(document).ready(function () {
       setInterval(function () {
         getAntrian();
@@ -419,7 +442,7 @@
   </script>
   {/if}
   {if: $show == 'panggil_loket' || $show == 'panggil_cs'}
-  <script>
+  <script type="text/javascript">
     function panggil(noantrian) {
       var loket = '';
       { if: isset($_GET['loket']) && $_GET['loket'] != '' }
