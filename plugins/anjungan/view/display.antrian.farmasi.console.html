@@ -145,28 +145,30 @@
 
   <br><br>
   <div class="container">
+    
+    <input type="text" style=" margin: auto; width: 50%; padding: 10px;" class="form-control form-control-lg" name="kdbooking" id="kdbooking" placeholder="Kode Booking" value="">
+    <br>
     <div class="card-deck text-center">
-            <div class="card mb-6 shadow-sm">
-                <form class="card" role="form" id="formobat" name="formobat">
-                  <button type="submit" class="btn btn-lg btn-success btn-block" style="padding: 30px;font-size:42px;" id="btnKRMObat" value="Submit" name="btnKRMObat" onclick="printDiv('printAntrianObat');">
-                    <ul class="list-unstyled mt-3 mb-4" >
-                      <div id="display_antrean_obat"></div>
-                    </ul>
-                    <h1 class="display-4">Antrean Obat</h1>
-                  </button>
-                </form>
-            </div>
-            <div class="card mb-6 shadow-sm">
-                <form class="card" role="form" id="formracikan" name="formracikan">
-                  <button type="submit" class="btn btn-lg btn-primary btn-block" style="padding: 30px;font-size:42px;" id="btnKRMRacikan" value="Submit" name="btnKRMRacikan" onclick="printDiv('printAntrianRacikan');">
-                    <ul class="list-unstyled mt-3 mb-4" >
-                      <div id="display_antrean_racikan"></div>
-                    </ul>
-                    <h1 class="display-4">Antrean Racikan</h1>
-                  </button>
-                </form>
-            </div>
-        </form>
+        <div class="card mb-6 shadow-sm">
+            <form class="card" role="form" id="formobat" name="formobat">
+              <button type="submit" class="btn btn-lg btn-success btn-block" style="padding: 30px;font-size:42px;" id="btnKRMObat" value="Submit" name="btnKRMObat" onclick="printDiv('printAntrianObat');">
+                <ul class="list-unstyled mt-3 mb-4" >
+                  <div id="display_antrean_obat"></div>
+                </ul>
+                <h1 class="display-4">Antrean Obat</h1>
+              </button>
+            </form>
+        </div>
+        <div class="card mb-6 shadow-sm">
+            <form class="card" role="form" id="formracikan" name="formracikan">
+              <button type="submit" class="btn btn-lg btn-primary btn-block" style="padding: 30px;font-size:42px;" id="btnKRMRacikan" value="Submit" name="btnKRMRacikan" onclick="printDiv('printAntrianRacikan');">
+                <ul class="list-unstyled mt-3 mb-4" >
+                  <div id="display_antrean_racikan"></div>
+                </ul>
+                <h1 class="display-4">Antrean Racikan</h1>
+              </button>
+            </form>
+        </div>
     </div>
   </div>
   <!-- <div class="container">
@@ -264,6 +266,7 @@
   <script>
   $(document).ready(function() {
     setInterval(function(){
+    
       $("#display_antrean_obat").load("{?=url()?}/anjungan/ajax?show=tampilobat");
       $("#print_antrean_obat").load("{?=url()?}/anjungan/ajax?show=printobat");
       $("#display_antrean_racikan").load("{?=url()?}/anjungan/ajax?show=tampilracikan");
@@ -272,13 +275,14 @@
   })
 
   function printDiv(eleId){
-      var PW = window.open('', '_blank', 'Print content');
-      PW.document.write(document.getElementById(eleId).innerHTML);
-      PW.document.close();
-      PW.focus();
-      PW.print();
-      PW.close();
-      window.location.href = "{?=url('anjungan/farmasi-console')?}";
+    var kdbooking = document.getElementById("kdbooking");
+    var PW = window.open('', '_blank', 'Print content');
+    PW.document.write(document.getElementById(eleId).innerHTML);
+    PW.document.close();
+    PW.focus();
+    PW.print();
+    PW.close();
+    window.location.href = "{?=url('anjungan/farmasi-console')?}";
   }
 
   </script>
