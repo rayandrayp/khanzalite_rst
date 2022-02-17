@@ -694,6 +694,7 @@ class Site extends SiteModule
 
     $this->tpl->set('page', ['title' => $assign['title'], 'desc' => $assign['desc'], 'content' => $assign['content']]);
   }
+
   public function getDisplayAntrianFarmasi()
   {
     $title = 'Display Antrian Farmasi';
@@ -729,8 +730,9 @@ class Site extends SiteModule
         $username      = !empty($_username) ? $_username : $this->core->getUserInfo('username');
 
         $setting_antrian_obat = str_replace(",", "','", $this->settings->get('anjungan.antrian_obat'));
-        $get_antrian = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'Obat')->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
+        $get_antrian = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'LIKE', 'Obat%')->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
         $noantrian = 0;
+
         if (!empty($get_antrian['noantrian'])) {
           $noantrian = $get_antrian['noantrian'];
         } else {
@@ -744,29 +746,48 @@ class Site extends SiteModule
         if (!empty($tcounter)) {
           $_tcounter = $tcounter + 1;
         }
-        //if selesaikan nomor urut
         if (isset($_GET['loket'])) {
-          $curr_loket = $_GET['loket'];
-          $this->db('mlite_antrian_loket')
-            ->where('type', 'Obat')
-            ->where('noantrian', $tcounter)
-            ->where('postdate', date('Y-m-d'))
-            ->save([
-              'end_time' => date('H:i:s'),
-              'loket' => $curr_loket,
-              'status' => 1
-            ]);
-          $kdbooking = $this->updateWaktuAntreanBPJS($_GET['kdbooking'],7);
-          $response = $this->sendDataWSBPJS('updatewaktu',$kdbooking);
-          /*$this->db()->pdo()->exec("DELETE FROM `antriloket`");
+
+          if (isset($_GET['batal'])) { //batal
+            $kdbooking = $_GET['batal'];
+            $curr_loket = $_GET['loket'];
+            $this->db('mlite_antrian_loket')
+              ->where('type', 'LIKE', 'Obat%')
+              ->where('noantrian', $tcounter)
+              ->where('postdate', date('Y-m-d'))
+              ->save([
+                'end_time' => date('H:i:s'),
+                'loket' => $curr_loket,
+                'status' => 99
+              ]);
+            $requestData = $this->updateWaktuAntreanBPJS($kdbooking, 99);
+            //$response = $this->sendDataWSBPJS('updatewaktu', $requestData);
+
+          } else { //selesai
+            $curr_loket = $_GET['loket'];
+            $this->db('mlite_antrian_loket')
+              ->where('type', 'LIKE', 'Obat%')
+              ->where('noantrian', $tcounter)
+              ->where('postdate', date('Y-m-d'))
+              ->save([
+                'end_time' => date('H:i:s'),
+                'loket' => $curr_loket,
+                'status' => 1
+              ]);
+            $kdbooking = $this->updateWaktuAntreanBPJS($_GET['kdbooking'], 7);
+            //$response = $this->sendDataWSBPJS('updatewaktu', $kdbooking);
+            /*$this->db()->pdo()->exec("DELETE FROM `antriloket`");
               $this->db('antriloket')->save([
                 'loket' => $_GET['loket'],
                 'antrian' => $_tcounter
               ]);*/
+          }
+
           $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_obat')->save(['value' => $_GET['loket']]);
           $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_obat_nomor')->save(['value' => $_tcounter]);
           redirect(url('anjungan/farmasi?show=panggil_obat'));
         }
+
         if (isset($_GET['antrian'])) {
           /*$this->db()->pdo()->exec("DELETE FROM `antriloket`");
               $this->db('antriloket')->save([
@@ -779,7 +800,7 @@ class Site extends SiteModule
         }
 
         $hitung_antrian = $this->db('mlite_antrian_loket')
-          ->where('type', 'Obat')
+          ->where('type', 'LIKE', 'Obat%')
           ->like('postdate', date('Y-m-d'))
           ->toArray();
         $counter = strlen($tcounter);
@@ -788,6 +809,14 @@ class Site extends SiteModule
           $xcounter[] = '<audio id="suarabel' . $i . '" src="{?=url()?}/plugins/anjungan/suara/' . substr($tcounter, $i, 1) . '.wav" ></audio>';
         };
 
+        //get kode booking
+        $get_kdbooking = $this->db('mlite_antrian_loket')->select('type')->where('type', 'LIKE', 'Obat%')->where('noantrian', $tcounter)->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
+        if ($get_kdbooking) {
+          $kodebookingArr = explode('#', $get_kdbooking['type']);
+          $kodebooking = $kodebookingArr[1];
+        } else {
+          $kodebooking = "-";
+        }
         $content = $this->draw('display.antrian.farmasi.html', [
           'title' => $title,
           'logo' => $logo,
@@ -798,10 +827,11 @@ class Site extends SiteModule
           'namaloket' => 'Obat',
           'kodeloket' => 'A',
           'panggil_loket' => 'panggil_obat',
-          'antrian' => $tcounter - 1,
+          'antrian' => $tcounter,
           'hitung_antrian' => $hitung_antrian,
           'xcounter' => $xcounter,
           'noantrian' => $noantrian,
+          'kodebooking' => $kodebooking,
           'display' => $display
         ]);
         break;
@@ -809,7 +839,7 @@ class Site extends SiteModule
       case "panggil_racikan":
         $display = 'Panggil Racikan';
         $loket = explode(",", $this->settings->get('anjungan.antrian_racikan'));
-        $get_antrian = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'Racikan')->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
+        $get_antrian = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'LIKE', 'Racikan%')->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
         $noantrian = 0;
         if (!empty($get_antrian['noantrian'])) {
           $noantrian = $get_antrian['noantrian'];
@@ -824,19 +854,35 @@ class Site extends SiteModule
           $_tcounter = $tcounter + 1;
         }
         if (isset($_GET['loket'])) {
-          $curr_loket = $_GET['loket'];
-          $this->db('mlite_antrian_loket')
-            ->where('type', 'Racikan')
-            ->where('noantrian', $tcounter)
-            ->where('postdate', date('Y-m-d'))
-            ->save([
-              'end_time' => date('H:i:s'),
-              'loket' => $curr_loket,
-              'status' => 1
-            ]);
-          $kdbooking = $this->updateWaktuAntreanBPJS($_GET['kdbooking'],7);
-          $response = $this->sendDataWSBPJS('updatewaktu',$kdbooking);
-          
+          if (isset($_GET['batal'])) { //batal
+            $kdbooking = $_GET['batal'];
+            $curr_loket = $_GET['loket'];
+            $this->db('mlite_antrian_loket')
+              ->where('type', 'LIKE', 'Racikan%')
+              ->where('noantrian', $tcounter)
+              ->where('postdate', date('Y-m-d'))
+              ->save([
+                'end_time' => date('H:i:s'),
+                'loket' => $curr_loket,
+                'status' => 99
+              ]);
+            $requestData = $this->updateWaktuAntreanBPJS($kdbooking, 99);
+            //$response = $this->sendDataWSBPJS('updatewaktu', $requestData);
+
+          } else { //selesai
+            $curr_loket = $_GET['loket'];
+            $this->db('mlite_antrian_loket')
+              ->where('type', 'LIKE', 'Racikan%')
+              ->where('noantrian', $tcounter)
+              ->where('postdate', date('Y-m-d'))
+              ->save([
+                'end_time' => date('H:i:s'),
+                'loket' => $curr_loket,
+                'status' => 1
+              ]);
+            $kdbooking = $this->updateWaktuAntreanBPJS($_GET['kdbooking'], 7);
+            //$response = $this->sendDataWSBPJS('updatewaktu', $kdbooking);
+          }
           $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_racikan')->save(['value' => $_GET['loket']]);
           $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_racikan_nomor')->save(['value' => $_tcounter]);
           redirect(url('anjungan/farmasi?show=panggil_racikan'));
@@ -852,7 +898,7 @@ class Site extends SiteModule
           redirect(url('anjungan/farmasi?show=panggil_racikan'));
         }
         $hitung_antrian = $this->db('mlite_antrian_loket')
-          ->where('type', 'Racikan')
+          ->where('type', 'LIKE', 'Racikan%')
           ->like('postdate', date('Y-m-d'))
           ->toArray();
         $counter = strlen($tcounter);
@@ -861,6 +907,14 @@ class Site extends SiteModule
           $xcounter[] = '<audio id="suarabel' . $i . '" src="{?=url()?}/plugins/anjungan/suara/' . substr($tcounter, $i, 1) . '.wav" ></audio>';
         };
 
+        //get kode booking
+        $get_kdbooking = $this->db('mlite_antrian_loket')->select('type')->where('type', 'LIKE', 'Racikan%')->where('noantrian', $tcounter)->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
+        if ($get_kdbooking) {
+          $kodebookingArr = explode('#', $get_kdbooking['type']);
+          $kodebooking = $kodebookingArr[1];
+        } else {
+          $kodebooking = "-";
+        }
         $content = $this->draw('display.antrian.farmasi.html', [
           'title' => $title,
           'logo' => $logo,
@@ -871,10 +925,11 @@ class Site extends SiteModule
           'namaloket' => 'Racikan',
           'kodeloket' => 'B',
           'panggil_loket' => 'panggil_racikan',
-          'antrian' => $tcounter - 1,
+          'antrian' => $tcounter,
           'hitung_antrian' => $hitung_antrian,
           'xcounter' => $xcounter,
           'noantrian' => $noantrian,
+          'kodebooking' => $kodebooking,
           'display' => $display
         ]);
         break;
@@ -1232,7 +1287,7 @@ class Site extends SiteModule
         break;
 
       case "tampilobat":
-        $result = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'Obat')->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
+        $result = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'LIKE', 'Obat%')->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
 
         if ($result) {
           $noantrian = $result['noantrian'];
@@ -1256,7 +1311,7 @@ class Site extends SiteModule
         break;
 
       case "printobat":
-        $result = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'Obat')->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
+        $result = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'LIKE', 'Obat%')->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
 
         if ($result) {
           $noantrian = $result['noantrian'];
@@ -1280,11 +1335,12 @@ class Site extends SiteModule
         <script>
           $(document).ready(function() {
             $("#btnKRMObat").on('click', function() {
+              var kdbooking = $('#kdbooking').val();
               $("#formobat").submit(function(e) {
                 e.preventDefault();
                 e.stopImmediatePropagation();
                 $.ajax({
-                  url: "<?php echo url() . '/anjungan/ajax?show=simpanobat&noantrian=' . $next_antrian; ?>",
+                  url: "<?php echo url() . '/anjungan/ajax?show=simpanobat&noantrian=' . $next_antrian . '&kdbooking='; ?>" + kdbooking,
                   type: "POST",
                   data: $(this).serialize(),
                   success: function(data) {
@@ -1301,10 +1357,11 @@ class Site extends SiteModule
         break;
 
       case "simpanobat":
+        $kdbooking = $_GET['kdbooking'];
         $this->db('mlite_antrian_loket')
           ->save([
             'kd' => NULL,
-            'type' => 'Obat',
+            'type' => 'Obat#' . $kdbooking,
             'noantrian' => $_GET['noantrian'],
             'postdate' => date('Y-m-d'),
             'start_time' => date('H:i:s'),
@@ -1314,7 +1371,7 @@ class Site extends SiteModule
         break;
 
       case "tampilracikan":
-        $result = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'Racikan')->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
+        $result = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'LIKE', 'Racikan%')->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
 
         if ($result) {
           $noantrian = $result['noantrian'];
@@ -1338,7 +1395,7 @@ class Site extends SiteModule
         break;
 
       case "printracikan":
-        $result = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'Racikan')->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
+        $result = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'LIKE', 'Racikan%')->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
 
         if ($result) {
           $noantrian = $result['noantrian'];
@@ -1362,11 +1419,12 @@ class Site extends SiteModule
         <script>
           $(document).ready(function() {
             $("#btnKRMRacikan").on('click', function() {
+              var kdbooking = $('#kdbooking').val();
               $("#formracikan").submit(function(e) {
                 e.preventDefault();
                 e.stopImmediatePropagation();
                 $.ajax({
-                  url: "<?php echo url() . '/anjungan/ajax?show=simpanracikan&noantrian=' . $next_antrian; ?>",
+                  url: "<?php echo url() . '/anjungan/ajax?show=simpanracikan&noantrian=' . $next_antrian . '&kdbooking='; ?>" + kdbooking,
                   type: "POST",
                   data: $(this).serialize(),
                   success: function(data) {
@@ -1383,10 +1441,11 @@ class Site extends SiteModule
         break;
 
       case "simpanracikan":
+        $kdbooking = $_GET['kdbooking'];
         $this->db('mlite_antrian_loket')
           ->save([
             'kd' => NULL,
-            'type' => 'Racikan',
+            'type' => 'Racikan#' . $kdbooking,
             'noantrian' => $_GET['noantrian'],
             'postdate' => date('Y-m-d'),
             'start_time' => date('H:i:s'),
@@ -2471,7 +2530,7 @@ class Site extends SiteModule
     return $request;
   }
 
-  public function checkinAntreanRS ($kodebooking)
+  public function checkinAntreanRS($kodebooking)
   {
     $waktu = strtotime(date("Y-m-d h:i:s")) * 1000;
     $request = '{
@@ -2482,7 +2541,7 @@ class Site extends SiteModule
     return $request;
   }
 
-  public function batalAntreanRS ($kodebooking, $keterangan)
+  public function batalAntreanRS($kodebooking, $keterangan)
   {
     $request = '{
                   "kodebooking": "' . $kodebooking . '",

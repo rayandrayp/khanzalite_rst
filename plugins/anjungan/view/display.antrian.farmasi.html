@@ -216,22 +216,26 @@
               <br>
 
               <div class="btn-group btn-group-justified">
-                <a href="#" class="btn btn-warning" style="font-size:32px;"><p style="font-size:15px;">Lewati <i class="fa fa-pause"></i></p></a>
-                <a href="{?=url()?}/anjungan/farmasi?show={$panggil_loket}&loket={$namaloket}" class="btn btn-danger"
+                <a href="{?=url()?}/anjungan/farmasi?show={$panggil_loket}&loket={$namaloket}&lewati={$antrian}" class="btn btn-warning" style="font-size:32px;"><p style="font-size:15px;">Lewati <i class="fa fa-pause"></i></p></a>
+                <a href="{?=url()?}/anjungan/farmasi?show={$panggil_loket}&loket={$namaloket}&batal={$kodebooking}" class="btn btn-danger"
                   style="font-size:32px;"><p style="font-size:15px;">Batal <i class="fa fa-times"></i></p></a>
               </div>
               <br>
 
               <div class="row" style="padding-left: 15px; padding-right: 15px;">
-                <form action="{?=url()?}/anjungan/farmasi?show={$panggil_loket}&loket={$namaloket}" method="GET">
+                <!-- <form action="{?=url()?}/anjungan/farmasi?show={$panggil_loket}&loket={$namaloket}" method="GET"> -->
                   <div class="input-group input-group-lg">
-                    <input type="text" class="form-control form-control-lg" name="kdbooking" id="kdbooking" placeholder="Kode Booking" value="">
+                    <input type="text" class="form-control form-control-lg" name="kdbooking" id="kdbooking" placeholder="Kode Booking" disabled="true" value="{$kodebooking}">
                     <span class="input-group-btn" style="margin:30px">
                       <!-- Append button addon using class input-group-lg -->
                       {if: $antrian > $noantrian}
-                      <input class="btn btn-primary" disabled="disabled" type="submit" value="Selesai &#9745">
+                      <a href="" class="btn btn-primary" disabled="disabled"
+                        style="font-size:32px;"><p style="font-size:15px;">Selesai <i class="fa fa-forward"></i></p></a>
+                      <!-- <input class="btn btn-primary" disabled="disabled" type="submit" value="Selesai &#9745"> -->
                       {else}
-                      <input class="btn btn-primary" type="submit" value="Selesai &#9745">
+                      <a href="{?=url()?}/anjungan/farmasi?show={$panggil_loket}&loket={$namaloket}&kdbooking={$kodebooking}" class="btn btn-primary"
+                        style="font-size:32px;"><p style="font-size:15px;">Selesai <i class="fa fa-forward"></i></p></a>
+                      <!-- <input  href="{?=url()?}/anjungan/farmasi?show={$panggil_loket}&loket={$namaloket}&kdbooking={$kodebooking}" class="btn btn-primary" type="submit" value="Selesai &#9745"> -->
                       {/if}
                       <!-- {if: $antrian > $noantrian}
                       <a  class="btn btn-primary" disabled="disabled"
@@ -242,7 +246,7 @@
                       {/if} -->
                     </span>
                   </div>
-                </form>
+                <!-- </form> -->
               </div>
             </div>
           </div>
@@ -251,6 +255,17 @@
     </div>
   </div>
   <div class="text-center" style="width: 300px;margin: 20px auto;">
+    <div class="form-row">
+      <div class="form-group col-md-6">
+        <label>Antrian Terlewati</label>
+      </div>
+      <div class="form-group col-md-6">
+        <select id="inputState" class="form-control" style="width: 150px;">
+          <option selected>Choose...</option>
+          <option>...</option>
+        </select>
+      </div>
+    </div>
     <form action="">
       <input type="hidden" name="show" value="{$panggil_loket}">
       <input type="hidden" name="reset" value="{?=isset($_GET['loket'])?$_GET['loket']:'1'?}">
@@ -361,7 +376,9 @@
     }
 
     function fungsiloop(value){
-      updateLayar(value.type, value.noantrian, value.loket);
+      var type = value.type.split("#");
+      console.log("Tipe " + type[0]);
+      updateLayar(type[0], value.noantrian, value.loket);
     }
 
     function updateLayar(type, nomor, no_loket) {

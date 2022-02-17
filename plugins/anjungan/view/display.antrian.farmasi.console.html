@@ -266,7 +266,6 @@
   <script>
   $(document).ready(function() {
     setInterval(function(){
-    
       $("#display_antrean_obat").load("{?=url()?}/anjungan/ajax?show=tampilobat");
       $("#print_antrean_obat").load("{?=url()?}/anjungan/ajax?show=printobat");
       $("#display_antrean_racikan").load("{?=url()?}/anjungan/ajax?show=tampilracikan");
@@ -278,7 +277,7 @@
     var kdbooking = document.getElementById("kdbooking").value;
     console.log(kdbooking);
     var PW = window.open('', '_blank', 'Print content');
-    PW.document.write(document.getElementById(eleId).innerHTML + '<br>Kode Booking: ' + kdbooking + '</p>');
+    PW.document.write(document.getElementById(eleId).innerHTML + 'Kode Booking: ' + kdbooking + '</p>');
     PW.document.close();
     PW.focus();
     PW.print();

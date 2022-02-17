@@ -70,3 +70,17 @@ Khanza Lite Change log
     Ganti fungsi JS ke setInterval 1000 untuk refresh loket antrian
     Ubah layout display loket antrian
     Banyak lah, pokoknya terkait antrean online
+
+02/17/2022
+- site.php (plugins/anjungan/Site.php)
+    Tambah fungsi untuk display antrian farmasi
+    Tambah fungsi untuk menampilkan kode booking
+    Tambah fungsi untuk batal antrian
+    Tambah fungsi untuk selesai
+
+- display.antrian.farmasi.html
+    tambah halaman
+    Ubah tampilan operasi loket
+
+-display.antrian.farmasi.console.html
+    tambah halaman
