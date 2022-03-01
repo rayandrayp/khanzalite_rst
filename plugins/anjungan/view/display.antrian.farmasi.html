@@ -211,7 +211,7 @@
             <div class="panel-footer">
               <div class="btn-group btn-group-justified">
                 <a href="#" class="btn btn-primary" style="font-size:32px;"><p style="font-size:15px;">Sisa Antrean {$noantrian}</p></a>
-                <a href="#" class="btn btn-primary" style="font-size:32px;" onclick="panggil({$antrian})"><p style="font-size:15px;">Panggil Ulang <i class="fa fa-bullhorn"></i></p></a>
+                <a href="#" class="btn btn-primary" style="font-size:32px;" id="panggilulang" onclick="panggil({$antrian})"><p style="font-size:15px;">Panggil Ulang <i class="fa fa-bullhorn"></i></p></a>
               </div>
               <br>
 
@@ -260,9 +260,10 @@
         <label>Antrian Terlewati</label>
       </div>
       <div class="form-group col-md-6">
-        <select id="inputState" class="form-control" style="width: 150px;">
-          <option selected>Choose...</option>
-          <option>...</option>
+        <select id="antrianterlewati" name="antrianterlewati" class="form-control" style="width: 150px;">
+          {loop: $antrianterlewati}
+          <option value="{$value.noantrian}">{$value.noantrian}</option>
+          {/loop}
         </select>
       </div>
     </div>
@@ -308,7 +309,7 @@
 
   {if: !$show}
   <script type="text/javascript">
-
+   
     function showTime() {
       var a_p = "";
       var today = new Date();
@@ -344,7 +345,10 @@
       setInterval(function () {
         getAntrian();
         console.log("this")
-      }, 1000);
+      }, 3000);
+      // setTimeout(function () {
+      //         getAntrian();
+      //       }, 3000);
     });
 
     function getAntrian() {
@@ -361,8 +365,10 @@
               fungsiloop(element);
             }
             //updateLayar(data.type, data.noantrian, data.loket);
+            console.log("data panggil "+data.panggil);
             panggil(data.panggil);
-            setSelesai(data.id);
+            console.log("data selesai "+data.data_loket[0]["kd"]);
+            setSelesai(data.data_loket[0]["kd"]);
           }
         },
         error: function (xhr) {
@@ -388,14 +394,14 @@
 
     function panggil(data) {
       var ass = new Array();
-
+      console.log("begin panggil");
       $.each(data, function (key, value) {
         var filename = "{?=url()?}/plugins/anjungan/suara/" + value + ".wav";
         var auau = new Audio(filename);
         ass.push(auau);
       });
 
-      console.log(ass);
+      console.log("data ass "+ass);
       play_sound_queue(ass);
     }
 
@@ -446,6 +452,7 @@
     }
 
     function setSelesai(id) {
+      console.log("Set selesai ID="+id);
       $.ajax({
         url: '{?=url()?}/anjungan/panggilselesai',
         dataType: 'json',
@@ -458,22 +465,57 @@
     }
   </script>
   {/if}
-  {if: $show == 'panggil_loket' || $show == 'panggil_cs'}
+  {if: $show == 'panggil_obat'}
   <script type="text/javascript">
     function panggil(noantrian) {
       var loket = '';
-      { if: isset($_GET['loket']) && $_GET['loket'] != '' }
+      var type = 'Obat';
+      {if: isset($_GET['loket']) && $_GET['loket'] != '' }
       var loket = "{?=$_GET['loket']?}";
-      {
-        /if}
+      
+      {/if}
+      
+      console.log("type " + type);
         //alert('Panggil ' + loket + ' - ' + noantrian);
         $.ajax({
+          type: "GET",
           url: '{?=url()?}/anjungan/setpanggil',
           dataType: 'json',
           data: {
             noantrian: noantrian,
-            type: '{?=str_replace("panggil_","",$_GET['show'])?}',
-            loket: loket,
+            type: type,//'{?=str_replace("panggil_","",$_GET['show'])?}',
+            loket: loket
+          },
+          success: function (data) {
+            console.log(data);
+          },
+          error: function (xhr) {
+            console.log(xhr.status);
+          }
+        });
+      }
+  </script>
+  {/if}
+  {if: $show == 'panggil_racikan'}
+  <script type="text/javascript">
+    function panggil(noantrian) {
+      var loket = '';
+      var type = 'Racikan';
+      {if: isset($_GET['loket']) && $_GET['loket'] != '' }
+      var loket = "{?=$_GET['loket']?}";
+      
+      {/if}
+      
+      console.log("type " + type);
+        //alert('Panggil ' + loket + ' - ' + noantrian);
+        $.ajax({
+          type: "GET",
+          url: '{?=url()?}/anjungan/setpanggil',
+          dataType: 'json',
+          data: {
+            noantrian: noantrian,
+            type: type,//'{?=str_replace("panggil_","",$_GET['show'])?}',
+            loket: loket
           },
           success: function (data) {
             console.log(data);

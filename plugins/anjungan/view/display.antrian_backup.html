@@ -146,33 +146,28 @@
   <br><br>
   <div class="container">
     <div class="card-deck mb-3 text-center">
-      <div class="card mb-6 shadow-sm" data-toggle="modal" data-target="#antrian">
+      <div class="card mb-4 shadow-sm" data-toggle="modal" data-target="#antrian">
         <div class="card-body btn btn-lg btn-success">
           <ul class="list-unstyled mt-3 mb-4">
             <span style="font-size: 100px; color: white;"><i class="fa fa-question"></i></span>
           </ul>
-          <a href="#" style="text-decoration: none; color: white;">
-            <h1 class="display-5">PASIEN</h1>
-            <h1 class="display-5">BARU</h1>
-          </a>
+          <a href="#" style="text-decoration: none; color: white;"><h1 class="display-4">ANTRIAN</h1></a>
         </div>
       </div>
-      <div class="card mb-6 shadow-sm" data-toggle="modal" data-target="#daftar">
+      <div class="card mb-4 shadow-sm" data-toggle="modal" data-target="#daftar">
         <div class="card-body btn btn-lg btn-primary">
           <ul class="list-unstyled mt-3 mb-4">
             <span style="font-size: 100px; color: white;"><i class="fa fa-stethoscope"></i></span>
           </ul>
-          <h1 class="display-5">PASIEN</h1>
-          <h1 class="display-5">LAMA</h1>
+          <h1 class="display-4">DAFTAR</h1>
         </div>
       </div>
-      <div class="card mb-6 shadow-sm" data-toggle="modal" data-target="#checkin">
+      <div class="card mb-4 shadow-sm" data-toggle="modal" data-target="#kontrol">
         <div class="card-body btn btn-lg btn-danger">
           <ul class="list-unstyled mt-3 mb-4">
             <span style="font-size: 100px; color: white;"><i class="fa fa-user-md"></i></span>
           </ul>
-          <h1 class="display-5">CHECK-IN</h1>
-          <h1 class="display-5">MOBILE JKN</h1>
+          <a href="#" style="text-decoration: none; color: white;"><h1 class="display-4">KONTROL</h1></a>
         </div>
       </div>
     </div>
@@ -218,6 +213,20 @@
               <button type="submit" class="btn btn-lg btn-danger btn-block" style="padding: 30px;font-size:42px;" id="btnKRM" value="Submit" name="btnKRM" onclick="printDiv('printAntrianLoket');">ANTRIAN LOKET</button>
             </form>
           </div>
+          <div class="col-6 pt-3 pb-3">
+            <div id="printAntrianCS" style="display: none;" class="cetak">
+              <div style="width: 200px; font-family: Tahoma; margin-top: 10px; margin-right: 5px; margin-bottom: 100px; margin-left: 15px; font-size: 21px !important;border: 0px solid #000;">
+                <p style="font-size:12px;" align="center">{$settings.nama_instansi}<br><span class="small">{$settings.alamat}<br>Telp: {$settings.nomor_telepon}</span></p>
+                <hr>
+                <div id="print_nomor_cs"></div>
+                <p align="center">Layanan Pelanggan</p>
+              </div>
+            </div>
+            <div id="display_nomor_cs"></div>
+            <form role="form" id="formcs" name="formcs">
+              <button type="submit" class="btn btn-lg btn-danger btn-block" style="padding: 30px;font-size:42px;" id="btnKRMCS" value="Submit" name="btnKRMCS" onclick="printDiv('printAntrianCS');">ANTRIAN CS</button>
+            </form>
+          </div>
           </div>
         </div>
         <div class="modal-footer">
@@ -232,7 +241,7 @@
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="exampleModalCenterTitle">Pendaftaran Pasien BPJS/ Non-BPJS</h5>
+          <h5 class="modal-title" id="exampleModalCenterTitle">Pendaftaran Pasien Mandiri (Cara Bayar UMUM)</h5>
           <button type="button" class="close" data-dismiss="modal" onclick="javascript:window.location='{?=url('anjungan/pasien')?}'" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
@@ -240,7 +249,7 @@
         <div class="modal-body">
           <ul class="nav nav-pills nav-wizard" id="myTab" role="tablist">
             <li class="nav-item">
-              <a class="nav-link active" data-toggle="tab" href="#infoPanel" role="tab">No. BPJS/NIK</a>
+              <a class="nav-link active" data-toggle="tab" href="#infoPanel" role="tab">No. RM</a>
             <li>
             <li class="nav-item">
               <a class="nav-link" data-toggle="tab" href="#poli" role="tab">Pilih Poli dan Dokter</a>
@@ -254,36 +263,11 @@
             <div class="tab-pane fade show active" id="infoPanel" role="tabpanel">
               <h4>Data Rekam Medik</h4>
               <div class="form-group">
-                <label for="campaignName">Pilih Kepesertaan</label>
-                <select class="form-control" id="selectkepesertaan">
-                  <option value="-" selected="true" disabled="true">-</option>
-                  <option value="bpjs">BPJS</option>
-                  <option value="nonbpjs">Non-BPJS</option>
-                </select> 
+                <label for="campaignName">Nomor Kartu Berobat</label>
+                <input type="text" class="form-text form-control form-control-lg norm" id="no_rm" value="" placeholder="Nomor Kartu Berobat"></input>
               </div>
-              <div class="d-none" id="partbpjs">
-                <div class="form-group" >
-                  <label for="campaignName">Nomor Kartu BPJS</label>
-                  <input type="text" class="form-text form-control form-control-lg nobpjs" id="no_bpjs" value="" placeholder="Nomor Kartu BPJS"></input>
-                </div>
-              </div>
-              <div class="d-none" id="partnonbpjs">
-                <div class="form-group">
-                  <label for="campaignName">Nomor Induk Kependudukan (NIK)</label>
-                  <input type="text" class="form-text form-control form-control-lg noktp" id="no_ktp" value="" placeholder="Nomor Induk Kependudukan (NIK)"></input>
-                </div>
-              </div>
-              
-              <button class="btn btn-secondary" id="cekNomor">Cek Nomor</button>
-
-              <div class="d-none" id="messageDiv">
-                <div class="form-group">
-                  <label for="message" id="messageText" style="color: rgb(223, 0, 0);"></label>
-                </div>
-              </div>
-
+              <button class="btn btn-secondary" id="infoContinue">Cek Kartu</button>
             </div>
-
             <div class="tab-pane fade" id="poli" role="tabpanel">
               <h4>Informasi Pribadi, Klinik dan Dokter Tujuan</h4>
               <div class="form-row">
@@ -407,43 +391,6 @@
     </div>
   </div>
 
-  <!-- Modal Checkin -->
-  <div class="modal fade" id="checkin" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="exampleModalCenterTitle">Checkin Pasien Mobile-JKN</h5>
-          <button type="button" class="close" data-dismiss="modal" onclick="javascript:window.location='{?=url('anjungan/pasien')?}'" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <div class="modal-body">
-          <ul class="nav nav-pills nav-wizard" id="myTab" role="tablist">
-            <li class="nav-item">
-              <a class="nav-link active" data-toggle="tab" href="#infoPanel" role="tab">Kodebooking</a>
-            <li>
-          </ul>
-
-          <div class="tab-content mt-2">
-            <div class="tab-pane fade show active" id="infoPanel" role="tabpanel">
-              <h4>Kodebooking</h4>
-              <div class="form-group">
-                <label for="campaignName">Masukkan kodebooking yang didapatkan dari Mobile-JKN</label>
-                <input type="text" class="form-text form-control form-control-lg kdbooking" id="no_kodebooking" value="" placeholder="Nomor Kodebooking"></input>
-              </div>
-              <button class="btn btn-secondary" id="checkin">Check-in Sekarang</button>
-            </div>
-          </div>
-        
-        </div>
-
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="javascript:window.location='{?=url('anjungan/pasien')?}'">Tutup</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- Modal Kontrol -->
   <div class="modal fade" id="kontrol" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
@@ -557,14 +504,12 @@
     });
   });
   $(document).ready(function() {
-    setTimeout(function () {
+    setInterval(function(){
       $("#display_nomor_loket").load("{?=url()?}/anjungan/ajax?show=tampilloket");
       $("#print_nomor_loket").load("{?=url()?}/anjungan/ajax?show=printloket");
-    }, 3000);
-    // setInterval(function(){
-    //   $("#display_nomor_loket").load("{?=url()?}/anjungan/ajax?show=tampilloket");
-    //   $("#print_nomor_loket").load("{?=url()?}/anjungan/ajax?show=printloket");
-    // }, 1000);
+      $("#display_nomor_cs").load("{?=url()?}/anjungan/ajax?show=tampilcs");
+      $("#print_nomor_cs").load("{?=url()?}/anjungan/ajax?show=printcs");
+    }, 1000);
   })
   function printDiv(eleId){
       var PW = window.open('', '_blank', 'Print content');
@@ -585,26 +530,15 @@
       PW.close();
       window.location.href = "{?=url('anjungan/pasien')?}";
   }
-  
   $(function () {
-    // $('#infoContinue').click(function (e) {
-    $('#cekNomor').click(function (e) {
-      var value = $('#selectkepesertaan').val();
-      var nomor = ""; 
-      //console.log(value);
-      if (value == 'bpjs'){//jika pasien BPJS
-        nomor = $('#no_bpjs').val();
 
-
-
-      } else if (value == 'nonbpjs'){ //jika pasien non-BPJS
-        nomor = $('#no_ktp').val();
-
-        $.ajax({
+    $('#infoContinue').click(function (e) {
+      var no_rkm_medis_daftar = $('#no_rm').val();
+      $.ajax({
         type:'POST',
-        url:'{?=url()?}/anjungan/ajax?show=check-nik',
+        url:'{?=url()?}/anjungan/ajax?show=get-daftar',
         dataType: "json",
-        data: {no_ktp:nomor},
+        data: {no_rkm_medis_daftar:no_rkm_medis_daftar},
         success:function(data){
           if(data.status == 'ok'){
             e.preventDefault();
@@ -614,45 +548,12 @@
             $('#no_rkm_medis_daftar').val(data.result.no_rkm_medis);
             $('#nm_pasien_daftar').val(data.result.nm_pasien);
             $('#alamat_daftar').val(data.result.alamat);
-            $('#kd_pj').val('A09');
-            $('#kd_pj').prop('disabled', 'disabled');
           }else{
-            $('#messageText').text('Data NIK anda tidak ditemukan');
-            $('#messageDiv').removeClass('d-none');
-            $('selectkepesertaan select').val("-").change();
-            // window.location.href = "{?=url('anjungan/pasien')?}";
+            alert("Detail nomor rekam medik tidak ditemukan...");
+            document.getElementById("no_rm").value = "";
           }
         }
       });
-
-        
-      }
-      //console.log(nomor);
-      
-
-
-
-      // var no_rkm_medis_daftar = $('#no_rm').val();
-      // $.ajax({
-      //   type:'POST',
-      //   url:'{?=url()?}/anjungan/ajax?show=get-daftar',
-      //   dataType: "json",
-      //   data: {no_rkm_medis_daftar:no_rkm_medis_daftar},
-      //   success:function(data){
-      //     if(data.status == 'ok'){
-      //       e.preventDefault();
-      //       $('.progress-bar').css('width', '70%');
-      //       $('.progress-bar').html('Step 2 of 3');
-      //       $('#myTab a[href="#poli"]').tab('show');
-      //       $('#no_rkm_medis_daftar').val(data.result.no_rkm_medis);
-      //       $('#nm_pasien_daftar').val(data.result.nm_pasien);
-      //       $('#alamat_daftar').val(data.result.alamat);
-      //     }else{
-      //       alert("Detail nomor rekam medik tidak ditemukan...");
-      //       document.getElementById("no_rm").value = "";
-      //     }
-      //   }
-      // });
 
       setTimeout(function() { window.location.href = "{?=url('anjungan/pasien')?}"; }, 500000);
 
@@ -811,51 +712,6 @@
     });
     //end of simpan pendaftaran
 
-    //selectkepesertaan
-    $('select#selectkepesertaan').on('change',function(){
-      var value = $(this).val(); 
-      if (value == 'bpjs'){
-        console.log("BPJS");
-        $("#partbpjs").removeClass('d-none');
-        $("#partnonbpjs").addClass('d-none');
-      } else if (value == 'nonbpjs') {
-        console.log("Non BPJS");
-        $("#partbpjs").addClass('d-none');
-        $("#partnonbpjs").removeClass('d-none');
-      }
-      
-    });
-    //end of selectkepesertaan
-    
-    //checkin
-    $('#checkin').click(function (e) {
-      var no_kodebooking = $('#no_kodebooking').val();
-      $.ajax({
-        type:'POST',
-        url:'{?=url()?}/anjungan/ajax?show=checkin',
-        dataType: "json",
-        data: {no_kodebooking:no_kodebooking},
-        success:function(data){
-          if(data.status == 'ok'){
-            alert("Checkin berhasil.");
-            e.preventDefault();
-            $('.progress-bar').css('width', '70%');
-            $('.progress-bar').html('Step 2 of 3');
-            $('#myTab a[href="#poli"]').tab('show');
-            $('#no_rkm_medis_daftar').val(data.result.no_rkm_medis);
-            $('#nm_pasien_daftar').val(data.result.nm_pasien);
-            $('#alamat_daftar').val(data.result.alamat);
-          }else{
-            alert("Detail nomor rekam medik tidak ditemukan...");
-            document.getElementById("no_rm").value = "";
-          }
-        }
-      });
-
-      setTimeout(function() { window.location.href = "{?=url('anjungan/pasien')?}"; }, 500000);
-
-    });
-    //end of checkin
   });
 
   $(function () {
@@ -979,18 +835,11 @@
         layout: 'custom',
         customLayout: {
           'normal' : [
-            '7 8 9',
-            '4 5 6',
-            '1 2 3',
-            '0 . {b}',
+            '8 9 . {b}',
+            '4 5 6 7',
+            '0 1 2 3',
             '{accept} {cancel}'
           ]
-          // 'normal' : [
-          //   '8 9 . {b}',
-          //   '4 5 6 7',
-          //   '0 1 2 3',
-          //   '{accept} {cancel}'
-          // ]
         },
         maxLength : 6,
         // Prevent keys not in the displayed keyboard from being typed in
@@ -1015,18 +864,11 @@
         layout: 'custom',
         customLayout: {
           'normal' : [
-            '7 8 9',
-            '4 5 6',
-            '1 2 3',
-            '0 . {b}',
+            '8 9 . {b}',
+            '4 5 6 7',
+            '0 1 2 3',
             '{accept} {cancel}'
           ]
-          // 'normal' : [
-          //   '8 9 . {b}',
-          //   '4 5 6 7',
-          //   '0 1 2 3',
-          //   '{accept} {cancel}'
-          // ]
         },
         maxLength : 6,
         // Prevent keys not in the displayed keyboard from being typed in
@@ -1040,222 +882,6 @@
         validate : function(keyboard, value, isClosing){
           // only make valid if input is 6 characters in length
           return value.length === 6;
-        }
-      })
-      //.addTyping();
-  });
-
-  $(function() {
-      $('#nobpjs')
-      .keyboard({
-        layout: 'custom',
-        customLayout: {
-          'normal' : [
-            '7 8 9',
-            '4 5 6',
-            '1 2 3',
-            '0 . {b}',
-            '{accept} {cancel}'
-          ]
-          // 'normal' : [
-          //   '8 9 . {b}',
-          //   '4 5 6 7',
-          //   '0 1 2 3',
-          //   '{accept} {cancel}'
-          // ]
-        },
-        maxLength : 13,
-        // Prevent keys not in the displayed keyboard from being typed in
-        restrictInput : true,
-        // include lower case characters (added v1.25.7)
-        restrictInclude : 'a b c d e f',
-        // don't use combos or A+E could become a ligature
-        useCombos : false,
-        // activate the "validate" callback function
-        acceptValid : true,
-        validate : function(keyboard, value, isClosing){
-          // only make valid if input is 6 characters in length
-          return value.length === 13;
-        }
-      })
-      //.addTyping();
-  });
-
-  $(function() {
-      $('.nobpjs')
-      .keyboard({
-        layout: 'custom',
-        customLayout: {
-          'normal' : [
-            '7 8 9',
-            '4 5 6',
-            '1 2 3',
-            '0 . {b}',
-            '{accept} {cancel}'
-          ]
-          // 'normal' : [
-          //   '8 9 . {b}',
-          //   '4 5 6 7',
-          //   '0 1 2 3',
-          //   '{accept} {cancel}'
-          // ]
-        },
-        maxLength : 13,
-        // Prevent keys not in the displayed keyboard from being typed in
-        restrictInput : true,
-        // include lower case characters (added v1.25.7)
-        restrictInclude : 'a b c d e f',
-        // don't use combos or A+E could become a ligature
-        useCombos : false,
-        // activate the "validate" callback function
-        acceptValid : true,
-        validate : function(keyboard, value, isClosing){
-          // only make valid if input is 6 characters in length
-          return value.length === 13;
-        }
-      })
-      //.addTyping();
-  });
-
-  $(function() {
-      $('#noktp')
-      .keyboard({
-        layout: 'custom',
-        customLayout: {
-          'normal' : [
-            '7 8 9',
-            '4 5 6',
-            '1 2 3',
-            '0 . {b}',
-            '{accept} {cancel}'
-          ]
-          // 'normal' : [
-          //   '8 9 . {b}',
-          //   '4 5 6 7',
-          //   '0 1 2 3',
-          //   '{accept} {cancel}'
-          // ]
-        },
-        maxLength : 16,
-        // Prevent keys not in the displayed keyboard from being typed in
-        restrictInput : true,
-        // include lower case characters (added v1.25.7)
-        restrictInclude : 'a b c d e f',
-        // don't use combos or A+E could become a ligature
-        useCombos : false,
-        // activate the "validate" callback function
-        acceptValid : true,
-        validate : function(keyboard, value, isClosing){
-          // only make valid if input is 6 characters in length
-          return value.length === 16;
-        }
-      })
-      //.addTyping();
-  });
-
-  $(function() {
-      $('.noktp')
-      .keyboard({
-        layout: 'custom',
-        customLayout: {
-          'normal' : [
-            '7 8 9',
-            '4 5 6',
-            '1 2 3',
-            '0 . {b}',
-            '{accept} {cancel}'
-          ]
-          // 'normal' : [
-          //   '8 9 . {b}',
-          //   '4 5 6 7',
-          //   '0 1 2 3',
-          //   '{accept} {cancel}'
-          // ]
-        },
-        maxLength : 16,
-        // Prevent keys not in the displayed keyboard from being typed in
-        restrictInput : true,
-        // include lower case characters (added v1.25.7)
-        restrictInclude : 'a b c d e f',
-        // don't use combos or A+E could become a ligature
-        useCombos : false,
-        // activate the "validate" callback function
-        acceptValid : true,
-        validate : function(keyboard, value, isClosing){
-          // only make valid if input is 6 characters in length
-          return value.length === 16;
-        }
-      })
-      //.addTyping();
-  });
-
-  $(function() {
-      $('#kdbooking')
-      .keyboard({
-        layout: 'custom',
-        customLayout: {
-          'normal' : [
-            '7 8 9',
-            '4 5 6',
-            '1 2 3',
-            '0 . {b}',
-            '{accept} {cancel}'
-          ]
-          // 'normal' : [
-          //   '8 9 . {b}',
-          //   '4 5 6 7',
-          //   '0 1 2 3',
-          //   '{accept} {cancel}'
-          // ]
-        },
-        maxLength : 12,
-        // Prevent keys not in the displayed keyboard from being typed in
-        restrictInput : true,
-        // include lower case characters (added v1.25.7)
-        restrictInclude : 'a b c d e f',
-        // don't use combos or A+E could become a ligature
-        useCombos : false,
-        // activate the "validate" callback function
-        acceptValid : true,
-        validate : function(keyboard, value, isClosing){
-          // only make valid if input is 12 characters in length
-          return value.length === 12;
-        }
-      })
-      //.addTyping();
-  });
-
-  $(function() {
-      $('.kdbooking')
-      .keyboard({
-        layout: 'custom',
-        customLayout: {
-          'normal' : [
-            '7 8 9',
-            '4 5 6',
-            '1 2 3',
-            '0 . {b}',
-            '{accept} {cancel}'
-          ]
-          // 'normal' : [
-          //   '8 9 . {b}',
-          //   '4 5 6 7',
-          //   '0 1 2 3',
-          //   '{accept} {cancel}'
-          // ]
-        },
-        maxLength : 12,
-        // Prevent keys not in the displayed keyboard from being typed in
-        restrictInput : true,
-        // include lower case characters (added v1.25.7)
-        restrictInclude : 'a b c d e f',
-        // don't use combos or A+E could become a ligature
-        useCombos : false,
-        // activate the "validate" callback function
-        acceptValid : true,
-        validate : function(keyboard, value, isClosing){
-          // only make valid if input is 12 characters in length
-          return value.length === 12;
         }
       })
       //.addTyping();
