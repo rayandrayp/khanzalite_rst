@@ -134,6 +134,14 @@
       footer a, footer a:hover {
         color: #fff;
       }
+      .my-custom-scrollbar {
+      position: relative;
+      height: 200px;
+      overflow: auto;
+      }
+      .table-wrapper-scroll-y {
+      display: block;
+      }
     </style>
 </head>
 <body>
@@ -281,6 +289,67 @@
                   <label for="message" id="messageText" style="color: rgb(223, 0, 0);"></label>
                 </div>
               </div>
+
+              <div class="table-wrapper-scroll-y my-custom-scrollbar">
+
+                <table class="table table-bordered table-striped mb-0">
+                  <thead>
+                    <tr>
+                      <th scope="col">#</th>
+                      <th scope="col">Nomor Rujukan</th>
+                      <th scope="col">Tanggal Kunjungan</th>
+                      <th scope="col">Poli</th>
+                      <th scope="col">Pilih</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <th scope="row">1</th>
+                      <td>Mark</td>
+                      <td>Otto</td>
+                      <td>@mdo</td>
+                      <td><button type="button" class="btn btn-primary" data-dismiss="modal">Pilih</button></td>
+                    </tr>
+                    <tr>
+                      <th scope="row">2</th>
+                      <td>Jacob</td>
+                      <td>Thornton</td>
+                      <td>@fat</td>
+                      <td><button type="button" class="btn btn-primary" data-dismiss="modal">Pilih</button></td>
+                    </tr>
+                    <tr>
+                      <th scope="row">3</th>
+                      <td>Larry</td>
+                      <td>the Bird</td>
+                      <td>@twitter</td>
+                      <td><button type="button" class="btn btn-primary" data-dismiss="modal">Pilih</button></td>
+                    </tr>
+                    <tr>
+                      <th scope="row">4</th>
+                      <td>Mark</td>
+                      <td>Otto</td>
+                      <td>@mdo</td>
+                      <td><button type="button" class="btn btn-primary" data-dismiss="modal">Pilih</button></td>
+                    </tr>
+                    <tr>
+                      <th scope="row">5</th>
+                      <td>Jacob</td>
+                      <td>Thornton</td>
+                      <td>@fat</td>
+                      <td><button type="button" class="btn btn-primary" data-dismiss="modal">Pilih</button></td>
+                    </tr>
+                    <tr>
+                      <th scope="row">6</th>
+                      <td>Larry</td>
+                      <td>the Bird</td>
+                      <td>@twitter</td>
+                      <td><button type="button" class="btn btn-primary" data-dismiss="modal">Pilih</button></td>
+                    </tr>
+                  </tbody>
+                </table>
+              
+              </div>
+              
 
             </div>
 
@@ -587,77 +656,6 @@
   }
   
   $(function () {
-    // $('#infoContinue').click(function (e) {
-    $('#cekNomor').click(function (e) {
-      var value = $('#selectkepesertaan').val();
-      var nomor = ""; 
-      //console.log(value);
-      if (value == 'bpjs'){//jika pasien BPJS
-        nomor = $('#no_bpjs').val();
-
-
-
-      } else if (value == 'nonbpjs'){ //jika pasien non-BPJS
-        nomor = $('#no_ktp').val();
-
-        $.ajax({
-        type:'POST',
-        url:'{?=url()?}/anjungan/ajax?show=check-nik',
-        dataType: "json",
-        data: {no_ktp:nomor},
-        success:function(data){
-          if(data.status == 'ok'){
-            e.preventDefault();
-            $('.progress-bar').css('width', '70%');
-            $('.progress-bar').html('Step 2 of 3');
-            $('#myTab a[href="#poli"]').tab('show');
-            $('#no_rkm_medis_daftar').val(data.result.no_rkm_medis);
-            $('#nm_pasien_daftar').val(data.result.nm_pasien);
-            $('#alamat_daftar').val(data.result.alamat);
-            $('#kd_pj').val('A09');
-            $('#kd_pj').prop('disabled', 'disabled');
-          }else{
-            $('#messageText').text('Data NIK anda tidak ditemukan');
-            $('#messageDiv').removeClass('d-none');
-            $('selectkepesertaan select').val("-").change();
-            // window.location.href = "{?=url('anjungan/pasien')?}";
-          }
-        }
-      });
-
-        
-      }
-      //console.log(nomor);
-      
-
-
-
-      // var no_rkm_medis_daftar = $('#no_rm').val();
-      // $.ajax({
-      //   type:'POST',
-      //   url:'{?=url()?}/anjungan/ajax?show=get-daftar',
-      //   dataType: "json",
-      //   data: {no_rkm_medis_daftar:no_rkm_medis_daftar},
-      //   success:function(data){
-      //     if(data.status == 'ok'){
-      //       e.preventDefault();
-      //       $('.progress-bar').css('width', '70%');
-      //       $('.progress-bar').html('Step 2 of 3');
-      //       $('#myTab a[href="#poli"]').tab('show');
-      //       $('#no_rkm_medis_daftar').val(data.result.no_rkm_medis);
-      //       $('#nm_pasien_daftar').val(data.result.nm_pasien);
-      //       $('#alamat_daftar').val(data.result.alamat);
-      //     }else{
-      //       alert("Detail nomor rekam medik tidak ditemukan...");
-      //       document.getElementById("no_rm").value = "";
-      //     }
-      //   }
-      // });
-
-      setTimeout(function() { window.location.href = "{?=url('anjungan/pasien')?}"; }, 500000);
-
-    });
-
     $('input[name="datepicker"]').datepicker({
       uiLibrary: 'bootstrap4',
       format: 'yyyy-mm-dd',
@@ -810,6 +808,108 @@
       setTimeout(function() { window.location.href = "{?=url('anjungan/pasien')?}"; }, 500000);
     });
     //end of simpan pendaftaran
+    function dump(obj) {
+      var out = '';
+      for (var i in obj) {
+        out += i + ": " + obj[i] + "\n";
+        }
+      console.log(out);
+    }
+    //cek nomor BPJS/NIK
+    // $('#infoContinue').click(function (e) {
+      $('#cekNomor').click(function (e) {
+      var value = $('#selectkepesertaan').val();
+      var nomor = ""; 
+      //console.log(value);
+      if (value == 'bpjs'){//jika pasien BPJS
+        nomor = $('#no_bpjs').val();
+        console.log(nomor);
+        $.ajax({
+          type:'POST',
+          url:'{?=url()?}/anjungan/ajax?show=check-rujukan',
+          dataType: "json",
+          data: {no_bpjs:nomor},
+          success:function(data){
+            console.log(data);
+            if(data.status == 'ok'){
+              e.preventDefault();
+              var responseJson = JSON.parse(data['response']);
+              console.log(responseJson);
+              console.log(responseJson.rujukan);
+              console.log(responseJson['rujukan']);
+              // $('.progress-bar').css('width', '70%');
+              // $('.progress-bar').html('Step 2 of 3');
+              // $('#myTab a[href="#poli"]').tab('show');
+              //var text = 'Rujukan anda ditemukan' . data.response;
+              
+              // console.log(text);
+              // $('#messageText').text(text);
+              // $('#messageDiv').removeClass('d-none');
+            }else{
+              console.log(data.status);
+              $('#messageText').text('Rujukan anda tidak ditemukan');
+              $('#messageDiv').removeClass('d-none');
+              // window.location.href = "{?=url('anjungan/pasien')?}";
+            }
+          }
+        });
+
+      } else if (value == 'nonbpjs'){ //jika pasien non-BPJS
+        nomor = $('#no_ktp').val();
+
+        $.ajax({
+          type:'POST',
+          url:'{?=url()?}/anjungan/ajax?show=check-nik',
+          dataType: "json",
+          data: {no_ktp:nomor},
+          success:function(data){
+            if(data.status == 'ok'){
+              e.preventDefault();
+              $('.progress-bar').css('width', '70%');
+              $('.progress-bar').html('Step 2 of 3');
+              $('#myTab a[href="#poli"]').tab('show');
+              $('#no_rkm_medis_daftar').val(data.result.no_rkm_medis);
+              $('#nm_pasien_daftar').val(data.result.nm_pasien);
+              $('#alamat_daftar').val(data.result.alamat);
+              $('#kd_pj').val('A09');
+              $('#kd_pj').prop('disabled', 'disabled');
+            }else{
+              $('#messageText').text('Data NIK anda tidak ditemukan');
+              $('#messageDiv').removeClass('d-none');
+              // window.location.href = "{?=url('anjungan/pasien')?}";
+            }
+          }
+        });
+      }
+      //console.log(nomor);
+      
+
+      // var no_rkm_medis_daftar = $('#no_rm').val();
+      // $.ajax({
+      //   type:'POST',
+      //   url:'{?=url()?}/anjungan/ajax?show=get-daftar',
+      //   dataType: "json",
+      //   data: {no_rkm_medis_daftar:no_rkm_medis_daftar},
+      //   success:function(data){
+      //     if(data.status == 'ok'){
+      //       e.preventDefault();
+      //       $('.progress-bar').css('width', '70%');
+      //       $('.progress-bar').html('Step 2 of 3');
+      //       $('#myTab a[href="#poli"]').tab('show');
+      //       $('#no_rkm_medis_daftar').val(data.result.no_rkm_medis);
+      //       $('#nm_pasien_daftar').val(data.result.nm_pasien);
+      //       $('#alamat_daftar').val(data.result.alamat);
+      //     }else{
+      //       alert("Detail nomor rekam medik tidak ditemukan...");
+      //       document.getElementById("no_rm").value = "";
+      //     }
+      //   }
+      // });
+
+      setTimeout(function() { window.location.href = "{?=url('anjungan/pasien')?}"; }, 500000);
+
+    });
+    //end of cek nomor BPJS/NIK
 
     //selectkepesertaan
     $('select#selectkepesertaan').on('change',function(){
@@ -818,10 +918,16 @@
         console.log("BPJS");
         $("#partbpjs").removeClass('d-none');
         $("#partnonbpjs").addClass('d-none');
+        $('#messageText').text('');
+        $('#messageDiv').removeClass('d-none');
+        $('#no_ktp').val('');
       } else if (value == 'nonbpjs') {
         console.log("Non BPJS");
         $("#partbpjs").addClass('d-none');
         $("#partnonbpjs").removeClass('d-none');
+        $('#messageText').text('');
+        $('#messageDiv').removeClass('d-none');
+        $('#no_bpjs').val('');
       }
       
     });

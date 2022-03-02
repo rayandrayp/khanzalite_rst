@@ -6,6 +6,7 @@ use Systems\SiteModule;
 use Systems\Lib\BpjsService;
 use Systems\Lib\QRCode;
 
+require_once __DIR__ . '/../../vendor/autoload.php';
 class Site extends SiteModule
 {
 
@@ -1852,6 +1853,44 @@ class Site extends SiteModule
         }
         break;
 
+      case "check-rujukan":
+        if (!empty($_POST['no_bpjs'])) {
+          $data = array();
+          $no_bpjs = $_POST['no_bpjs'];
+
+          $responsePCARE = $this->getRujukanWSBPJS('', $no_bpjs);
+          if ($responsePCARE['metaData']['code'] == '200') {
+            $this->db('mlite_settings')->save([
+              'module' => 'debug',
+              'field' => 'check-rujukan Pcare',
+              'value' => 'PCare berhasil' . $responsePCARE['reponse']
+            ]);
+            $data = $responsePCARE;
+            $data['status'] = 'ok';
+          } else {
+            $responseRS = $this->getRujukanWSBPJS('RS/', $no_bpjs);
+            if ($responseRS['metaData']['code'] == '200') {
+              $this->db('mlite_settings')->save([
+                'module' => 'debug',
+                'field' => 'check-rujukan RS',
+                'value' => 'RS berhasil ' . $responseRS['response']
+              ]);
+              $data = $responseRS;
+              $data['status'] = 'ok';
+            } else {
+              // $this->db('mlite_settings')->save([
+              //   'module' => 'debug',
+              //   'field' => 'check-rujukan RS',
+              //   'value' => 'RS gagal ' . $responseRS['metaData']['code'] . ' msg: ' . $responseRS['metaData']['message']
+              // ]);
+              $data['status'] = 'err';
+              $data['result'] = '';
+            }
+          }
+          echo json_encode($data);
+        }
+        break;
+
       case "check-nik":
         if (!empty($_POST['no_ktp'])) {
           $data = array();
@@ -2630,6 +2669,65 @@ class Site extends SiteModule
 
     return $data;
   }
+
+  public function getRujukanWSBPJS($path, $no_peserta)
+  {
+    $consid = "31533";
+    $secretKey = "2lLD04E61A";
+    $user_key = "6129e4009acbd89f089be0aa5350f57d";
+
+    // Computes the timestamp
+    date_default_timezone_set('Asia/Jakarta');
+    $tStamp = strval(time() - strtotime('Y/m/d H:i:s'));
+    // Computes the signature by hashing the salt with the secret key as the key
+    $signature = hash_hmac('sha256', $consid . "&" . $tStamp, $secretKey, true);
+
+    // base64 encode
+    $encodedSignature = base64_encode($signature);
+
+    $url = 'https://apijkn.bpjs-kesehatan.go.id/vclaim-rest/Rujukan/' . $path . 'List/Peserta/' . $no_peserta;
+
+    $header = array(
+      'Accept: application/json',
+      'X-Cons-ID: ' . $consid,
+      'X-Timestamp: ' . $tStamp,
+      'X-Signature: ' . $encodedSignature,
+      'user_key: ' . $user_key
+    );
+    // $this->db('mlite_settings')->save([
+    //   'module' => 'debug',
+    //   'field' => 'getRujukanWSBPJS_url',
+    //   'value' => $url
+    // ]);
+    // $this->db('mlite_settings')->save([
+    //   'module' => 'debug',
+    //   'field' => 'getRujukanWSBPJS_header',
+    //   'value' => 'X-Cons-ID ' . $consid . ' ;X-Timestamp ' . $tStamp . ' ;X-Signature ' . $encodedSignature . ' ;user_key ' . $user_key
+    // ]);
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+    curl_setopt($ch, CURLOPT_SSL_CIPHER_LIST, 'DEFAULT@SECLEVEL=1');
+
+    $res = curl_exec($ch);
+    //$result = file_get_contents($res);
+    $obj = json_decode($res, true);
+    $decryptData = $this->stringDecrypt($consid . $secretKey . $tStamp, $obj['response']);
+    $decompressData = $this->decompress($decryptData);
+    $data['metaData'] = $obj['metaData'];
+    $data['response'] = $decompressData;
+
+    curl_close($ch);
+
+    // $this->db('mlite_settings')->save([
+    //   'module' => 'debug',
+    //   'field' => 'check-getRujukanWSBPJS data',
+    //   'value' => $res
+    // ]);
+    return $data;
+  }
   //end of WS BPJS
 
   //start WS RS
@@ -2730,5 +2828,29 @@ class Site extends SiteModule
     curl_close($ch);
 
     return $data;
+  }
+
+  //begin function decrypt
+  function stringDecrypt($key, $string)
+  {
+
+    $encrypt_method = 'AES-256-CBC';
+
+    // hash
+    $key_hash = hex2bin(hash('sha256', $key));
+
+    // iv - encrypt method AES-256-CBC expects 16 bytes - else you will get a warning
+    $iv = substr(hex2bin(hash('sha256', $key)), 0, 16);
+
+    $output = openssl_decrypt(base64_decode($string), $encrypt_method, $key_hash, OPENSSL_RAW_DATA, $iv);
+
+    return $output;
+  }
+
+  // function lzstring decompress 
+  // download libraries lzstring : https://github.com/nullpunkt/lz-string-php
+  function decompress($string)
+  {
+    return \LZCompressor\LZString::decompressFromEncodedURIComponent($string);
   }
 }
