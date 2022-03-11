@@ -290,67 +290,22 @@
                 </div>
               </div>
 
-              <div class="table-wrapper-scroll-y my-custom-scrollbar">
-
-                <table class="table table-bordered table-striped mb-0">
-                  <thead>
-                    <tr>
-                      <th scope="col">#</th>
-                      <th scope="col">Nomor Rujukan</th>
-                      <th scope="col">Tanggal Kunjungan</th>
-                      <th scope="col">Poli</th>
-                      <th scope="col">Pilih</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <th scope="row">1</th>
-                      <td>Mark</td>
-                      <td>Otto</td>
-                      <td>@mdo</td>
-                      <td><button type="button" class="btn btn-primary" data-dismiss="modal">Pilih</button></td>
-                    </tr>
-                    <tr>
-                      <th scope="row">2</th>
-                      <td>Jacob</td>
-                      <td>Thornton</td>
-                      <td>@fat</td>
-                      <td><button type="button" class="btn btn-primary" data-dismiss="modal">Pilih</button></td>
-                    </tr>
-                    <tr>
-                      <th scope="row">3</th>
-                      <td>Larry</td>
-                      <td>the Bird</td>
-                      <td>@twitter</td>
-                      <td><button type="button" class="btn btn-primary" data-dismiss="modal">Pilih</button></td>
-                    </tr>
-                    <tr>
-                      <th scope="row">4</th>
-                      <td>Mark</td>
-                      <td>Otto</td>
-                      <td>@mdo</td>
-                      <td><button type="button" class="btn btn-primary" data-dismiss="modal">Pilih</button></td>
-                    </tr>
-                    <tr>
-                      <th scope="row">5</th>
-                      <td>Jacob</td>
-                      <td>Thornton</td>
-                      <td>@fat</td>
-                      <td><button type="button" class="btn btn-primary" data-dismiss="modal">Pilih</button></td>
-                    </tr>
-                    <tr>
-                      <th scope="row">6</th>
-                      <td>Larry</td>
-                      <td>the Bird</td>
-                      <td>@twitter</td>
-                      <td><button type="button" class="btn btn-primary" data-dismiss="modal">Pilih</button></td>
-                    </tr>
-                  </tbody>
-                </table>
+                <div class="table-wrapper-scroll-y my-custom-scrollbar d-none" id="tabelRujukanDiv">
+                  <table class="table table-bordered table-striped mb-0" id="tabelRujukan">
+                    <thead>
+                      <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Nomor Rujukan</th>
+                        <th scope="col">Tanggal Kunjungan</th>
+                        <th scope="col">Poli</th>
+                        <th scope="col">Pilih</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                  </table>
+                </div>
               
-              </div>
-              
-
             </div>
 
             <div class="tab-pane fade" id="poli" role="tabpanel">
@@ -364,7 +319,16 @@
                   <label>Nama Lengkap</label>
                     <input type="text" name="nm_pasien_daftar" class="form-control" placeholder=" " id="nm_pasien_daftar">
                 </div>
+                <div class="col form-group">
+                  <label>Nomor Rujukan</label>
+                    <input type="text" name="no_rujukan" class="form-control" placeholder="" id="no_rujukan">
+                </div>
+                <div class="col form-group d-none" >
+                  <label>Nomor Induk Kependudukan</label>
+                    <input type="text" name="nik" class="form-control" placeholder="" id="nik">
+                </div>
               </div>
+              
               <div class="form-group">
                 <label>Alamat Lengkap</label>
                 <textarea class="form-control" placeholder="" id="alamat_daftar" disabled></textarea>
@@ -400,6 +364,8 @@
               </div>
               <button class="btn btn-secondary" id="finish">Simpan Pendaftaran</button>
             </div>
+            
+            <!-- Print area -->
             <div class="tab-pane fade" id="reviewPrint" role="tabpanel">
               <h4>Cetak Bukti Daftar</h4>
               <div style="width: 200px; font-family: Tahoma; margin: 0 auto; font-size: 11px !important;">
@@ -416,6 +382,7 @@
               </div>
               <hr>
               <div style="width: 70px; display: inline-block;">Tanggal</div>: <span id="tgl_registrasi_cetak"></span><br>
+              <div style="width: 70px; display: inline-block;">No. Rujukan </div>: <span id="no_rujukan_cetak"></span><br>
               <div style="width: 70px; display: inline-block;">No. RM</div>: <span id="no_rkm_medis_cetak"></span><br>
               <div style="width: 70px; display: inline-block;">Nama</div>: <span id="nm_pasien_cetak"></span><br>
               <div style="width: 70px; display: inline-block;">Klinik</div>: <span id="nm_poli_cetak"></span><br>
@@ -443,6 +410,7 @@
                   <br>
                   <div style="width: 70px; display: inline-block;">Tanggal </div>:<span id="tgl_registrasi_final"></span><br>
                   <div style="width: 70px; display: inline-block;">Antrian </div>: <span id="no_reg_final"></span><br>
+                  <div style="width: 70px; display: inline-block;">No. Rujukan </div>: <span id="no_rujukan_final"></span><br>
                   <div style="width: 70px; display: inline-block;">Nama </div>: <span id="nm_pasien_final"></span><br>
                   <div style="width: 70px; display: inline-block;">No. RM </div>: <span id="no_rkm_medis_final"></span><br>
                   <div style="width: 70px; display: inline-block;">Alamat </div>: <span id="alamat_final"></span><br>
@@ -588,43 +556,43 @@
   <script src="{?=url(MODULES)?}/anjungan/js/jquery.keyboard.js"></script>
   <script src="{?=url(MODULES)?}/anjungan/js/jquery.mousewheel.js"></script>
   <script>
-  $(document).ready(function(){
-    $('#getNoRM').on('click',function(){
-      var no_rkm_medis = $('#norm').val();
-      var kd_poli = $('#kdpoli').val();
-      $.ajax({
-        type:'POST',
-        url:'{?=url()?}/anjungan/ajax?show=get-skdp',
-        dataType: "json",
-        data: {no_rkm_medis:no_rkm_medis, kd_poli:kd_poli},
-        success:function(data){
-          if(data.status == 'ok'){
-            $('#no_rkm_medis').text(data.result.no_rkm_medis);
-            $('#tanggal_datang').text(data.result.tanggal_datang);
-            $('#nm_poli').text(data.result.nm_poli);
-            $('#c_no_rkm_medis').text(data.result.no_rkm_medis);
-            $('#c_nm_pasien').text(data.result.nm_pasien);
-            $('#c_diagnosa').text(data.result.diagnosa);
-            $('#c_terapi').text(data.result.terapi);
-            $('#c_alasan1').text(data.result.alasan1);
-            $('#c_alasan2').text(data.result.alasan2);
-            $('#c_rtl1').text(data.result.rtl1);
-            $('#c_rtl2').text(data.result.rtl2);
-            $('#c_tanggal_datang').text(data.result.tanggal_datang);
-            $('#c_tanggal_rujukan').text(data.result.tanggal_rujukan);
-            $('#c_no_antrian').text(data.result.no_antrian);
-            $('#c_nm_dokter').text(data.result.nm_dokter);
-            $('#c_nm_poli').text(data.result.nm_poli);
-            $('#c_no_reg').text(data.result.no_reg);
-            $('.get-content').slideDown();
-          }else{
-            $('.get-content').slideUp();
-            alert("Surat kontrol tidak ditemukan...");
-          }
-        }
-      });
-    });
-  });
+  // $(document).ready(function(){
+  //   $('#getNoRM').on('click',function(){
+  //     var no_rkm_medis = $('#norm').val();
+  //     var kd_poli = $('#kdpoli').val();
+  //     $.ajax({
+  //       type:'POST',
+  //       url:'{?=url()?}/anjungan/ajax?show=get-skdp',
+  //       dataType: "json",
+  //       data: {no_rkm_medis:no_rkm_medis, kd_poli:kd_poli},
+  //       success:function(data){
+  //         if(data.status == 'ok'){
+  //           $('#no_rkm_medis').text(data.result.no_rkm_medis);
+  //           $('#tanggal_datang').text(data.result.tanggal_datang);
+  //           $('#nm_poli').text(data.result.nm_poli);
+  //           $('#c_no_rkm_medis').text(data.result.no_rkm_medis);
+  //           $('#c_nm_pasien').text(data.result.nm_pasien);
+  //           $('#c_diagnosa').text(data.result.diagnosa);
+  //           $('#c_terapi').text(data.result.terapi);
+  //           $('#c_alasan1').text(data.result.alasan1);
+  //           $('#c_alasan2').text(data.result.alasan2);
+  //           $('#c_rtl1').text(data.result.rtl1);
+  //           $('#c_rtl2').text(data.result.rtl2);
+  //           $('#c_tanggal_datang').text(data.result.tanggal_datang);
+  //           $('#c_tanggal_rujukan').text(data.result.tanggal_rujukan);
+  //           $('#c_no_antrian').text(data.result.no_antrian);
+  //           $('#c_nm_dokter').text(data.result.nm_dokter);
+  //           $('#c_nm_poli').text(data.result.nm_poli);
+  //           $('#c_no_reg').text(data.result.no_reg);
+  //           $('.get-content').slideDown();
+  //         }else{
+  //           $('.get-content').slideUp();
+  //           alert("Surat kontrol tidak ditemukan...");
+  //         }
+  //       }
+  //     });
+  //   });
+  // });
   $(document).ready(function() {
     setTimeout(function () {
       $("#display_nomor_loket").load("{?=url()?}/anjungan/ajax?show=tampilloket");
@@ -644,18 +612,22 @@
       PW.close();
       window.location.href = "{?=url('anjungan/pasien')?}";
   }
-  function printSEP(eleId){
-      var PW = window.open('', '_blank', 'Print content');
-      PW.document.write('<link rel="stylesheet" href="../css/bootstrap.min.css">');
-      PW.document.write(document.getElementById(eleId).innerHTML);
-      PW.document.close();
-      PW.focus();
-      PW.print();
-      PW.close();
-      window.location.href = "{?=url('anjungan/pasien')?}";
-  }
+  // function printSEP(eleId){
+  //     var PW = window.open('', '_blank', 'Print content');
+  //     PW.document.write('<link rel="stylesheet" href="../css/bootstrap.min.css">');
+  //     PW.document.write(document.getElementById(eleId).innerHTML);
+  //     PW.document.close();
+  //     PW.focus();
+  //     PW.print();
+  //     PW.close();
+  //     window.location.href = "{?=url('anjungan/pasien')?}";
+  // }
   
   $(function () {
+    
+    var jsonRujukan;
+    var jam_praktek = "";
+
     $('input[name="datepicker"]').datepicker({
       uiLibrary: 'bootstrap4',
       format: 'yyyy-mm-dd',
@@ -675,7 +647,8 @@
               $("#pilih_poli_daftar").empty();
               var div_data = '<option value="" disabled selected="true">Pilih Poli</option>';
               $.each(data.result,function(i,data) {
-                div_data +="<option value="+data.kd_poli+">"+data.nm_poli+"</option>";
+                jam_praktek = data.jam_mulai + "-" + data.jam_selesai;
+                div_data +="<option value='"+data.kd_poli+";"+jam_praktek+"''>"+data.nm_poli+" (" + jam_praktek + ")" + "</option>";
               });
               $(div_data).appendTo('#pilih_poli_daftar');
             } else if(data.status == 'exist'){
@@ -691,7 +664,8 @@
     });
 
     $('select#pilih_poli_daftar').on('change',function(){
-      var kd_poli_daftar = this.value;
+      var kd_poli_arr = this.value.split(";");
+      var kd_poli_daftar = kd_poli_arr[0];
       var tgl_registrasi_daftar = $('#tgl_registrasi_daftar').val();
       $.ajax({
         type:'POST',
@@ -722,11 +696,31 @@
       var nm_pasien_daftar = $('#nm_pasien_daftar').val();
       var alamat_daftar = $('#alamat_daftar').val();
       var tgl_registrasi_daftar = $('#tgl_registrasi_daftar').val();
-      var kd_poli_daftar = $('#pilih_poli_daftar').val();
+      var kd_poli_field = $('#pilih_poli_daftar').val();
+      var kd_poli_arr = kd_poli_field.split(";");
+      var kd_poli_daftar = kd_poli_arr[0];
+      var jam_praktek = kd_poli_arr[1];
       var kd_dokter_daftar = $('#pilih_dokter_daftar').val();
       var kd_pj = $('#kd_pj').val();
+      var no_rujukan_daftar = $('#no_rujukan').val();
+      var jeniskunjungan = 1;//{1 (Rujukan FKTP), 2 (Rujukan Internal), 3 (Kontrol), 4 (Rujukan Antar RS)} // sementara pakai 1
+      var nik = $('#nik').val();
+
+      // console.log("Begin simpan pendaftaran");
+      // console.log(nik);
+      // console.log(no_rkm_medis_daftar);
+      // console.log(nm_pasien_daftar);
+      // console.log(alamat_daftar);
+      // console.log(tgl_registrasi_daftar);
+      // console.log(kd_poli_field);
+      // console.log(kd_poli_daftar);
+      // console.log(jam_praktek);
+      // console.log(kd_dokter_daftar);
+      // console.log(kd_pj);
+      // console.log(no_rujukan_daftar);
 
       $('#no_rkm_medis_cetak').text(no_rkm_medis_daftar);
+      $('#no_rujukan_cetak').text(no_rujukan_daftar);
       $('#nm_pasien_cetak').text(nm_pasien_daftar);
       $('#alamat_cetak').text(alamat_daftar);
       $('#tgl_registrasi_cetak').text(tgl_registrasi_daftar);
@@ -764,87 +758,99 @@
            }
          }
       });
-
+      
       $.ajax({
           url:'{?=url()?}/anjungan/ajax?show=post-registrasi',
           type:'POST',
           dataType: "json",
           data:{
-              no_rkm_medis:no_rkm_medis_daftar,
-              tgl_registrasi:tgl_registrasi_daftar,
-              kd_poli:kd_poli_daftar,
-              kd_dokter:kd_dokter_daftar,
-              kd_pj:kd_pj
+            no_rkm_medis_daftar:no_rkm_medis_daftar,
+            nik:nik,
+            tgl_registrasi_daftar:tgl_registrasi_daftar,
+            kd_poli_daftar:kd_poli_daftar,
+            kd_dokter_daftar:kd_dokter_daftar,
+            kd_pj:kd_pj,
+            jeniskunjungan:jeniskunjungan,
+            no_rujukan_daftar:no_rujukan_daftar,
+            jam_praktek:jam_praktek
           },
-         success:function(data){
+          success:function(data){
+            console.log(data);
            if(data.status == 'ok'){
-              console.log("status OK");
-              console.log("data.result.tgl_registrasi " + data.result.tgl_registrasi);
-              console.log("data.result.jam_reg " + data.result.jam_reg);
-              console.log("data.result.no_reg " + data.result.no_reg);
-              console.log("data.result.nm_pasien " + data.result.nm_pasien);
-              console.log("data.result.alamat " + data.result.alamat);
-              console.log("data.result.nm_dokter " + data.result.nm_dokter);
-              console.log("data.result.nm_poli " + data.result.nm_poli);
-              console.log("data.result.png_jawab " + data.result.png_jawab);
-
-              $('#tgl_registrasi_final').text(data.result.tgl_registrasi);
-              $('#jam_reg_final').text(data.result.jam_reg);
-              $('#no_reg_final').text(data.result.no_reg);
-              $('#nm_pasien_final').text(data.result.nm_pasien);
-              $('#no_rkm_medis_final').text(data.result.no_rkm_medis);
-              $('#alamat_final').text(data.result.alamat);
-              $('#nm_dokter_final').text(data.result.nm_dokter);
-              $('#nm_poli_final').text(data.result.nm_poli);
-              $('#cara_bayar_final').text(data.result.png_jawab);
+             console.log("ok " + data.result);
            } else {
-              console.log("Error saving data.");
+            console.log("err" + data.result);
            }
          }
+        //  success:function(data){
+        //    console.log(data);
+        //     if(data.status == 'ok'){
+        //       e.preventDefault();
+        //       console.log("status OK");
+
+        //       // $('#tgl_registrasi_final').text(data.result.tgl_registrasi);
+        //       // $('#jam_reg_final').text(data.result.jam_reg);
+        //       // $('#no_reg_final').text(data.result.no_reg);
+        //       // $('#nm_pasien_final').text(data.result.nm_pasien);
+        //       // $('#no_rujukan_final').text(no_rujukan_daftar);
+        //       // $('#no_rkm_medis_final').text(data.result.no_rkm_medis);
+        //       // $('#alamat_final').text(data.result.alamat);
+        //       // $('#nm_dokter_final').text(data.result.nm_dokter);
+        //       // $('#nm_poli_final').text(data.result.nm_poli);
+        //       // $('#cara_bayar_final').text(data.result.png_jawab);
+
+        //       // $('.progress-bar').css('width', '100%');
+        //       // $('.progress-bar').html('Step 3 of 3');
+        //       // $('#myTab a[href="#reviewPrint"]').tab('show');
+        //     }else{
+        //       console.log("status err");
+        //       console.log(data.result);
+        //     }
+        //   }
       });
-      $('.progress-bar').css('width', '100%');
-      $('.progress-bar').html('Step 3 of 3');
-      $('#myTab a[href="#reviewPrint"]').tab('show');
+      
       setTimeout(function() { window.location.href = "{?=url('anjungan/pasien')?}"; }, 500000);
     });
     //end of simpan pendaftaran
-    function dump(obj) {
-      var out = '';
-      for (var i in obj) {
-        out += i + ": " + obj[i] + "\n";
-        }
-      console.log(out);
-    }
+
     //cek nomor BPJS/NIK
     // $('#infoContinue').click(function (e) {
-      $('#cekNomor').click(function (e) {
+    $('#cekNomor').click(function (e) {
       var value = $('#selectkepesertaan').val();
       var nomor = ""; 
       //console.log(value);
       if (value == 'bpjs'){//jika pasien BPJS
         nomor = $('#no_bpjs').val();
-        console.log(nomor);
+        // console.log(nomor);
         $.ajax({
           type:'POST',
           url:'{?=url()?}/anjungan/ajax?show=check-rujukan',
           dataType: "json",
           data: {no_bpjs:nomor},
           success:function(data){
-            console.log(data);
+            // console.log(data);
             if(data.status == 'ok'){
               e.preventDefault();
               var responseJson = JSON.parse(data['response']);
-              console.log(responseJson);
-              console.log(responseJson.rujukan);
-              console.log(responseJson['rujukan']);
-              // $('.progress-bar').css('width', '70%');
-              // $('.progress-bar').html('Step 2 of 3');
-              // $('#myTab a[href="#poli"]').tab('show');
-              //var text = 'Rujukan anda ditemukan' . data.response;
-              
-              // console.log(text);
-              // $('#messageText').text(text);
-              // $('#messageDiv').removeClass('d-none');
+              jsonRujukan = responseJson.rujukan;
+              // console.log(responseJson);
+              // console.log(responseJson.rujukan);
+              // console.log(responseJson['rujukan']);
+              var trHTML = '';
+              $.each(jsonRujukan, function (i, item) {
+                
+                var index = i+1;
+                  trHTML += '<tr>' +
+                              '<th scope="row">' + index + '</th>' +
+                              '<td>' + item.noKunjungan + '</td>' +
+                              '<td>' + item.tglKunjungan + '</td>' +
+                              '<td>' + item.poliRujukan.nama + '</td>' +
+                              '<td><button data-index-rujukan="' + i + '" class="btn btn-primary"  type="button">Pilih</button></td>' +
+                            '</tr>';
+              });
+              // console.log(trHTML);
+              $('#tabelRujukan').append(trHTML);
+              $('#tabelRujukanDiv').removeClass('d-none');
             }else{
               console.log(data.status);
               $('#messageText').text('Rujukan anda tidak ditemukan');
@@ -871,8 +877,9 @@
               $('#no_rkm_medis_daftar').val(data.result.no_rkm_medis);
               $('#nm_pasien_daftar').val(data.result.nm_pasien);
               $('#alamat_daftar').val(data.result.alamat);
+              // $('#tgl_registrasi_daftar').val(new Date().toISOString().slice(0, 10));
               $('#kd_pj').val('A09');
-              $('#kd_pj').prop('disabled', 'disabled');
+              // $('#kd_pj').prop('disabled', 'disabled');
             }else{
               $('#messageText').text('Data NIK anda tidak ditemukan');
               $('#messageDiv').removeClass('d-none');
@@ -883,33 +890,50 @@
       }
       //console.log(nomor);
       
-
-      // var no_rkm_medis_daftar = $('#no_rm').val();
-      // $.ajax({
-      //   type:'POST',
-      //   url:'{?=url()?}/anjungan/ajax?show=get-daftar',
-      //   dataType: "json",
-      //   data: {no_rkm_medis_daftar:no_rkm_medis_daftar},
-      //   success:function(data){
-      //     if(data.status == 'ok'){
-      //       e.preventDefault();
-      //       $('.progress-bar').css('width', '70%');
-      //       $('.progress-bar').html('Step 2 of 3');
-      //       $('#myTab a[href="#poli"]').tab('show');
-      //       $('#no_rkm_medis_daftar').val(data.result.no_rkm_medis);
-      //       $('#nm_pasien_daftar').val(data.result.nm_pasien);
-      //       $('#alamat_daftar').val(data.result.alamat);
-      //     }else{
-      //       alert("Detail nomor rekam medik tidak ditemukan...");
-      //       document.getElementById("no_rm").value = "";
-      //     }
-      //   }
-      // });
-
       setTimeout(function() { window.location.href = "{?=url('anjungan/pasien')?}"; }, 500000);
 
     });
     //end of cek nomor BPJS/NIK
+
+    //jika rujukan dipilih
+    $('#tabelRujukan').on('click', 'button.btn', function() {
+      let id = $(this).data('index-rujukan');
+      var jsonData = jsonRujukan[id];
+      var todayDate = new Date().toISOString().slice(0, 10);
+      // console.log(jsonData);
+      console.log(jsonData.peserta.mr.noMR);
+      
+      $.ajax({
+        type:'POST',
+        url:'{?=url()?}/anjungan/ajax?show=get-daftar',
+        dataType: "json",
+        data: {no_rkm_medis_daftar:jsonData.peserta.mr.noMR},
+        success:function(data){
+          if(data.status == 'ok'){
+            //e.preventDefault();
+            $('.progress-bar').css('width', '70%');
+            $('.progress-bar').html('Step 2 of 3');
+            $('#myTab a[href="#poli"]').tab('show');
+            $('#no_rkm_medis_daftar').val(data.result.no_rkm_medis);
+            $('#no_rujukan').val(jsonData.noKunjungan);
+            $('#nik').val(jsonData.peserta.nik);
+            $('#nm_pasien_daftar').val(data.result.nm_pasien);
+            $('#alamat_daftar').val(data.result.alamat);
+            // $('#tgl_registrasi_daftar').val(todayDate);
+            $('#kd_pj').val('A65');
+            $('#kd_pj').prop('disabled', 'disabled');
+            // $('#tgl_registrasi_daftar').prop('disabled', 'disabled');
+          }else{
+            $('#messageText').text('Data pasien tidak ditemukan. Mohon mendaftarkan diri di loket pendaftaran.');
+            $('#messageDiv').removeClass('d-none');
+          }
+        }
+      });
+    });
+
+      setTimeout(function() { window.location.href = "{?=url('anjungan/pasien')?}"; }, 500000);
+
+  
 
     //selectkepesertaan
     $('select#selectkepesertaan').on('change',function(){
@@ -924,6 +948,7 @@
       } else if (value == 'nonbpjs') {
         console.log("Non BPJS");
         $("#partbpjs").addClass('d-none');
+        $("#tabelRujukanDiv").addClass('d-none');
         $("#partnonbpjs").removeClass('d-none');
         $('#messageText').text('');
         $('#messageDiv').removeClass('d-none');
@@ -962,121 +987,6 @@
 
     });
     //end of checkin
-  });
-
-  $(function () {
-
-    $('#infoPendaftaran').click(function (e) {
-      var no_rawat = $('#no_rawat').val();
-      $.ajax({
-        type:'POST',
-        url:'get-sep.php',
-        dataType: "json",
-        data: {no_rawat:no_rawat},
-        success:function(data){
-          if(data.status == 'ok'){
-            e.preventDefault();
-            var tgl_lahir = new Date(data.result.tanggal_lahir);
-            var dd = String(tgl_lahir.getDate()).padStart(2, '0');
-            var mm = String(tgl_lahir.getMonth() + 1).padStart(2, '0'); //January is 0!
-            var yyyy = tgl_lahir.getFullYear();
-            tanggal_lahir = dd + '/' + mm + '/' + yyyy;
-
-            $('.progress-bar').css('width', '70%');
-            $('.progress-bar').html('Step 2 of 3');
-            $('#myTab a[href="#reviewsep"]').tab('show');
-            $('#sep_no_sep').text(data.result.no_sep);
-            $('#sep_tglsep').text(data.result.tglsep);
-            $('#sep_no_kartu').text(data.result.no_kartu);
-            $('#sep_jkel').text(data.result.jkel);
-            $('#sep_nama_pasien').text(data.result.nama_pasien);
-            $('#sep_no_rawat').text(data.result.no_rawat);
-            $('#sep_tanggal_lahir').text(tanggal_lahir);
-            $('#sep_notelep').text(data.result.notelep);
-            $('#sep_peserta').text(data.result.peserta);
-            $('#sep_nmpolitujuan').text(data.result.nmpolitujuan);
-            $('#sep_cob').text(data.result.cob);
-            $('#sep_nmppkrujukan').text(data.result.nmppkrujukan);
-            $('#sep_jnspelayanan').text(data.result.jnspelayanan);
-            $('#sep_nmdiagnosaawal').text(data.result.nmdiagnosaawal);
-            $('#sep_klsrawat').text(data.result.klsrawat);
-            $('#sep_penjamin').text(data.result.penjamin);
-            $('#sep_catatan').text(data.result.catatan);
-          }else{
-            alert("Detail nomor perawatan tidak ditemukan...");
-            document.getElementById("no_rawat").value = "";
-          }
-        }
-      });
-
-      setTimeout(function() { window.location.href = "{?=url('anjungan/pasien')?}"; }, 500000);
-
-    });
-
-    $('#cetak').click(function (e) {
-      var no_rawat = $('#no_rawat').val();
-      $.ajax({
-        type:'POST',
-        url:'get-sep.php',
-        dataType: "json",
-        data: {no_rawat:no_rawat},
-        success:function(data){
-          if(data.status == 'ok'){
-            e.preventDefault();
-            var tgl_lahir = new Date(data.result.tanggal_lahir);
-            var dd = String(tgl_lahir.getDate()).padStart(2, '0');
-            var mm = String(tgl_lahir.getMonth() + 1).padStart(2, '0'); //January is 0!
-            var yyyy = tgl_lahir.getFullYear();
-            tanggal_lahir = dd + '/' + mm + '/' + yyyy;
-
-            $('.progress-bar').css('width', '100%');
-            $('.progress-bar').html('Step 3 of 3');
-            $('#myTab a[href="#reviewCetak"]').tab('show');
-            $('#_sep_no_sep').text(data.result.no_sep);
-            $('#_sep_tglsep').text(data.result.tglsep);
-            $('#_sep_no_kartu').text(data.result.no_kartu);
-            $('#_sep_jkel').text(data.result.jkel);
-            $('#_sep_nama_pasien').text(data.result.nama_pasien);
-            $('#_sep_no_rawat').text(data.result.no_rawat);
-            $('#_sep_tanggal_lahir').text(tanggal_lahir);
-            $('#_sep_notelep').text(data.result.notelep);
-            $('#_sep_peserta').text(data.result.peserta);
-            $('#_sep_nmpolitujuan').text(data.result.nmpolitujuan);
-            $('#_sep_cob').text(data.result.cob);
-            $('#_sep_nmppkrujukan').text(data.result.nmppkrujukan);
-            $('#_sep_jnspelayanan').text(data.result.jnspelayanan);
-            $('#_sep_nmdiagnosaawal').text(data.result.nmdiagnosaawal);
-            $('#_sep_klsrawat').text(data.result.klsrawat);
-            $('#_sep_penjamin').text(data.result.penjamin);
-            $('#_sep_catatan').text(data.result.catatan);
-
-            $('#__sep_no_sep').text(data.result.no_sep);
-            $('#__sep_tglsep').text(data.result.tglsep);
-            $('#__sep_no_kartu').text(data.result.no_kartu);
-            $('#__sep_jkel').text(data.result.jkel);
-            $('#__sep_nama_pasien').text(data.result.nama_pasien);
-            $('#__sep_no_rawat').text(data.result.no_rawat);
-            $('#__sep_tanggal_lahir').text(tanggal_lahir);
-            $('#__sep_notelep').text(data.result.notelep);
-            $('#__sep_peserta').text(data.result.peserta);
-            $('#__sep_nmpolitujuan').text(data.result.nmpolitujuan);
-            $('#__sep_cob').text(data.result.cob);
-            $('#__sep_nmppkrujukan').text(data.result.nmppkrujukan);
-            $('#__sep_jnspelayanan').text(data.result.jnspelayanan);
-            $('#__sep_nmdiagnosaawal').text(data.result.nmdiagnosaawal);
-            $('#__sep_klsrawat').text(data.result.klsrawat);
-            $('#__sep_penjamin').text(data.result.penjamin);
-            $('#__sep_catatan').text(data.result.catatan);
-
-          }else{
-            alert("Detail nomor perawatan tidak ditemukan...");
-            document.getElementById("no_rawat").value = "";
-          }
-        }
-      });
-      setTimeout(function() { window.location.href = "{?=url('anjungan/pasien')?}"; }, 500000);
-    });
-
   });
 
   $(function() {
