@@ -1,4 +1,5 @@
 <?php
+
 namespace Systems\Lib;
 
 class BpjsService
@@ -33,16 +34,16 @@ class BpjsService
     protected static function request($type, $url, $datafields, $consid, $secretkey, $user_key)
     {
         date_default_timezone_set('UTC');
-        $tStamp = strval(time()-strtotime('1970-01-01 00:00:00'));
-        $signature = hash_hmac('sha256', $consid."&".$tStamp, $secretkey, true);
+        $tStamp = strval(time() - strtotime('1970-01-01 00:00:00'));
+        $signature = hash_hmac('sha256', $consid . "&" . $tStamp, $secretkey, true);
         $encodedSignature = base64_encode($signature);
         $ch = curl_init();
         $headers = array(
-         'X-cons-id: '.$consid.'',
-         'X-timestamp: '.$tStamp.'' ,
-         'X-signature: '.$encodedSignature.'',
-         'user_key: '.$user_key.'',
-         'Content-Type:application/json',
+            'X-cons-id: ' . $consid . '',
+            'X-timestamp: ' . $tStamp . '',
+            'X-signature: ' . $encodedSignature . '',
+            'user_key: ' . $user_key . '',
+            'Content-Type:application/json',
         );
 
         $ch = curl_init();
@@ -70,16 +71,16 @@ class BpjsService
     protected static function request2($type, $url, $datafields, $consid, $secretkey, $user_key)
     {
         date_default_timezone_set('UTC');
-        $tStamp = strval(time()-strtotime('1970-01-01 00:00:00'));
-        $signature = hash_hmac('sha256', $consid."&".$tStamp, $secretkey, true);
+        $tStamp = strval(time() - strtotime('1970-01-01 00:00:00'));
+        $signature = hash_hmac('sha256', $consid . "&" . $tStamp, $secretkey, true);
         $encodedSignature = base64_encode($signature);
         $ch = curl_init();
         $headers = array(
-         'X-cons-id: '.$consid.'',
-         'X-timestamp: '.$tStamp.'' ,
-         'X-signature: '.$encodedSignature.'',
-         'user_key: '.$user_key.'',
-         'Content-Type:Application/x-www-form-urlencoded',
+            'X-cons-id: ' . $consid . '',
+            'X-timestamp: ' . $tStamp . '',
+            'X-signature: ' . $encodedSignature . '',
+            'user_key: ' . $user_key . '',
+            'Content-Type:Application/x-www-form-urlencoded',
         );
 
         $ch = curl_init();

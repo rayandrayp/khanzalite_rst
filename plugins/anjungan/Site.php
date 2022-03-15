@@ -34,6 +34,7 @@ class Site extends SiteModule
     $this->route('anjungan/farmasi-console', 'getDisplayConsoleFarmasi');
     $this->route('anjungan/apotek', 'getDisplayAntrianApotek');
     $this->route('anjungan/ajax', 'getAjax');
+    $this->route('anjungan/panggilantrianfarmasi', 'getPanggilAntrianFarmasi');
     $this->route('anjungan/panggilantrian', 'getPanggilAntrian');
     $this->route('anjungan/panggilselesai', 'getPanggilSelesai');
     $this->route('anjungan/setpanggil', 'getSetPanggil');
@@ -462,6 +463,7 @@ class Site extends SiteModule
           $_tcounter = $tcounter + 1;
         }
         if (isset($_GET['loket'])) {
+          //update current nomor menjadi 3 (sudah selesai dilayani)
           $curr_loket = $_GET['loket'];
           $this->db('mlite_antrian_loket')
             ->where('type', 'Loket')
@@ -470,15 +472,29 @@ class Site extends SiteModule
             ->save([
               'end_time' => date('H:i:s'),
               'loket' => $curr_loket,
-              'status' => 1
+              'status' => 3
             ]);
           /*$this->db()->pdo()->exec("DELETE FROM `antriloket`");
               $this->db('antriloket')->save([
                 'loket' => $_GET['loket'],
                 'antrian' => $_tcounter
               ]);*/
-          $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_loket')->save(['value' => $_GET['loket']]);
-          $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_loket_nomor')->save(['value' => $_tcounter]);
+
+          $nextNomor = $this->db('mlite_antrian_loket')->select('status')->where('type', 'Loket')->where('noantrian', $tcounter + 1)->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
+          if ($nextNomor) {
+            //update next nomor menjadi 1 (sedang dilayani)
+            $this->db('mlite_antrian_loket')
+              ->where('type', 'Loket')
+              ->where('noantrian', $tcounter + 1)
+              ->where('postdate', date('Y-m-d'))
+              ->save([
+                'loket' => $curr_loket,
+                'status' => 1
+              ]);
+            $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_loket')->save(['value' => $_GET['loket']]);
+            $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_loket_nomor')->save(['value' => $_tcounter]);
+          }
+          redirect(url('anjungan/loket?show=panggil_loket&no_loket=' . $curr_loket));
         }
         if (isset($_GET['antrian'])) {
           /*$this->db()->pdo()->exec("DELETE FROM `antriloket`");
@@ -488,6 +504,7 @@ class Site extends SiteModule
               ]);*/
           $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_loket')->save(['value' => $_GET['reset']]);
           $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_loket_nomor')->save(['value' => $_GET['antrian']]);
+          redirect(url('anjungan/loket?show=panggil_loket&no_loket=' . $_GET['no_loket']));
         }
         if (isset($_GET['no_loket'])) {
           $no_loket = $_GET['no_loket'];
@@ -1081,7 +1098,7 @@ class Site extends SiteModule
     $res = [];
 
     $date = date('Y-m-d');
-    $sql = $this->db()->pdo()->prepare("SELECT * FROM mlite_antrian_loket WHERE status = 1 AND postdate = '$date' ORDER BY CAST(noantrian as int) ASC");
+    $sql = $this->db()->pdo()->prepare("SELECT * FROM mlite_antrian_loket WHERE type in ('Loket', 'CS') AND  status = 1 AND postdate = '$date' ORDER BY CAST(noantrian as int) ASC");
     $sql->execute();
     $data = $sql->fetchAll(\PDO::FETCH_OBJ);
     if ($data) {
@@ -1148,7 +1165,72 @@ class Site extends SiteModule
 
     exit();
   }
+  public function getPanggilAntrianFarmasi()
+  {
+    $res = [];
 
+    $date = date('Y-m-d');
+    $sql = $this->db()->pdo()->prepare("SELECT * FROM mlite_antrian_loket WHERE type not in ('Loket', 'CS') AND status = 1 AND postdate = '$date' ORDER BY CAST(noantrian as int) ASC");
+    $sql->execute();
+    $data = $sql->fetchAll(\PDO::FETCH_OBJ);
+    if ($data) {
+      //$data  = $query->fetch_object();
+      $type = explode('#', $data[0]->type);
+      //print_r($data);
+      // code...
+      switch (strtolower($type[0])) {
+        case 'obat':
+          $kode = 'a';
+          break;
+        case 'racikan':
+          $kode = 'b';
+          break;
+        default:
+          $kode = 'ahhay';
+          break;
+      }
+
+      //$terbilang = Terbilang::convert($data->noantrian);
+      $terbilang = strtolower(terbilang($data[0]->noantrian));
+      // $loket = strtolower(terbilang($data[0]->loket));
+
+      switch (strtolower($data[0]->loket)) {
+        case 'obat':
+          $loket = '1';
+          break;
+        case 'racikan':
+          $loket = '2';
+          break;
+        default:
+          $loket = $data[0]->loket;
+          break;
+      }
+      $text = "antrian $kode $terbilang counter $loket";
+      $res = [
+        'status' => true,
+        'data_loket' => $data,
+        'panggil' => explode(" ", $text)
+      ];
+      // $res = [
+      //   'id' => $data[0]->kd,
+      //   'status' => true,
+      //   'type' => $data[0]->type,
+      //   'kode' => $kode,
+      //   'noantrian' => $data[0]->noantrian,
+      //   'loket' => $data[0]->loket,
+      //   'no_loket' => $data[0]->loket,
+      //   'panggil' => explode(" ", $text)
+      // ];
+    } else {
+      $res = [
+        'status' => false
+      ];
+    }
+
+    die(json_encode($res));
+
+    exit();
+  }
   public function getPanggilSelesai()
   {
     if (!isset($_GET['id']) || $_GET['id'] == '') die(json_encode(array('status' => false)));
@@ -1681,48 +1763,68 @@ class Site extends SiteModule
       case "get-dokter":
         if (!empty($_POST['kd_poli'])) {
           $tanggal = $_POST['tgl_registrasi'];
-          $tentukan_hari = date('D', strtotime($tanggal));
-          $day = array('Sun' => 'AKHAD', 'Mon' => 'SENIN', 'Tue' => 'SELASA', 'Wed' => 'RABU', 'Thu' => 'KAMIS', 'Fri' => 'JUMAT', 'Sat' => 'SABTU');
-          $hari = $day[$tentukan_hari];
+          $kd_poli = $_POST['kd_poli'];
+          $path = 'jadwaldokter/kodepoli/' . $kd_poli . '/tanggal/' . $tanggal;
           $data = array();
-          $result = $this->db('jadwal')
-            ->select(['kd_dokter' => 'jadwal.kd_dokter'])
-            ->select(['nm_dokter' => 'dokter.nm_dokter'])
-            ->select(['kuota' => 'jadwal.kuota'])
-            ->join('poliklinik', 'poliklinik.kd_poli = jadwal.kd_poli')
-            ->join('dokter', 'dokter.kd_dokter = jadwal.kd_dokter')
-            ->where('jadwal.kd_poli', $_POST['kd_poli'])
-            ->like('jadwal.hari_kerja', $hari)
-            ->oneArray();
-          $check_kuota = $this->db('reg_periksa')
-            ->select(['count' => 'COUNT(DISTINCT no_rawat)'])
-            ->where('kd_poli', $_POST['kd_poli'])
-            ->where('tgl_registrasi', $_POST['tgl_registrasi'])
-            ->oneArray();
-          $curr_count = $check_kuota['count'];
-          $curr_kuota = $result['kuota'];
-          $online = $curr_kuota / 2;
-          if ($curr_count > $online) {
-            $data['status'] = 'limit';
+          $responseJadwalDokter = $this->getDataWSBPJS($path);
+          // $this->db('mlite_settings')->save([
+          //   'module' => 'debug',
+          //   'field' => 'get-dokter',
+          //   'value' => 'get-dokter' . json_encode($responseJadwalDokter)
+          // ]);
+          if ($responseJadwalDokter['metadata']['code'] == '200') {
+
+            $data = $responseJadwalDokter;
+            $data['status'] = 'ok';
           } else {
-            $query = $this->db('jadwal')
-              ->select(['kd_dokter' => 'jadwal.kd_dokter'])
-              ->select(['nm_dokter' => 'dokter.nm_dokter'])
-              ->join('poliklinik', 'poliklinik.kd_poli = jadwal.kd_poli')
-              ->join('dokter', 'dokter.kd_dokter = jadwal.kd_dokter')
-              ->join('maping_dokter_dpjpvclaim', 'maping_dokter_dpjpvclaim.kd_dokter = jadwal.kd_dokter')
-              ->where('jadwal.kd_poli', $_POST['kd_poli'])
-              ->like('jadwal.hari_kerja', $hari)
-              ->toArray();
-            if (!empty($query)) {
-              $data['status'] = 'ok';
-              $data['result'] = $query;
-            } else {
-              $data['status'] = 'err';
-              $data['result'] = '';
-            }
-            echo json_encode($data);
+            $data['status'] = 'err';
+            $data['result'] = '';
           }
+          echo json_encode($data);
+
+
+          // $tentukan_hari = date('D', strtotime($tanggal));
+          // $day = array('Sun' => 'AKHAD', 'Mon' => 'SENIN', 'Tue' => 'SELASA', 'Wed' => 'RABU', 'Thu' => 'KAMIS', 'Fri' => 'JUMAT', 'Sat' => 'SABTU');
+          // $hari = $day[$tentukan_hari];
+
+          // $result = $this->db('jadwal')
+          //   ->select(['kd_dokter' => 'jadwal.kd_dokter'])
+          //   ->select(['nm_dokter' => 'dokter.nm_dokter'])
+          //   ->select(['kuota' => 'jadwal.kuota'])
+          //   ->join('poliklinik', 'poliklinik.kd_poli = jadwal.kd_poli')
+          //   ->join('dokter', 'dokter.kd_dokter = jadwal.kd_dokter')
+          //   ->where('jadwal.kd_poli', $_POST['kd_poli'])
+          //   ->like('jadwal.hari_kerja', $hari)
+          //   ->oneArray();
+          // $check_kuota = $this->db('reg_periksa')
+          //   ->select(['count' => 'COUNT(DISTINCT no_rawat)'])
+          //   ->where('kd_poli', $_POST['kd_poli'])
+          //   ->where('tgl_registrasi', $_POST['tgl_registrasi'])
+          //   ->oneArray();
+          // $curr_count = $check_kuota['count'];
+          // $curr_kuota = $result['kuota'];
+          // $online = $curr_kuota / 2;
+          // if ($curr_count > $online) {
+          //   $data['status'] = 'limit';
+          // } else {
+          //   $query = $this->db('jadwal')
+          //     ->select(['kd_dokter' => 'jadwal.kd_dokter'])
+          //     ->select(['nm_dokter' => 'dokter.nm_dokter'])
+          //     ->join('poliklinik', 'poliklinik.kd_poli = jadwal.kd_poli')
+          //     ->join('dokter', 'dokter.kd_dokter = jadwal.kd_dokter')
+          //     ->join('maping_dokter_dpjpvclaim', 'maping_dokter_dpjpvclaim.kd_dokter = jadwal.kd_dokter')
+          //     ->where('jadwal.kd_poli', $_POST['kd_poli'])
+          //     ->like('jadwal.hari_kerja', $hari)
+          //     ->toArray();
+          //   if (!empty($query)) {
+          //     $data['status'] = 'ok';
+          //     $data['result'] = $query;
+          //   } else {
+          //     $data['status'] = 'err';
+          //     $data['result'] = '';
+          //   }
+          //   echo json_encode($data);
+          // }
         }
         break;
 
@@ -1767,19 +1869,30 @@ class Site extends SiteModule
           //   'field' => 'post-registrasi',
           //   'value' => 'begin post registrasi'
           // ]);
-          $result = $this->db('maping_dokter_dpjpvclaim')->where('kd_dokter', $_POST['kd_dokter_daftar'])->oneArray();
+          // $result = $this->db('maping_dokter_dpjpvclaim')->where('kd_dokter', $_POST['kd_dokter_daftar'])->oneArray();
+
 
           $no_rkm_medis = $_POST['no_rkm_medis_daftar'];
-          $nomorkartu = $this->core->getPasienInfo('no_peserta', $no_rkm_medis);
+          $nomorreferensi = $_POST['no_rujukan_daftar']; //nomor rujukan
+          $nomorkartu = $_POST['no_peserta']; //$this->core->getPasienInfo('no_peserta', $no_rkm_medis);
           $nik = $_POST['nik'];
           $nohp = $this->core->getPasienInfo('no_tlp', $no_rkm_medis);;
           $kodepoli = $_POST['kd_poli_daftar'];
           $norm = $no_rkm_medis;
           $tanggalperiksa = $_POST['tgl_registrasi_daftar'];
-          $kodedokter = $result['kd_dokter_bpjs'];
+          $kodedokter = $_POST['kd_dokter_daftar'];
           $jampraktek = $_POST['jam_praktek'];
           $jeniskunjungan = $_POST['jeniskunjungan'];
-          $nomorreferensi = $_POST['no_rujukan_daftar']; //nomor rujukan
+          $jenispasien = 'JKN';
+
+          if ($nomorreferensi == '-') { //jika non BPJS
+            $jenispasien = 'NON JKN';
+            $nomorkartu = '';
+            $nomorreferensi = '';
+          }
+
+
+          $this->cekDataPasien($no_rkm_medis, $nomorkartu, $nik);
 
           $dataAmbilAntrean = $this->ambilAntreanRS($nomorkartu, $nik, $nohp, $kodepoli, $norm, $tanggalperiksa, $kodedokter, $jampraktek, $jeniskunjungan, $nomorreferensi);
           $responseAmbilAntrean = $this->sendDataWSRS('ambilantrean', $dataAmbilAntrean);
@@ -1807,13 +1920,12 @@ class Site extends SiteModule
           // $this->db('mlite_settings')->save([
           //   'module' => 'debug',
           //   'field' => 'post-registrasi responseAmbilAntrean-code',
-          //   'value' => $responseAmbilAntrean['metadata']['message'] . ' | ' . $kodedokter . ' | ' . $responseAmbilAntrean['response']['query']
+          //   'value' => $responseAmbilAntrean['metadata']['message'] . ' | ' . $kodedokter . ' | ' . $jampraktek
           // ]);
           // //Ok | 35039 | 
           if ($responseAmbilAntrean['metadata']['code'] == '200') {
 
             $kodebooking = $responseAmbilAntrean['response']['kodebooking'];
-            $jenispasien = 'JKN';
             $nomorkartu = $nomorkartu;
             $nik = $nik;
             $nohp = $nohp;
@@ -1862,11 +1974,11 @@ class Site extends SiteModule
               $keterangan
             );
             $responseTambahAntrean = $this->sendDataWSBPJS('antrean/add', $dataTambahAntrean);
-            //   // $this->db('mlite_settings')->save([
-            //   //   'module' => 'debug',
-            //   //   'field' => 'post-registrasi responseTambahAntrean',
-            //   //   'value' => $responseTambahAntrean['metadata']['code'] . ' ' . $responseTambahAntrean['metadata']['message']
-            //   // ]);
+            // $this->db('mlite_settings')->save([
+            //   'module' => 'debug',
+            //   'field' => 'post-registrasi responseTambahAntrean',
+            //   'value' => $responseTambahAntrean['metadata']['code'] . ' ' . $responseTambahAntrean['metadata']['message']
+            // ]);
             if ($responseTambahAntrean['metadata']['code'] == '200') {
               $result = $this->db('reg_periksa')
                 ->select('reg_periksa.no_rkm_medis')
@@ -1907,7 +2019,7 @@ class Site extends SiteModule
               //   'field' => 'post-registrasi responseTambahAntrean',
               //   'value' => 'delete records ' . $no_rawat . ' | ' . $data['result']
               // ]);
-              //$this->db('reg_periksa')->where('no_rawat', $no_rawat)->delete();
+              $this->db('reg_periksa')->where('no_rawat', $no_rawat)->delete();
               $this->db('referensi_mobilejkn_bpjs')->where('nobooking', $kodebooking)->delete();
             }
           } else {
@@ -1985,18 +2097,42 @@ class Site extends SiteModule
           $no_kodebooking = $_POST['no_kodebooking'];
 
           //prepare data WS 
-
+          $dataWS = $this->checkinAntreanRS($no_kodebooking);
           //send data WS
+          $responseCheckin = $this->sendDataWSRS('', $dataWS);
 
-          $query = $this->db('pasien')
-            ->where('no_rkm_medis', $_POST['no_rkm_medis_daftar'])
-            ->oneArray();
-          if (!empty($query)) {
-            $data['status'] = 'ok';
-            $data['result'] = $query;
+          if ($responseCheckin['metadata']['code'] == '200') {
+            $result = $this->db('reg_periksa')
+              ->select('reg_periksa.no_rkm_medis')
+              ->select('pasien.nm_pasien')
+              ->select('pasien.alamat')
+              ->select('reg_periksa.tgl_registrasi')
+              ->select('reg_periksa.jam_reg')
+              ->select('reg_periksa.no_rawat')
+              ->select('reg_periksa.no_reg')
+              ->select('poliklinik.nm_poli')
+              ->select('dokter.nm_dokter')
+              ->select('reg_periksa.status_lanjut')
+              ->select('penjab.png_jawab')
+              ->join('poliklinik', 'poliklinik.kd_poli = reg_periksa.kd_poli')
+              ->join('dokter', 'dokter.kd_dokter = reg_periksa.kd_dokter')
+              ->join('penjab', 'penjab.kd_pj = reg_periksa.kd_pj')
+              ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+              ->join('referensi_mobilejkn_bpjs', 'referensi_mobilejkn_bpjs.no_rawat = reg_periksa.no_rawat')
+              ->where('referensi_mobilejkn_bpjs.nobooking', $no_kodebooking)
+              ->oneArray();
+
+            if (!empty($result)) {
+              $data['status'] = 'ok';
+              $data['result'] = $result;
+            } else {
+              $data['status'] = 'err';
+              $data['result'] = 'Registrasi WS Berhasil. Tetapi Data Registrasi Tidak Tercatat.';
+            }
           } else {
+            //delete record 
             $data['status'] = 'err';
-            $data['result'] = '';
+            $data['result'] = 'Checkin gagal. ' . $responseCheckin['metadata']['message'];
           }
           echo json_encode($data);
         }
@@ -2580,6 +2716,18 @@ class Site extends SiteModule
     exit();
   }
 
+  public function cekDataPasien($norm, $nobpjs, $nik)
+  {
+    $get_data = $this->db('pasien')->select('no_peserta')->select('no_ktp')->where('no_rkm_medis', $norm)->oneArray();
+    if ($get_data['no_ktp'] != $nik) {
+      $this->db('pasien')->where('no_rkm_medis', $norm)->save(['no_ktp' => $nik]);
+    }
+    if ($get_data['no_peserta'] != $nobpjs) {
+      $this->db('pasien')->where('no_rkm_medis', $norm)->save(['no_peserta' => $nobpjs]);
+    }
+    return true;
+  }
+
   //Begin code post data ke WS BPJS
   public function updateJadwalDokterBPJS($kodepoli, $kodesubspesialis, $kodedokter, $hari, $buka, $tutup)
   {
@@ -2780,6 +2928,57 @@ class Site extends SiteModule
     return $data;
   }
 
+  public function getDataWSBPJS($path)
+  {
+    $consid = "24722";
+    $secretKey = "2bF2C184BB";
+    $user_key = "39625d47ae7fc6c4db8d957ee4958fc5";
+
+    // Computes the timestamp
+    date_default_timezone_set('Asia/Jakarta');
+    $tStamp = strval(time() - strtotime('Y/m/d H:i:s'));
+    // Computes the signature by hashing the salt with the secret key as the key
+    $signature = hash_hmac('sha256', $consid . "&" . $tStamp, $secretKey, true);
+
+    // base64 encode
+    $encodedSignature = base64_encode($signature);
+
+    $url = 'https://apijkn-dev.bpjs-kesehatan.go.id/antreanrs_dev/' . $path;
+    // $this->db('mlite_settings')->save([
+    //   'module' => 'debug',
+    //   'field' => 'getDataWSBPJS',
+    //   'value' => 'X-Cons-ID ' . $consid . ' ;X-Timestamp ' . $tStamp . ' ;X-Signature ' . $encodedSignature . ' ;user_key ' . $user_key
+    // ]);
+    // $this->db('mlite_settings')->save([
+    //   'module' => 'debug',
+    //   'field' => 'getDataWSBPJS',
+    //   'value' => $url
+    // ]);
+    $header = array(
+      'Content-Type: ' . 'application/json',
+      'x-cons-id: ' . $consid,
+      'x-timestamp: ' . $tStamp,
+      'x-signature: ' . $encodedSignature,
+      'user_key: ' . $user_key
+    );
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+    curl_setopt($ch, CURLOPT_SSL_CIPHER_LIST, 'DEFAULT@SECLEVEL=1');
+
+    $res = curl_exec($ch);
+    //$result = file_get_contents($res);
+    $obj = json_decode($res, true);
+    $decryptData = $this->stringDecrypt($consid . $secretKey . $tStamp, $obj['response']);
+    $decompressData = $this->decompress($decryptData);
+    $data['metadata'] = $obj['metadata'];
+    $data['response'] = $decompressData;
+
+    curl_close($ch);
+    return $data;
+  }
+
   public function getRujukanWSBPJS($path, $no_peserta)
   {
     $consid = "31533";
@@ -2931,11 +3130,11 @@ class Site extends SiteModule
     $token = $this->getTokenWSRS();
     $username = "bridging_rstds";
 
-    $this->db('mlite_settings')->save([
-      'module' => 'debug',
-      'field' => 'sendDataWSRS token RS',
-      'value' => $token
-    ]);
+    // $this->db('mlite_settings')->save([
+    //   'module' => 'debug',
+    //   'field' => 'sendDataWSRS token RS',
+    //   'value' => $token
+    // ]);
 
     //begin post data
     // API URL

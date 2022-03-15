@@ -125,11 +125,10 @@
 <body>
   <div class="container-fluid">
     {if: !$show}
-
+    <h2 class="text-center text-white antrian_judul"><img class="logo" src="{?=url()?}/{$logo}" alt="" width="60px">
+      Antrian Loket {$settings.nama_instansi}</h2>
     <div class="row loket">
       <div class="kiri">
-        <h2 class="text-center text-white antrian_judul"><img class="logo" src="{?=url()?}/{$logo}" alt="" width="60px">
-          Antrian Loket {$settings.nama_instansi}</h2>
         <div class="card bg-dark text-white">
           <div class="embed-responsive embed-responsive-16by9">
             <iframe class="embed-responsive-item"
@@ -296,10 +295,13 @@
   </script>
   <script>
     $(document).ready(function () {
-      setInterval(function () {
-        getAntrian();
-        console.log("this")
-      }, 1000);
+      // setInterval(function () {
+      //   getAntrian();
+      //   console.log("this")
+      // }, 3000);
+      setTimeout(function () {
+              getAntrian();
+            }, 3000);
     });
 
     function getAntrian() {
@@ -315,9 +317,10 @@
             for (const element of data.data_loket) {
               fungsiloop(element);
             }
-            //updateLayar(data.type, data.noantrian, data.loket);
-            //panggil(data.panggil);
-            setSelesai(data.id);
+            console.log("data panggil "+data.panggil);
+            panggil(data.panggil);
+            console.log("data selesai "+data.data_loket[0]["kd"]);
+            setSelesai(data.data_loket[0]["kd"]);
           }
         },
         error: function (xhr) {
@@ -415,10 +418,9 @@
   <script>
     function panggil(noantrian) {
       var loket = '';
-      { if: isset($_GET['loket']) && $_GET['loket'] != '' }
+      {if: isset($_GET['loket']) && $_GET['loket'] != '' }
       var loket = "{?=$_GET['loket']?}";
-      {
-        /if}
+      {/if}
         //alert('Panggil ' + loket + ' - ' + noantrian);
         $.ajax({
           url: '{?=url()?}/anjungan/setpanggil',
