@@ -84,3 +84,17 @@ Khanza Lite Change log
 
 -display.antrian.farmasi.console.html
     tambah halaman
+
+03/21/2022
+- site.php (plugins/anjungan/Site.php)
+    Tambah fungsi untuk prepare data WS
+    Tambah fungsi send data WS
+    Ganti fungsi untuk menampilkan dokter menjadi berasal dari WS BPJS referensi jadwal dokter
+    Tambah kode untuk menyimpan data pendaftaran dan mengirim data ke WS BPJS dan WS RS (post-registrasi)
+    Tambah kode untuk mengirim data Update Waktu Antrean menjadi 3 (post-registrasi)
+
+- display.antrian.html
+    Tambah kode untuk daftar berdasarkan NIK (umum) dan no Peserta (BPJS)
+    Tambah fungsi untuk mengambil dan menampilkan data rujukan dari WS BPJS
+    Tambah fungsi untuk mengambil dan menampilkan jadwal dokter
+

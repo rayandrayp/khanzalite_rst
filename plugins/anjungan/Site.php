@@ -1773,11 +1773,10 @@ class Site extends SiteModule
           //   'value' => 'get-dokter' . json_encode($responseJadwalDokter)
           // ]);
           if ($responseJadwalDokter['metadata']['code'] == '200') {
-
             $data = $responseJadwalDokter;
             $data['status'] = 'ok';
           } else {
-            $data['status'] = 'err';
+            $data['status'] = 'empty';
             $data['result'] = '';
           }
           echo json_encode($data);
@@ -2001,6 +2000,9 @@ class Site extends SiteModule
                 ->oneArray();
 
               if (!empty($result)) {
+                $dataUpdateWaktuAntrean = $this->updateWaktuAntreanBPJS($kodebooking, 3);
+                $this->sendDataWSBPJS('antrean/updatewaktu', $dataUpdateWaktuAntrean);
+
                 $data['status'] = 'ok';
                 $data['result'] = $result;
               } else {

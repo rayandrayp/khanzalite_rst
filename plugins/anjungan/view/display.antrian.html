@@ -368,6 +368,11 @@
                  </div>
               </div>
               <button class="btn btn-secondary" id="finish">Simpan Pendaftaran</button>
+              <div class="d-none" id="messageDivSimpan">
+                <div class="form-group">
+                  <label for="message" id="messageTextSimpan" style="color: rgb(223, 0, 0);"></label>
+                </div>
+              </div>
             </div>
             
             <!-- Print area -->
@@ -678,10 +683,13 @@
         dataType: "json",
         data: {kd_poli:kd_poli_daftar, tgl_registrasi:tgl_registrasi_daftar},
         success:function(data){
-          var responseJson = JSON.parse(data['response']);
-            //jsonList = responseJson.list;
+          
+          // jsonList = responseJson.list;
           // console.log(responseJson);
+          // console.log(data.status);
+
           if(data.status == 'ok'){
+            var responseJson = JSON.parse(data['response']);
             $("#pilih_dokter_daftar").empty();
             // console.log(responseJson.rujukan);
             // console.log(responseJson['rujukan']);
@@ -690,14 +698,27 @@
               var div_data="<option value='"+item.kodedokter+";"+item.jadwal+"'>"+item.namadokter+" (" + item.jadwal + ")" +"</option>";
               $(div_data).appendTo('#pilih_dokter_daftar');
             });
-
+            $('#messageTextSimpan').text('');
+            $('#messageDivSimpan').addClass('d-none')
+            
           } else if(data.status == 'limit'){
             alert("Limit pendaftaran sudah terpenuhi. Silahkan pilih hari lain...");
             document.getElementById("tgl_registrasi_daftar").value = "";
+
+          } else if(data.status == 'empty'){
+            $("#pilih_dokter_daftar").empty();
+            alert("Dokter tidak ditemukan...");
           }else{
             $("#pilih_dokter_daftar").empty();
             alert("Dokter tidak ditemukan...");
           }
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+           console.log(textStatus, errorThrown);
+           $("#pilih_dokter_daftar").empty();
+           console.log("Dokter tidak ditemukan...");
+           $('#messageTextSimpan').text('Dokter tidak ditemukan. Silahkan pilih poli lain.');
+           $('#messageDivSimpan').removeClass('d-none')
         }
       });
     });
@@ -947,7 +968,7 @@
             $('#nm_pasien_daftar').val(data.result.nm_pasien);
             $('#alamat_daftar').val(data.result.alamat);
             // $('#tgl_registrasi_daftar').val(todayDate);
-            $('#kd_pj').val('A65');
+            $('#kd_pj').val('BPJ');
             $('#kd_pj').prop('disabled', 'disabled');
             // $('#tgl_registrasi_daftar').prop('disabled', 'disabled');
           }else{
