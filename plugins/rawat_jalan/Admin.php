@@ -718,6 +718,12 @@ class Admin extends AdminModule
   {
     $datetime = date('Y-m-d h:i:s');
     $cek = $this->db('mutasi_berkas')->where('no_rawat', $_POST['no_rawat'])->oneArray();
+    $kodebooking = "";
+    //get nomor kodebooking
+    $dataRefMobileJKN = $this->db('referensi_mobilejkn_bpjs')->where('no_rawat', $_POST['no_rawat'])->oneArray();
+    if (!empty($dataRefMobileJKN)) {
+      $kodebooking = $dataRefMobileJKN['nobooking'];
+    }
 
     if ($_POST['stts'] == 'Berkas Dikirim') {
       if (!$this->db('mutasi_berkas')->where('no_rawat', $_POST['no_rawat'])->oneArray()) {
@@ -749,6 +755,66 @@ class Admin extends AdminModule
         ]);
       }
       $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->save($_POST);
+      if ($kodebooking != '') {
+        //send data Update waktu antrean = 4
+        $dataUpdateWaktuAntrean = $this->updateWaktuAntreanBPJS($kodebooking, 4);
+        $response = $this->sendDataWSBPJS('antrean/updatewaktu', $dataUpdateWaktuAntrean);
+        if ($response['metadata']['code'] != '200') {
+          $this->db('mlite_settings')->save([
+            'module' => 'debug',
+            'field' => 'post status rawat Berkas Diterima',
+            'value' => $kodebooking . '|' . $response['metadata']['code'] . '|' . $response['metadata']['message']
+          ]);
+        }
+      }
+    } else if ($_POST['stts'] == 'Sudah') { //pasien sudah selesai dilayani
+
+      $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->save($_POST);
+      if ($kodebooking != '') {
+        //send data Update waktu antrean = 5
+        $dataUpdateWaktuAntrean = $this->updateWaktuAntreanBPJS($kodebooking, 5);
+        $response = $this->sendDataWSBPJS('antrean/updatewaktu', $dataUpdateWaktuAntrean);
+        if ($response['metadata']['code'] != '200') {
+          $this->db('mlite_settings')->save([
+            'module' => 'debug',
+            'field' => 'post status rawat Sudah dilayani',
+            'value' => $kodebooking . '|' . $response['metadata']['code'] . '|' . $response['metadata']['message']
+          ]);
+        }
+      }
+    } else if ($_POST['stts'] == 'Batal') { //pasien batal dilayani
+
+      $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->save($_POST);
+      if ($kodebooking != '') {
+        //send data Update waktu antrean = 99
+        $dataUpdateWaktuAntrean = $this->updateWaktuAntreanBPJS($kodebooking, 99);
+        $dataBatalAntrean = $this->batalAntreanBPJS($kodebooking, 'Pasien tidak hadir di poli.');
+        $response1 = $this->sendDataWSBPJS('antrean/batal', $dataBatalAntrean);
+        $response2 = $this->sendDataWSBPJS('antrean/updatewaktu', $dataUpdateWaktuAntrean);
+        $response3 = $this->sendDataWSRS('batalantrean', $dataBatalAntrean);
+
+        if ($response1['metadata']['code'] != '200') {
+          $this->db('mlite_settings')->save([
+            'module' => 'debug',
+            'field' => 'post status rawat Batal1',
+            'value' => $kodebooking . '|' . $response1['metadata']['code'] . '|' . $response1['metadata']['message']
+          ]);
+        }
+        if ($response2['metadata']['code'] != '200') {
+          $this->db('mlite_settings')->save([
+            'module' => 'debug',
+            'field' => 'post status rawat Batal2',
+            'value' => $kodebooking . '|' . $response2['metadata']['code'] . '|' . $response2['metadata']['message']
+          ]);
+        }
+        if ($response3['metadata']['code'] != '200') {
+          $this->db('mlite_settings')->save([
+            'module' => 'debug',
+            'field' => 'post status rawat Batal3',
+            'value' => $kodebooking . '|' . $response3['metadata']['code'] . '|' . $response3['metadata']['message']
+          ]);
+        }
+      }
     } else {
       $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->save($_POST);
     }
@@ -1267,5 +1333,166 @@ class Admin extends AdminModule
   protected function data_icd($table)
   {
     return new DB_ICD($table);
+  }
+
+  //Start WS BPJS
+  public function updateWaktuAntreanBPJS($kodebooking, $taskid)
+  {
+    $waktu = strtotime(date("Y-m-d H:i:s")) * 1000;
+    //   "taskid": {
+    //     1 (mulai waktu tunggu admisi), 
+    //     2 (akhir waktu tunggu admisi/mulai waktu layan admisi), 
+    //     3 (akhir waktu layan admisi/mulai waktu tunggu poli), 
+    //     4 (akhir waktu tunggu poli/mulai waktu layan poli),  
+    //     5 (akhir waktu layan poli/mulai waktu tunggu farmasi), 
+    //     6 (akhir waktu tunggu farmasi/mulai waktu layan farmasi membuat obat), 
+    //     7 (akhir waktu obat selesai dibuat),
+    //     99 (tidak hadir/batal)
+    // },
+    $request = array(
+      "kodebooking" => $kodebooking,
+      "taskid" => $taskid,
+      "waktu" => $waktu
+    );
+    // $request = '{
+    //                 "kodebooking": "' . $kodebooking . '",
+    //                 "taskid": ' . $taskid . ',
+    //                 "waktu": ' . $waktu . '
+    //             }';
+
+    return $request;
+  }
+
+  public function batalAntreanBPJS($kodebooking, $keterangan)
+  {
+    $request = array(
+      "kodebooking" => $kodebooking,
+      "keterangan" => $keterangan
+    );
+    // $request = '{
+    //                 "kodebooking": "' . $kodebooking . '",
+    //                 "keterangan": "' . $keterangan . '"
+    //             }';
+
+    return $request;
+  }
+
+  public function sendDataWSBPJS($path, $data)
+  {
+    $consid = "31533";
+    $secretKey = "2lLD04E61A";
+    $user_key = "9089e0d979f93718d2a84e0b16664ef6";
+
+    // Computes the timestamp
+    date_default_timezone_set('Asia/Jakarta');
+    $tStamp = strval(time() - strtotime('Y/m/d H:i:s'));
+    // Computes the signature by hashing the salt with the secret key as the key
+    $signature = hash_hmac('sha256', $consid . "&" . $tStamp, $secretKey, true);
+
+    // base64 encode
+    $encodedSignature = base64_encode($signature);
+
+    //begin post data
+    // API URL
+
+    $url = 'https://apijkn.bpjs-kesehatan.go.id/antreanrs/' . $path;
+
+    $jsonData = json_encode($data);
+
+    $header = array(
+      'Content-Type: ' . 'application/json',
+      'x-cons-id: ' . $consid,
+      'x-timestamp: ' . $tStamp,
+      'x-signature: ' . $encodedSignature,
+      'user_key: ' . $user_key
+    );
+    // $this->db('mlite_settings')->save([
+    //   'module' => 'debug',
+    //   'field' => 'sendDataBPJS data json',
+    //   'value' => $jsonData
+    // ]);
+    // $this->db('mlite_settings')->save([
+    //   'module' => 'debug',
+    //   'field' => 'sendDataBPJS consid tstamp signature userkey url',
+    //   'value' => $consid . ' | ' . $tStamp . ' | ' . $encodedSignature . ' | ' . $user_key . ' | ' . $url
+    // ]);
+    //24722 | 1646878330 | bE0Hkkxbf/veONKwXxLO/HKoi0mKtE8uvKvN12B2m+w= | 39625d47ae7fc6c4db8d957ee4958fc5 | https://apijkn-dev.bpjs-kesehatan.go.id/antreanrs_dev/antrean/add
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonData);
+
+    $res = curl_exec($ch);
+    //$result = file_get_contents($res);
+    $data = json_decode($res, true);
+    curl_close($ch);
+
+    return $data;
+  }
+
+  //end of WS BPJS
+
+  public function getTokenWSRS()
+  {
+    // $url = 'http://localhost/webapps/api-bpjsfktl/auth';
+    $url = 'https://rssoepraoen.simkeskhanza.com/webapps/api-bpjsfktl/auth';
+    $header = array(
+      'Accept: application/json',
+      'x-username: bridging_rstds',
+      'x-password: RSTSoepraoen0341'
+    );
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+    curl_setopt($ch, CURLOPT_SSL_CIPHER_LIST, 'DEFAULT@SECLEVEL=1');
+
+    $res = curl_exec($ch);
+    // $result = file_get_contents($res);
+    $data = json_decode($res, true);
+    curl_close($ch);
+
+    return $data['response']['token'];
+  }
+
+  public function sendDataWSRS($path, $data)
+  {
+    $token = $this->getTokenWSRS();
+    $username = "bridging_rstds";
+
+    // $this->db('mlite_settings')->save([
+    //   'module' => 'debug',
+    //   'field' => 'sendDataWSRS token RS',
+    //   'value' => $token
+    // ]);
+
+    //begin post data
+    // API URL
+    $url = 'https://rssoepraoen.simkeskhanza.com/webapps/api-bpjsfktl/' . $path;
+    // $url = 'http://localhost/webapps/api-bpjsfktl/' . $path;
+    // $payload = array(
+    //   'test' => 'data'
+    // );
+
+    $jsonData = json_encode($data);
+
+    $header = array(
+      'Accept: application/json',
+      'x-token: ' . $token,
+      'x-username: ' . $username
+    );
+
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonData);
+
+    $res = curl_exec($ch);
+    //$result = file_get_contents($res);
+    $data = json_decode($res, true);
+    curl_close($ch);
+
+    return $data;
   }
 }

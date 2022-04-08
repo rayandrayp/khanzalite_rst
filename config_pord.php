@@ -5,9 +5,9 @@ if (!version_compare(PHP_VERSION, '5.5.0', '>=')) {
 
 define('DBHOST', 'localhost');
 define('DBPORT', '3306');
-define('DBUSER', 'root');
-define('DBPASS', 'basoro');
-define('DBNAME', 'mlite_dev');
+define('DBUSER', 'itrst');
+define('DBPASS', 'ITrst321');
+define('DBNAME', 'sik');
 
 // URL Webapps
 define('WEBAPPS_URL', 'http://localhost/webapps');
