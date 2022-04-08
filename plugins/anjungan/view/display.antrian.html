@@ -451,21 +451,24 @@
                                             {$settings.nama_instansi}<br>
                                             <br> {$settings.nomor_telepon}
                                             <br>
-                                            <hr> ANJUNGAN PASIEN MANDIRI<br> No. Antrian
-                                            <hr> <span id="no_reg_final"></span><br>
+                                            <hr> ANJUNGAN PASIEN MANDIRI <br>
+                                            No. Antrian<br>
+                                        </div>
+                                        <div style="font-size:11px; font-weight: bold; text-align: center;">
+                                            <span id="no_reg_final"></span><br>
                                         </div>
                                     </div>
                                     <br>
                                     <div style="width: 70px; display: inline-block;">Kodebooking </div>:<span id="kdbooking_final"></span><br>
-                                    <div style="width: 70px; display: inline-block;">Tanggal </div>:<span id="tgl_registrasi_final"></span><br>
+                                    <div style="width: 70px; display: inline-block;">Tanggal </div>:<span id="tgl_registrasi_final"> - <span id="jam_reg_final"></span> </span><br>
                                     <div style="width: 70px; display: inline-block;">No. Rujukan </div>: <span id="no_rujukan_final"></span><br>
                                     <div style="width: 70px; display: inline-block;">Nama </div>: <span id="nm_pasien_final"></span><br>
                                     <div style="width: 70px; display: inline-block;">No. RM </div>: <span id="no_rkm_medis_final"></span><br>
-                                    <div style="width: 70px; display: inline-block;">Ruang </div>: <span id="nm_poli_final"></span><br>
+                                    <div style="width: 70px; display: inline-block;">Poli </div>: <span id="nm_poli_final"></span><br>
 
                                     <div style="text-align: center;">
                                         <hr> Pendaftaran berhasil disimpan. Terimakasih telah menggunakan anjungan Pasien Mandiri.<br> Silahkan menuju poli terkait dan simpanlah bukti cetak pendaftaran ini untuk ditunjukkan ke petugas poli.<br>
-                                        <hr> Bawalah surat rujukan atau surat kontrol asli. Tetap pakai masker dan patuhi protokol kesehatan.<br><br>
+                                        <hr> Tetap pakai masker dan patuhi protokol kesehatan.<br><br>
                                     </div>
                                 </section>
                             </div>
@@ -951,10 +954,10 @@
                             $('#nm_pasien_final').text(data.result.nm_pasien);
                             $('#no_rujukan_final').text(no_rujukan_daftar);
                             $('#no_rkm_medis_final').text(data.result.no_rkm_medis);
-                            $('#alamat_final').text(data.result.alamat);
-                            $('#nm_dokter_final').text(data.result.nm_dokter);
+                            // $('#alamat_final').text(data.result.alamat);
+                            // $('#nm_dokter_final').text(data.result.nm_dokter);
                             $('#nm_poli_final').text(data.result.nm_poli);
-                            $('#cara_bayar_final').text(caraBayar);
+                            // $('#cara_bayar_final').text(caraBayar);
 
                             $('.progress-bar').css('width', '100%');
                             $('.progress-bar').html('Step 3 of 3');

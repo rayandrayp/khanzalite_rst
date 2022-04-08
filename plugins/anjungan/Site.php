@@ -2060,6 +2060,14 @@ class Site extends SiteModule
               'value' => $responseTambahAntrean['metadata']['code'] . ' ' . $responseTambahAntrean['metadata']['message']
             ]);
             if ($responseTambahAntrean['metadata']['code'] == '200') {
+
+              //check in antrean
+              //prepare data WS 
+              $dataWS = $this->checkinAntreanRS($kodebooking);
+              //send data WS
+              $responseCheckin = $this->sendDataWSRS('checkinantrean', $dataWS);
+
+              //get data registrasi untuk cetak
               $result = $this->db('reg_periksa')
                 ->select('reg_periksa.no_rkm_medis')
                 ->select('referensi_mobilejkn_bpjs.nobooking')
