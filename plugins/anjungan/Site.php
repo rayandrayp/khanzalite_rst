@@ -1991,11 +1991,11 @@ class Site extends SiteModule
           // //       "code": 200
           // //   }
 
-          $this->db('mlite_settings')->save([
-            'module' => 'debug',
-            'field' => 'post-registrasi responseAmbilAntrean-code',
-            'value' => $responseAmbilAntrean['metadata']['message'] . ' | ' . $kodedokter . ' | ' . $jampraktek
-          ]);
+          // $this->db('mlite_settings')->save([
+          //   'module' => 'debug',
+          //   'field' => 'post-registrasi responseAmbilAntrean-code',
+          //   'value' => $responseAmbilAntrean['metadata']['message'] . ' | ' . $kodedokter . ' | ' . $jampraktek
+          // ]);
           // //Ok | 35039 | 
           if ($responseAmbilAntrean['metadata']['code'] == '200') {
 
@@ -2054,11 +2054,12 @@ class Site extends SiteModule
               $keterangan
             );
             $responseTambahAntrean = $this->sendDataWSBPJS('antrean/add', $dataTambahAntrean);
-            $this->db('mlite_settings')->save([
-              'module' => 'debug',
-              'field' => 'post-registrasi responseTambahAntrean',
-              'value' => $responseTambahAntrean['metadata']['code'] . ' ' . $responseTambahAntrean['metadata']['message']
-            ]);
+            $datajs = json_encode($dataTambahAntrean);
+            // $this->db('mlite_settings')->save([
+            //   'module' => 'debug',
+            //   'field' => 'post-registrasi datajs',
+            //   'value' => $datajs
+            // ]);
             if ($responseTambahAntrean['metadata']['code'] == '200') {
 
               //check in antrean
@@ -3236,6 +3237,7 @@ class Site extends SiteModule
 
   public function checkinAntreanRS($kodebooking)
   {
+    date_default_timezone_set('Asia/Jakarta');
     $waktu = strtotime(date("Y-m-d H:i:s")) * 1000;
     $request = array(
       "kodebooking" => $kodebooking,
@@ -3291,6 +3293,7 @@ class Site extends SiteModule
 
   public function sendDataWSRS($path, $data)
   {
+    date_default_timezone_set('Asia/Jakarta');
     $token = $this->getTokenWSRS();
     $username = "bridging_rstds";
 
