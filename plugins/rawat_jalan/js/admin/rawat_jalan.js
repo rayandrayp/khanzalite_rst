@@ -714,19 +714,35 @@ $("#layanan").on("click", ".pilih_layanan", function(event){
 });
 
 // ketika tombol panggil ditekan
-$("#display").on("click",".panggil", function(event){
+$("#display").on("click",".panggilnomor", function(event){
   event.preventDefault();
 
   var nm_pasien 	= $(this).attr("data-nm_pasien");
   var nm_poli = $(this).attr("data-nm_poli");
   var no_reg = $(this).attr("data-no_reg");
+  // nm_pasien + ", nomor antrian " + no_reg + ", ke " + nm_poli ,"Indonesian Male", {pitch: 1,rate: 0.8,volume: 2}
+
   function play (){
     responsiveVoice.speak(
       nm_pasien + ", nomor antrian " + no_reg + ", ke " + nm_poli ,"Indonesian Male", {pitch: 1,rate: 0.8,volume: 2}
     );
   }
   play();
+});
+$("#display").on("click",".panggilnama", function(event){
+  event.preventDefault();
 
+  var nm_pasien 	= $(this).attr("data-nm_pasien");
+  var nm_poli = $(this).attr("data-nm_poli");
+  var no_reg = $(this).attr("data-no_reg");
+  // nm_pasien + ", nomor antrian " + no_reg + ", ke " + nm_poli ,"Indonesian Male", {pitch: 1,rate: 0.8,volume: 2}
+
+  function play (){
+    responsiveVoice.speak(
+      nm_pasien + ", ke " + nm_poli ,"Indonesian Male", {pitch: 1,rate: 0.8,volume: 2}
+    );
+  }
+  play();
 });
 // akhir kode panggil
 

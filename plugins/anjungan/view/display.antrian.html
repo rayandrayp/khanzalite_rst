@@ -445,16 +445,19 @@
                             </div>
 
                             <div id="printDaftar" style="display: none;" class="cetak">
-                                <section style="margin: 20px; width: 200px; font-family: Tahoma; font-size: 11px !important;">
+                                <section style="margin: 1px; width: 200px; font-family: Tahoma; font-size: 11px !important;">
                                     <div class="block-header">
-                                        <div style="font-size:11px; font-weight: bold; text-align: center;">
+                                        <div style="font-size:13px; font-weight: bold; text-align: center;">
                                             {$settings.nama_instansi}<br>
-                                            <br> {$settings.nomor_telepon}
-                                            <br>
-                                            <hr> ANJUNGAN PASIEN MANDIRI <br>
+                                        </div>
+                                        <div style="font-size:11px; text-align: center;">
+                                            {$settings.nomor_telepon}<br>
+                                        </div>
+                                        <div style="font-size:12px; font-weight: bold; text-align: center;">
+                                            <hr> ANJUNGAN PASIEN MANDIRI <br><br>
                                             No. Antrian<br>
                                         </div>
-                                        <div style="font-size:11px; font-weight: bold; text-align: center;">
+                                        <div style="font-size:40px; font-weight: bold; text-align: center;">
                                             <span id="no_reg_final"></span><br>
                                         </div>
                                     </div>
@@ -467,7 +470,7 @@
                                     <div style="width: 70px; display: inline-block;">Poli </div>: <span id="nm_poli_final"></span><br>
 
                                     <div style="text-align: center;">
-                                        <hr> Pendaftaran berhasil disimpan. Terimakasih telah menggunakan anjungan Pasien Mandiri.<br> Silahkan menuju poli terkait dan simpanlah bukti cetak pendaftaran ini untuk ditunjukkan ke petugas poli.<br>
+                                        <hr> Terimakasih telah menggunakan anjungan Pasien Mandiri.<br> Silahkan menuju poli terkait dan simpan bukti cetak pendaftaran.<br>
                                         <hr> Tetap pakai masker dan patuhi protokol kesehatan.<br><br>
                                     </div>
                                 </section>
@@ -548,11 +551,18 @@
                             <div id="printCheckin" style="display: none;" class="cetak">
                                 <section style="margin: 20px; width: 170px; font-family: Tahoma; font-size: 11px !important;">
                                     <div class="block-header">
+                                        <div style="font-size:13px; font-weight: bold; text-align: center;">
+                                            {$settings.nama_instansi}<br>
+                                        </div>
+                                        <div style="font-size:11px; text-align: center;">
+                                            {$settings.nomor_telepon}<br>
+                                        </div>
                                         <div style="font-size:12px; font-weight: bold; text-align: center;">
-                                            {$settings.nama_instansi}<br> {$settings.alamat}
-                                            <br> {$settings.nomor_telepon}
-                                            <br>
-                                            <hr> BUKTI PENDAFTARAN<br> ANJUNGAN PASIEN MANDIRI<br>
+                                            <hr> ANJUNGAN PASIEN MANDIRI <br><br>
+                                            No. Antrian<br>
+                                        </div>
+                                        <div style="font-size:40px; font-weight: bold; text-align: center;">
+                                            <span id="no_reg_final"></span><br>
                                         </div>
                                     </div>
                                     <br>
