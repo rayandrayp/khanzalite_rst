@@ -141,7 +141,8 @@ class Site extends SiteModule
     $hari = $day[$tentukan_hari];
 
     $poliklinik = str_replace(",", "','", $this->settings->get('anjungan.display_poli'));
-    $strQuery = "SELECT a.kd_dokter, a.kd_poli, b.nm_poli, c.nm_dokter, a.jam_mulai, a.jam_selesai FROM jadwal a, poliklinik b, dokter c WHERE a.kd_poli = b.kd_poli AND a.kd_dokter = c.kd_dokter AND a.hari_kerja = '$hari'  AND a.kd_poli IN ('$poliklinik')";
+    // $strQuery = "SELECT a.kd_dokter, a.kd_poli, b.nm_poli, c.nm_dokter, a.jam_mulai, a.jam_selesai FROM jadwal a, poliklinik b, dokter c WHERE a.kd_poli = b.kd_poli AND a.kd_dokter = c.kd_dokter AND a.hari_kerja = '$hari'  AND a.kd_poli IN ('$poliklinik')";
+    $strQuery = "SELECT DISTINCT a.kd_dokter, a.kd_poli, b.nm_poli, c.nm_dokter FROM jadwal a, poliklinik b, dokter c WHERE a.kd_poli = b.kd_poli AND a.kd_dokter = c.kd_dokter AND a.hari_kerja = '$hari'  AND a.kd_poli IN ('$poliklinik') GROUP BY kd_dokter";
     $query = $this->db()->pdo()->prepare($strQuery);
     $query->execute();
     $rows = $query->fetchAll(\PDO::FETCH_ASSOC);
@@ -195,11 +196,11 @@ class Site extends SiteModule
           ->where('kd_poli', $row['kd_poli'])
           ->where('kd_dokter', $row['kd_dokter'])
           ->oneArray();
-        $row['diff'] = (strtotime($row['jam_selesai']) - strtotime($row['jam_mulai'])) / 60;
+        // $row['diff'] = (strtotime($row['jam_selesai']) - strtotime($row['jam_mulai'])) / 60;
         $row['interval'] = 0;
-        if ($row['diff'] == 0) {
-          $row['interval'] = round($row['diff'] / $row['get_no_reg']['max']);
-        }
+        // if ($row['diff'] == 0) {
+        //   $row['interval'] = round($row['diff'] / $row['get_no_reg']['max']);
+        // }
         if ($row['interval'] > 10) {
           $interval = 10;
         } else {
@@ -836,20 +837,23 @@ class Site extends SiteModule
                 'antrian' => $_tcounter
               ]);*/
           }
-
-          $nextNomor = $this->db('mlite_antrian_loket')->select('status')->where('type', 'LIKE', 'Obat%')->where('noantrian', $tcounter + 1)->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
+          $get_antrian_akhir = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'LIKE', 'Obat%')->where('status', 0)->where('postdate', date('Y-m-d'))->asc('start_time')->oneArray();
+          // $nextNomor = $this->db('mlite_antrian_loket')->select('status')->where('type', 'LIKE', 'Obat%')->where('noantrian', $tcounter + 1)->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
+          $nextNomor = $get_antrian_akhir['noantrian'];
           if ($nextNomor) {
             //update next nomor menjadi 1 (sedang dilayani)
             $this->db('mlite_antrian_loket')
               ->where('type', 'LIKE', 'Obat%')
-              ->where('noantrian', $tcounter + 1)
+              ->where('noantrian', $nextNomor)
               ->where('postdate', date('Y-m-d'))
               ->save([
-                'loket' => $curr_loket,
-                'status' => 1
+                'loket' => $curr_loket
               ]);
+            //,'status' => 1
+            // remarked karena saat selesai tidak otomatis memanggil nomor antrian berikutnya 
+
             $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_obat')->save(['value' => $_GET['loket']]);
-            $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_obat_nomor')->save(['value' => $_tcounter]);
+            $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_obat_nomor')->save(['value' => $nextNomor]);
           }
 
 
@@ -990,20 +994,23 @@ class Site extends SiteModule
               ]);
             }
           }
-          $nextNomor = $this->db('mlite_antrian_loket')->select('status')->where('type', 'LIKE', 'Racikan%')->where('noantrian', $tcounter + 1)->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
+          $get_antrian_akhir = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'LIKE', 'Racikan%')->where('status', 0)->where('postdate', date('Y-m-d'))->asc('start_time')->oneArray();
+          // $nextNomor = $this->db('mlite_antrian_loket')->select('status')->where('type', 'LIKE', 'Racikan%')->where('noantrian', $tcounter + 1)->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
+          $nextNomor = $get_antrian_akhir['noantrian'];
           if ($nextNomor) {
             //update next nomor menjadi 1 (sedang dilayani)
             $this->db('mlite_antrian_loket')
               ->where('type', 'LIKE', 'Racikan%')
-              ->where('noantrian', $tcounter + 1)
+              ->where('noantrian', $nextNomor)
               ->where('postdate', date('Y-m-d'))
               ->save([
-                'loket' => $curr_loket,
-                'status' => 1
+                'loket' => $curr_loket
               ]);
+            //,'status' => 1
+            // remarked karena saat selesai tidak otomatis memanggil nomor antrian berikutnya 
 
             $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_racikan')->save(['value' => $_GET['loket']]);
-            $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_racikan_nomor')->save(['value' => $_tcounter]);
+            $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_racikan_nomor')->save(['value' => $nextNomor]);
           }
 
           redirect(url('anjungan/farmasi?show=panggil_racikan'));
@@ -1579,7 +1586,8 @@ class Site extends SiteModule
             'noantrian' => $_GET['noantrian'],
             'postdate' => date('Y-m-d'),
             'start_time' => date('H:i:s'),
-            'end_time' => '00:00:00'
+            'end_time' => '00:00:00',
+            'loket' => 'Obat'
           ]);
         //redirect(url('anjungan/pasien'));
         $dataUpdateWaktuAntrean = $this->updateWaktuAntreanBPJS($kdbooking, 6);
@@ -1672,7 +1680,8 @@ class Site extends SiteModule
             'noantrian' => $_GET['noantrian'],
             'postdate' => date('Y-m-d'),
             'start_time' => date('H:i:s'),
-            'end_time' => '00:00:00'
+            'end_time' => '00:00:00',
+            'loket' => 'Racikan'
           ]);
         $dataUpdateWaktuAntrean = $this->updateWaktuAntreanBPJS($kdbooking, 6);
         $response = $this->sendDataWSBPJS('antrean/updatewaktu', $dataUpdateWaktuAntrean);
@@ -1958,6 +1967,7 @@ class Site extends SiteModule
           $nik = $_POST['nik'];
           $nohp = $this->core->getPasienInfo('no_tlp', $no_rkm_medis);;
           $kodepoli = $_POST['kd_poli_daftar'];
+          $kodesubspesialis = $_POST['kodesubspesialis'];
           $norm = $no_rkm_medis;
           $tanggalperiksa = $_POST['tgl_registrasi_daftar'];
           $kodedokter = $_POST['kd_dokter_daftar'];
@@ -1970,6 +1980,7 @@ class Site extends SiteModule
 
           $dataAmbilAntrean = $this->ambilAntreanRS($nomorkartu, $nik, $nohp, $kodepoli, $norm, $tanggalperiksa, $kodedokter, $jampraktek, $jeniskunjungan, $nomorreferensi);
           $responseAmbilAntrean = $this->sendDataWSRS('ambilantrean', $dataAmbilAntrean);
+          // var_dump($dataAmbilAntrean);
           // // {
           // //   "response": {
           // //       "nomorantrean": "X-XXX",
@@ -2003,7 +2014,7 @@ class Site extends SiteModule
             $nomorkartu = $nomorkartu;
             $nik = $nik;
             $nohp = $nohp;
-            $kodepoli = $kodepoli;
+            $kodepoli = $kodesubspesialis;
             $namapoli = $responseAmbilAntrean['response']['namapoli'];
             $pasienbaru = $responseAmbilAntrean['response']['pasienbaru'];
             $norm = $responseAmbilAntrean['response']['norm'];
@@ -2063,10 +2074,15 @@ class Site extends SiteModule
             if ($responseTambahAntrean['metadata']['code'] == '200') {
 
               //check in antrean
+              date_default_timezone_set('Asia/Jakarta');
+              $sekarang  = date("Y-m-d");
+              $jamsekarang = date("H:i:s");
+              $query = $this->db()->pdo()->prepare("UPDATE referensi_mobilejkn_bpjs set status='Checkin',validasi='$sekarang $jamsekarang' where nobooking='$kodebooking'");
+              $query->execute();
               //prepare data WS 
-              $dataWS = $this->checkinAntreanRS($kodebooking);
+              // $dataWS = $this->checkinAntreanRS($kodebooking);
               //send data WS
-              $responseCheckin = $this->sendDataWSRS('checkinantrean', $dataWS);
+              // $responseCheckin = $this->sendDataWSRS('checkinantrean', $dataWS);
 
               //get data registrasi untuk cetak
               $result = $this->db('reg_periksa')
@@ -2295,7 +2311,6 @@ class Site extends SiteModule
               $data['result'] = 'Checkin gagal. Tidak dapat tambah antrean BPJS ' . $responseTambahAntrean['metadata']['message'];
             }
           } else {
-            //delete record 
             $data['status'] = 'err';
             $data['result'] = 'Checkin gagal. ' . $responseCheckin['metadata']['message'];
           }
