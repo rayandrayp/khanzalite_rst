@@ -9,6 +9,7 @@ use Systems\Lib\Fpdf\PDF_MC_Table;
 class Admin extends AdminModule
 {
   private $_uploads = WEBAPPS_PATH . '/berkasrawat/pages/upload';
+  
   public function navigation()
   {
     return [
@@ -101,18 +102,35 @@ class Admin extends AdminModule
 
     $poliklinik = str_replace(",", "','", $this->core->getUserInfo('cap', null, true));
     $igd = $this->settings('settings', 'igd');
-    $sql = "SELECT reg_periksa.*,
-            pasien.*,
-            dokter.*,
-            poliklinik.*,
-            penjab.*
-          FROM reg_periksa, pasien, dokter, poliklinik, penjab
-          WHERE reg_periksa.no_rkm_medis = pasien.no_rkm_medis
-          AND reg_periksa.kd_poli != '$igd'
-          AND reg_periksa.tgl_registrasi BETWEEN '$tgl_kunjungan' AND '$tgl_kunjungan_akhir'
-          AND reg_periksa.kd_dokter = dokter.kd_dokter
-          AND reg_periksa.kd_poli = poliklinik.kd_poli
-          AND reg_periksa.kd_pj = penjab.kd_pj";
+    $sql = "SELECT a.no_rkm_medis, a.no_peserta, a.no_ktp, a.no_rawat,
+            a.nm_pasien, a.tgl_registrasi, a.no_reg, a.nm_poli, a.nm_dokter,
+            a.stts, a.jam_reg, IFNULL(t.temp3, '-') AS mulai, IFNULL(t.temp4, '-') AS selesai
+            FROM (
+                SELECT reg_periksa.*,
+                    pasien.no_ktp,
+                    pasien.nm_pasien,
+                    pasien.no_peserta,
+                    dokter.nm_dokter,
+                    poliklinik.nm_poli,
+                    penjab.png_jawab
+                FROM reg_periksa, pasien, dokter, poliklinik, penjab
+                WHERE reg_periksa.no_rkm_medis = pasien.no_rkm_medis
+                AND reg_periksa.tgl_registrasi BETWEEN '$tgl_kunjungan' AND '$tgl_kunjungan_akhir'
+                AND reg_periksa.kd_dokter = dokter.kd_dokter
+                AND reg_periksa.kd_poli = poliklinik.kd_poli
+                AND reg_periksa.kd_pj = penjab.kd_pj ";
+    // $sql = "SELECT reg_periksa.*,
+    //         pasien.*,
+    //         dokter.*,
+    //         poliklinik.*,
+    //         penjab.*
+    //       FROM reg_periksa, pasien, dokter, poliklinik, penjab
+    //       WHERE reg_periksa.no_rkm_medis = pasien.no_rkm_medis
+    //       AND reg_periksa.kd_poli != '$igd'
+    //       AND reg_periksa.tgl_registrasi BETWEEN '$tgl_kunjungan' AND '$tgl_kunjungan_akhir'
+    //       AND reg_periksa.kd_dokter = dokter.kd_dokter
+    //       AND reg_periksa.kd_poli = poliklinik.kd_poli
+    //       AND reg_periksa.kd_pj = penjab.kd_pj";
 
     if ($this->core->getUserInfo('role') != 'admin') {
       $sql .= " AND reg_periksa.kd_poli IN ('$poliklinik')";
@@ -127,6 +145,8 @@ class Admin extends AdminModule
       $sql .= " AND reg_periksa.status_bayar = 'Sudah Bayar'";
     }
 
+    $sql .= " ) AS a LEFT JOIN temporary2 t ON a.no_rawat = t.temp2";
+    
     $stmt = $this->db()->pdo()->prepare($sql);
     $stmt->execute();
     $rows = $stmt->fetchAll();
@@ -716,7 +736,8 @@ class Admin extends AdminModule
 
   public function postStatusRawat()
   {
-    $datetime = date('Y-m-d h:i:s');
+    $datetime = date('Y-m-d H:i:s');
+    $time = date('H:i:s');
     $cek = $this->db('mutasi_berkas')->where('no_rawat', $_POST['no_rawat'])->oneArray();
     $kodebooking = "";
     //get nomor kodebooking
@@ -754,7 +775,20 @@ class Admin extends AdminModule
           'diterima' => $datetime
         ]);
       }
-      $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->save($_POST);
+      //cek jika sudah ada record
+      if (!$this->db('temporary2')->where('temp2', $_POST['no_rawat'])->oneArray()) {
+        
+        $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->save($_POST);
+        
+        //add waktu pasien saat mulai layan
+        $this->db('temporary2')->save([
+          'temp1' => 'waktupasien',
+          'temp2' => $_POST['no_rawat'],
+          'temp3' => $time,
+          'temp4' => '-'
+        ]);
+      }
+      
       if ($kodebooking != '') {
         //send data Update waktu antrean = 4
         $dataUpdateWaktuAntrean = $this->updateWaktuAntreanBPJS($kodebooking, 4);
@@ -770,6 +804,8 @@ class Admin extends AdminModule
     } else if ($_POST['stts'] == 'Sudah') { //pasien sudah selesai dilayani
 
       $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->save($_POST);
+      //update waktu pasien saat selesai layan
+      $this->db('temporary2')->where('temp1', 'waktupasien')->where('temp2', $_POST['no_rawat'])->update('temp4', $time);
       if ($kodebooking != '') {
         //send data Update waktu antrean = 5
         $dataUpdateWaktuAntrean = $this->updateWaktuAntreanBPJS($kodebooking, 5);

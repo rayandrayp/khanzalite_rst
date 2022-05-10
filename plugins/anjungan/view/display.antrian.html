@@ -740,6 +740,7 @@
 
             var jsonRujukan;
             var jam_praktek = "";
+            // var kodesubspesialis = "";
 
             $('input[name="datepicker"]').datepicker({
                 uiLibrary: 'bootstrap4',
@@ -814,7 +815,10 @@
                             // console.log(responseJson['rujukan']);
 
                             $.each(responseJson, function(i, item) {
-                                var div_data = "<option value='" + item.kodedokter + ";" + item.jadwal + "'>" + item.namadokter + " (" + item.jadwal + ")" + "</option>";
+                                // kodesubspesialis = item.kodesubspesialis;
+                                // console.log(kodesubspesialis);
+                                // $("#kodesubspesialis").text(item.kodesubspesialis);
+                                var div_data = "<option value='" + item.kodesubspesialis + ";" + item.kodedokter + ";" + item.jadwal + "'>" + item.namadokter + " (" + item.jadwal + ")" + "</option>";
                                 $(div_data).appendTo('#pilih_dokter_daftar');
                             });
                             $('#messageTextSimpan').text('');
@@ -868,13 +872,14 @@
                 var pilih_nm_dokter = $('#pilih_dokter_daftar option:selected').text();
                 var nm_dokter = pilih_nm_dokter.substring(0, pilih_nm_dokter.length - 13);
                 var kd_dokter_arr = kd_dokter_field.split(";");
-                var kd_dokter_daftar = kd_dokter_arr[0];
-                var jam_praktek = kd_dokter_arr[1];
+                var kodesubspesialis = kd_dokter_arr[0];
+                var kd_dokter_daftar = kd_dokter_arr[1];
+                var jam_praktek = kd_dokter_arr[2];
                 var kd_poli_daftar = $('#pilih_poli_daftar').val();
                 var kd_pj = $('#kd_pj').val();
                 var nik = $('#nik').val();
 
-                // console.log("Begin simpan pendaftaran");
+                // console.log(kodesubspesialis);
                 console.log(nik);
                 console.log(no_rkm_medis_daftar);
                 console.log(kd_dokter_field);
@@ -929,6 +934,7 @@
                         }
                     }
                 });
+                //kodesubspesialis: kodesubspesialis,
 
                 $.ajax({
                     url: '{?=url()?}/anjungan/ajax?show=post-registrasi',
@@ -940,6 +946,7 @@
                         nik: nik,
                         tgl_registrasi_daftar: tgl_registrasi_daftar,
                         kd_poli_daftar: kd_poli_daftar,
+                        kodesubspesialis: kodesubspesialis,
                         kd_dokter_daftar: kd_dokter_daftar,
                         kd_pj: kd_pj,
                         jeniskunjungan: jeniskunjungan,

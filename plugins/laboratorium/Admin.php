@@ -3,17 +3,102 @@ namespace Plugins\Laboratorium;
 
 use Systems\AdminModule;
 use Plugins\Icd\DB_ICD;
+use Plugins\Laboratorium\Src\Keuangan;
 
 class Admin extends AdminModule
 {
 
+    // public function navigation()
+    // {
+    //     return [
+    //         'Kelola'   => 'manage',
+    //     ];
+    // }
+    public function init()
+    {
+        $this->keuangan = new Keuangan();
+    }
     public function navigation()
     {
-        return [
-            'Kelola'   => 'manage',
-        ];
+      return [
+        'Laporan Lab'  => 'index',
+        'Laboratorium'  => 'manage'
+      ];
     }
 
+    public function getIndex()
+    {
+      $sub_modules = [
+        ['name' => 'Laporan Keuangan', 'url' => url([ADMIN, 'laboratorium', 'keuangan']), 'icon' => 'file-o', 'desc' => 'Laporan Keuangan'],
+        ['name' => 'Laporan Reagen', 'url' => url([ADMIN, 'laboratorium', 'lap_reagen']), 'icon' => 'file-o', 'desc' => 'Laporan Reagen'],
+        ['name' => 'Laporan Spuit', 'url' => url([ADMIN, 'laboratorium', 'lap_spuit']), 'icon' => 'file-o', 'desc' => 'Laporan Spuit'],
+        ['name' => 'Laporan Status', 'url' => url([ADMIN, 'laboratorium', 'lap_status']), 'icon' => 'file-o', 'desc' => 'Laporan Status'],
+        ['name' => 'Laporan Waktu Tunggu', 'url' => url([ADMIN, 'laboratorium', 'lap_waktu_tunggu']), 'icon' => 'file-o', 'desc' => 'Laporan Waktu Tunggu'],
+        ['name' => 'Laporan Waktu Tunggu per Ruangan', 'url' => url([ADMIN, 'laboratorium', 'lap_waktu_tunggu_ruangan']), 'icon' => 'file-o', 'desc' => 'Laporan Waktu Tunggu per Ruangan'],
+        ['name' => 'Laporan Ruangan', 'url' => url([ADMIN, 'laboratorium', 'lap_ruangan']), 'icon' => 'file-o', 'desc' => 'Laporan Ruangan'],
+        ['name' => 'Laporan Dokter', 'url' => url([ADMIN, 'laboratorium', 'lap_dokter']), 'icon' => 'file-o', 'desc' => 'Laporan Dokter'],
+        ['name' => 'Laporan Dokter Seluruh', 'url' => url([ADMIN, 'laboratorium', 'lap_dokter_seluruh']), 'icon' => 'file-o', 'desc' => 'Laporan Dokter Seluruh'],
+        ['name' => 'Laporan Dokter Total', 'url' => url([ADMIN, 'laboratorium', 'lap_dokter_total']), 'icon' => 'file-o', 'desc' => 'Laporan Dokter Total'],
+        ['name' => 'Laporan Pemeriksa', 'url' => url([ADMIN, 'laboratorium', 'lap_pemeriksa']), 'icon' => 'file-o', 'desc' => 'Laporan Pemeriksa'],
+        ['name' => 'Laporan Pemeriksa Seluruh', 'url' => url([ADMIN, 'laboratorium', 'lap_pemeriksa_seluruh']), 'icon' => 'file-o', 'desc' => 'Laporan Pemeriksa Seluruh'],
+        ['name' => 'Laporan Pemeriksa Total', 'url' => url([ADMIN, 'laboratorium', 'lap_pemeriksa_total']), 'icon' => 'file-o', 'desc' => 'Laporan Pemeriksa Total'],
+        ['name' => 'Laporan Perincian', 'url' => url([ADMIN, 'laboratorium', 'lap_perincian']), 'icon' => 'file-o', 'desc' => 'Laporan Perincian'],
+        ['name' => 'Laporan Hasil Pemeriksaan', 'url' => url([ADMIN, 'laboratorium', 'lap_hasil_pemeriksaan']), 'icon' => 'file-o', 'desc' => 'Laporan Hasil Pemeriksaan'],
+        ['name' => 'Laporan Hasil Pemeriksaan ke Excel', 'url' => url([ADMIN, 'laboratorium', 'lap_hasil_pemeriksaan_excel']), 'icon' => 'file-o', 'desc' => 'Laporan Hasil Pemeriksaan ke Excel'],
+        ['name' => 'Laporan Hasil Pemeriksaan per Ruangan', 'url' => url([ADMIN, 'laboratorium', 'lap_hasil_pemeriksaan_ruangan']), 'icon' => 'file-o', 'desc' => 'Laporan Hasil Pemeriksaan per Ruangan'],
+        ['name' => 'Laporan Transfusi Darah', 'url' => url([ADMIN, 'laboratorium', 'lap_transfusi_darah']), 'icon' => 'file-o', 'desc' => 'Laporan Transfusi Darah'],
+      ];
+      return $this->draw('index.html', ['sub_modules' => $sub_modules]);
+    }
+
+    /* Start Keuangan Section */
+    public function getKeuangan()
+    {
+      $this->_addHeaderFiles();
+      $this->core->addJS(url([ADMIN, 'laboratorium', 'keuanganjs']), 'footer');
+      $return = $this->keuangan->getIndex();
+      return $this->draw('keuangan.html', ['datakeuangan' => $return]);
+
+    }
+
+    // public function anyKeuanganSearch()
+    // {
+    //   $tgl_awal = $_POST['mulai'];
+    //   $tgl_akhir = $_POST['sampai'];
+    //   $status = $_POST['status'];
+    //   $tipe_rawat = $_POST['tiperawat'];
+
+    //   $return = $this->keuangan->search($tgl_awal, $tgl_akhir, $status, $tipe_rawat);
+    //   echo $this->draw('keuangan.display.html', ['databarang' => $return]);
+    //   exit();
+    // }
+
+    public function postKeuanganSearch()
+    {
+      $tgl_awal = $_POST['mulai'];
+      $tgl_akhir = $_POST['sampai'];
+      $status = $_POST['status'];
+      $tipe_rawat = $_POST['tiperawat'];
+
+      $return = $this->keuangan->search($tgl_awal, $tgl_akhir, $status, $tipe_rawat);
+      echo $this->draw('keuangan.display.html', ['datakeuangan' => $return]);
+      exit();
+    }
+
+    public function getKeuanganJS()
+    {
+        header('Content-type: text/javascript');
+        echo $this->draw(MODULES.'/laboratorium/js/admin/keuangan.js');
+        exit();
+    }
+    /* End Keuangan Section */
+
+    public function anylap_keuangan()
+    {
+        $return = $this->laboratorium->anyForm();
+        echo $this->draw('manage.html', ['poliklinik' => $return]);
+        exit();
+    }
     public function anyManage()
     {
         $tgl_kunjungan = date('Y-m-d');
@@ -565,6 +650,13 @@ class Admin extends AdminModule
         return $text;
     }
 
+    public function getCSS()
+    {
+        header('Content-type: text/css');
+        echo $this->draw(MODULES.'/laboratorium/css/w3.css');
+        exit();
+    }
+
     public function getJavascript()
     {
         header('Content-type: text/javascript');
@@ -580,6 +672,7 @@ class Admin extends AdminModule
         $this->core->addCSS(url('assets/css/bootstrap-datetimepicker.css'));
         $this->core->addJS(url('assets/jscripts/moment-with-locales.js'));
         $this->core->addJS(url('assets/jscripts/bootstrap-datetimepicker.js'));
+        $this->core->addCSS(url([ADMIN, 'laboratorium', 'css']));
         $this->core->addJS(url([ADMIN, 'laboratorium', 'javascript']), 'footer');
     }
 

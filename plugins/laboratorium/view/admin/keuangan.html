@@ -1,0 +1,60 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Laporan Keuangan</h3>
+            </div>
+            <div class="panel-body">
+                <div class="row">
+                    <div id="notif"></div>
+                </div>
+                <div class="row">
+                    <div class="col col-md-10">
+                        <div class="w3-panel">
+                            <div class="w3-quarter w3-panel">
+                                <div class="input-group">
+                                    <span class="input-group-addon">Mulai</span>
+                                    <input type="date" name="mulai" class="w3-select w3-border" value="<?=date('Y-m-d')?>" />
+                                </div>
+                            </div>
+                            <div class="w3-quarter w3-panel">
+                                <div class="input-group">
+                                    <span class="input-group-addon">Sampai</span>
+                                    <input type="date" name="sampai" class="w3-select w3-border" value="<?=date('Y-m-d')?>" />
+                                </div>
+                            </div>
+                            <div class="w3-quarter w3-panel">
+                                <div class="input-group">
+                                    <span class="input-group-addon">Status</span>
+                                    <select name="status" class="w3-input w3-border">
+                                    <option value="bpjs" selected>BPJS</option>
+                                    <option value="dinas" selected>DINAS</option>
+                                    <option value="jamkesda" selected>JAMKESDA</option>
+                                    <option value="plb" selected>PLB</option>
+                                  </select>
+                                </div>
+                            </div>
+                            <div class="w3-quarter w3-panel">
+                                <div class="input-group">
+                                    <span class="input-group-addon">Tipe Rawat</span>
+                                    <select name="tiperawat" class="w3-input w3-border">
+                                <option value="Ralan" selected>WATLAN</option>
+                                <option value="Ranap" selected>WATNAP</option>
+                              </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col col-md-2">
+                        <div class="input-group" id="index">
+                            <input class="btn btn-default" type="button" id="search" value="Cari" />
+                        </div>
+                    </div>
+                </div>
+                <div class="display">
+                    {include: ../plugins/laboratorium/view/admin/keuangan.display.html}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

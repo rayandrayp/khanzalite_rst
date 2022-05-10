@@ -98,7 +98,7 @@ Khanza Lite Change log
     Tambah fungsi untuk mengambil dan menampilkan data rujukan dari WS BPJS
     Tambah fungsi untuk mengambil dan menampilkan jadwal dokter
 
-03/--/2022
+03/31/2022
 - Admin.php (plugins/rawat_jalan/Admin.php)
     Tambah fungsi prepare Data WS
     Tambah fungsi send Data WS

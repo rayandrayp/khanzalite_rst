@@ -1,0 +1,39 @@
+<div id="display">
+    <div class="table-responsive no-margin">
+        <table class="table table-striped no-padding">
+            <thead>
+                <tr>
+                    <th>No. Urut</th>
+                    <th>Tanggal</th>
+                    <th>No. RM</th>
+                    <th>Nama Pasien</th>
+                    <th>Alamat</th>
+                    <th>Jenis Pemeriksaan</th>
+                    <th>Jumlah</th>
+                </tr>
+            </thead>
+            <tbody>
+                {if: $datakeuangan} {loop: $datakeuangan.list}
+                <tr class="edit" data-kode_brng="{$value.nourut}">
+                    <td>{$value.nourut}</td>
+                    <td>{$value.tgl_periksa}</td>
+                    <td>{$value.no_rkm_medis}</td>
+                    <td>{$value.nm_pasien}</td>
+                    <td>{$value.nm_poli}</td>
+                    <td>{$value.nm_perawatan}</td>
+                    <td>{$value.biaya}</td>
+                </tr>
+                {/loop} {else}
+                <tr>
+                    <td colspan="25" class="text-center">Tidak ada data.</td>
+                </tr>
+                {/if}
+            </tbody>
+        </table>
+    </div>
+    <nav class="clearfix m-t-xs">
+    </nav>
+</div>
+<script type="text/javascript">
+    $(".alert-dismissible").fadeTo(3000, 500).slideUp(500);
+</script>
