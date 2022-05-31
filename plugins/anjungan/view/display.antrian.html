@@ -793,12 +793,14 @@
             $('select#pilih_poli_daftar').on('change', function() {
                 // var kd_poli_arr = this.value.split(";");
                 var kd_poli_daftar = this.value; //kd_poli_arr[0];
+                var no_rkm_medis_daftar = $('#no_rkm_medis_daftar').val();
                 var tgl_registrasi_daftar = $('#tgl_registrasi_daftar').val();
                 $.ajax({
                     type: 'POST',
                     url: '{?=url()?}/anjungan/ajax?show=get-dokter',
                     dataType: "json",
                     data: {
+                        no_rkm_medis: no_rkm_medis_daftar,
                         kd_poli: kd_poli_daftar,
                         tgl_registrasi: tgl_registrasi_daftar
                     },
@@ -823,7 +825,9 @@
                             });
                             $('#messageTextSimpan').text('');
                             $('#messageDivSimpan').addClass('d-none')
-
+                        } else if (data.status == 'exist') {
+                            alert("Anda sudah terdaftar di Poli tersebut...");
+                            window.location.href = "{?=url('anjungan/pasien')?}";
                         } else if (data.status == 'limit') {
                             alert("Limit pendaftaran sudah terpenuhi. Silahkan pilih hari lain...");
                             document.getElementById("tgl_registrasi_daftar").value = "";

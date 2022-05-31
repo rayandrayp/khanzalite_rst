@@ -222,12 +222,19 @@
                         no_rawat: no_rawat,
                         stts: result
                     }, function(data) {
-                        // sembunyikan form, tampilkan data yang sudah di perbaharui, tampilkan notif
-                        $("#display").load(baseURL + '/rawat_jalan/display?t=' + mlite.token);
-                        $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">" +
-                            "Status lanjut pasien telah disimpan!" +
-                            "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>" +
-                            "</div>").show();
+                        const res = JSON.parse(data);
+                        console.log(res);
+                        if (res.status == "error"){
+                            alert(res.message);
+                        } else {
+                            alert(res.message);
+                            // sembunyikan form, tampilkan data yang sudah di perbaharui, tampilkan notif
+                            $("#display").load(baseURL + '/rawat_jalan/display?t=' + mlite.token);
+                            $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">" +
+                                "Status lanjut pasien telah disimpan!" +
+                                "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>" +
+                                "</div>").show();
+                        }
                     });
                 }
             }

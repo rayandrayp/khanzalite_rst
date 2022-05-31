@@ -1849,8 +1849,13 @@ class Site extends SiteModule
           //   'value' => 'get-dokter' . json_encode($responseJadwalDokter)
           // ]);
           if ($responseJadwalDokter['metadata']['code'] == '200') {
-            $data = $responseJadwalDokter;
-            $data['status'] = 'ok';
+            if ($this->db('reg_periksa')->where('no_rkm_medis', $_POST['no_rkm_medis'])->where('tgl_registrasi', $_POST['tgl_registrasi'])->where('kd_poli', $kd_poli)->oneArray()) {
+              $data['status'] = 'exist';
+              $data['result'] = '';
+            } else {
+              $data = $responseJadwalDokter;
+              $data['status'] = 'ok';
+            }
           } else {
             $data['status'] = 'empty';
             $data['result'] = '';

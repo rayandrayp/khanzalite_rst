@@ -9,7 +9,7 @@ use Systems\Lib\Fpdf\PDF_MC_Table;
 class Admin extends AdminModule
 {
   private $_uploads = WEBAPPS_PATH . '/berkasrawat/pages/upload';
-  
+
   public function navigation()
   {
     return [
@@ -146,7 +146,7 @@ class Admin extends AdminModule
     }
 
     $sql .= " ) AS a LEFT JOIN temporary2 t ON a.no_rawat = t.temp2";
-    
+
     $stmt = $this->db()->pdo()->prepare($sql);
     $stmt->execute();
     $rows = $stmt->fetchAll();
@@ -776,10 +776,10 @@ class Admin extends AdminModule
         ]);
       }
       //cek jika sudah ada record
-      if (!$this->db('temporary2')->where('temp2', $_POST['no_rawat'])->oneArray()) {
-        
+      if (empty($this->db('temporary2')->where('temp2', $_POST['no_rawat'])->oneArray())) {
+
         $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->save($_POST);
-        
+
         //add waktu pasien saat mulai layan
         $this->db('temporary2')->save([
           'temp1' => 'waktupasien',
@@ -788,7 +788,7 @@ class Admin extends AdminModule
           'temp4' => '-'
         ]);
       }
-      
+
       if ($kodebooking != '') {
         //send data Update waktu antrean = 4
         $dataUpdateWaktuAntrean = $this->updateWaktuAntreanBPJS($kodebooking, 4);
@@ -803,20 +803,30 @@ class Admin extends AdminModule
       }
     } else if ($_POST['stts'] == 'Sudah') { //pasien sudah selesai dilayani
 
-      $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->save($_POST);
-      //update waktu pasien saat selesai layan
-      $this->db('temporary2')->where('temp1', 'waktupasien')->where('temp2', $_POST['no_rawat'])->update('temp4', $time);
-      if ($kodebooking != '') {
-        //send data Update waktu antrean = 5
-        $dataUpdateWaktuAntrean = $this->updateWaktuAntreanBPJS($kodebooking, 5);
-        $response = $this->sendDataWSBPJS('antrean/updatewaktu', $dataUpdateWaktuAntrean);
-        if ($response['metadata']['code'] != '200') {
-          $this->db('mlite_settings')->save([
-            'module' => 'debug',
-            'field' => 'post status rawat Sudah dilayani',
-            'value' => $kodebooking . '|' . $response['metadata']['code'] . '|' . $response['metadata']['message']
-          ]);
+      //cek jika sudah ada record
+      if (empty($this->db('temporary2')->where('temp2', $_POST['no_rawat'])->oneArray())) {
+        $data['status'] = 'error';
+        $data['message'] = 'Status pasien tidak runut, silahkan update "Berkas Diterima" terlebih dahulu.';
+        echo json_encode($data);
+      } else {
+        $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->save($_POST);
+        //update waktu pasien saat selesai layan
+        $this->db('temporary2')->where('temp1', 'waktupasien')->where('temp2', $_POST['no_rawat'])->update('temp4', $time);
+        if ($kodebooking != '') {
+          //send data Update waktu antrean = 5
+          $dataUpdateWaktuAntrean = $this->updateWaktuAntreanBPJS($kodebooking, 5);
+          $response = $this->sendDataWSBPJS('antrean/updatewaktu', $dataUpdateWaktuAntrean);
+          if ($response['metadata']['code'] != '200') {
+            $this->db('mlite_settings')->save([
+              'module' => 'debug',
+              'field' => 'post status rawat Sudah dilayani',
+              'value' => $kodebooking . '|' . $response['metadata']['code'] . '|' . $response['metadata']['message']
+            ]);
+          }
         }
+        $data['status'] = 'success';
+        $data['message'] = 'Status pasien berhasil diubah.';
+        echo json_encode($data);
       }
     } else if ($_POST['stts'] == 'Batal') { //pasien batal dilayani
 
