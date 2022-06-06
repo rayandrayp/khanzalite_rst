@@ -2013,134 +2013,140 @@ class Site extends SiteModule
           //   'value' => $responseAmbilAntrean['metadata']['message'] . ' | ' . $kodedokter . ' | ' . $jampraktek
           // ]);
           // //Ok | 35039 | 
-          if ($responseAmbilAntrean['metadata']['code'] == '200') {
+          if ($responseAmbilAntrean) {
 
-            $kodebooking = $responseAmbilAntrean['response']['kodebooking'];
-            $nomorkartu = $nomorkartu;
-            $nik = $nik;
-            $nohp = $nohp;
-            $kodepoli = $kodesubspesialis;
-            $namapoli = $responseAmbilAntrean['response']['namapoli'];
-            $pasienbaru = $responseAmbilAntrean['response']['pasienbaru'];
-            $norm = $responseAmbilAntrean['response']['norm'];
-            $tanggalperiksa = $tanggalperiksa;
-            $kodedokter = $kodedokter;
-            $namadokter = $responseAmbilAntrean['response']['namadokter'];
-            $jampraktek = $jampraktek;
-            $jeniskunjungan = $jeniskunjungan; //{1 (Rujukan FKTP), 2 (Rujukan Internal), 3 (Kontrol), 4 (Rujukan Antar RS)},
-            $nomorreferensi = $nomorreferensi;
-            $nomorantrean = $responseAmbilAntrean['response']['nomorantrean'];
-            $angkaantrean = $responseAmbilAntrean['response']['angkaantrean'];
-            $estimasidilayani = $responseAmbilAntrean['response']['estimasidilayani'];
-            $sisakuotajkn = $responseAmbilAntrean['response']['sisakuotajkn'];
-            $kuotajkn = $responseAmbilAntrean['response']['kuotajkn'];
-            $sisakuotanonjkn = $responseAmbilAntrean['response']['sisakuotanonjkn'];
-            $kuotanonjkn = $responseAmbilAntrean['response']['kuotanonjkn'];
-            $keterangan = $responseAmbilAntrean['response']['keterangan'];
+            if ($responseAmbilAntrean['metadata']['code'] == '200') {
 
-            if ($_POST['jenis'] != 'BPJS') { //jika non BPJS
-              $jenispasien = 'NON JKN';
-              $nomorkartu = '';
-              $nomorreferensi = '';
-            }
+              $kodebooking = $responseAmbilAntrean['response']['kodebooking'];
+              $nomorkartu = $nomorkartu;
+              $nik = $nik;
+              $nohp = $nohp;
+              $kodepoli = $kodesubspesialis;
+              $namapoli = $responseAmbilAntrean['response']['namapoli'];
+              $pasienbaru = $responseAmbilAntrean['response']['pasienbaru'];
+              $norm = $responseAmbilAntrean['response']['norm'];
+              $tanggalperiksa = $tanggalperiksa;
+              $kodedokter = $kodedokter;
+              $namadokter = $responseAmbilAntrean['response']['namadokter'];
+              $jampraktek = $jampraktek;
+              $jeniskunjungan = $jeniskunjungan; //{1 (Rujukan FKTP), 2 (Rujukan Internal), 3 (Kontrol), 4 (Rujukan Antar RS)},
+              $nomorreferensi = $nomorreferensi;
+              $nomorantrean = $responseAmbilAntrean['response']['nomorantrean'];
+              $angkaantrean = $responseAmbilAntrean['response']['angkaantrean'];
+              $estimasidilayani = $responseAmbilAntrean['response']['estimasidilayani'];
+              $sisakuotajkn = $responseAmbilAntrean['response']['sisakuotajkn'];
+              $kuotajkn = $responseAmbilAntrean['response']['kuotajkn'];
+              $sisakuotanonjkn = $responseAmbilAntrean['response']['sisakuotanonjkn'];
+              $kuotanonjkn = $responseAmbilAntrean['response']['kuotanonjkn'];
+              $keterangan = $responseAmbilAntrean['response']['keterangan'];
 
-            $dataTambahAntrean = $this->tambahAntreanBPJS(
-              $kodebooking,
-              $jenispasien,
-              $nomorkartu,
-              $nik,
-              $nohp,
-              $kodepoli,
-              $namapoli,
-              $pasienbaru,
-              $norm,
-              $tanggalperiksa,
-              $kodedokter,
-              $namadokter,
-              $jampraktek,
-              $jeniskunjungan,
-              $nomorreferensi,
-              $nomorantrean,
-              $angkaantrean,
-              $estimasidilayani,
-              $sisakuotajkn,
-              $kuotajkn,
-              $sisakuotanonjkn,
-              $kuotanonjkn,
-              $keterangan
-            );
-            $responseTambahAntrean = $this->sendDataWSBPJS('antrean/add', $dataTambahAntrean);
-            $datajs = json_encode($dataTambahAntrean);
-            // $this->db('mlite_settings')->save([
-            //   'module' => 'debug',
-            //   'field' => 'post-registrasi datajs',
-            //   'value' => $datajs
-            // ]);
-            if ($responseTambahAntrean['metadata']['code'] == '200') {
-
-              //check in antrean
-              date_default_timezone_set('Asia/Jakarta');
-              $sekarang  = date("Y-m-d");
-              $jamsekarang = date("H:i:s");
-              $query = $this->db()->pdo()->prepare("UPDATE referensi_mobilejkn_bpjs set status='Checkin',validasi='$sekarang $jamsekarang' where nobooking='$kodebooking'");
-              $query->execute();
-              //prepare data WS 
-              // $dataWS = $this->checkinAntreanRS($kodebooking);
-              //send data WS
-              // $responseCheckin = $this->sendDataWSRS('checkinantrean', $dataWS);
-
-              //get data registrasi untuk cetak
-              $result = $this->db('reg_periksa')
-                ->select('reg_periksa.no_rkm_medis')
-                ->select('referensi_mobilejkn_bpjs.nobooking')
-                ->select('pasien.nm_pasien')
-                ->select('pasien.alamat')
-                ->select('reg_periksa.tgl_registrasi')
-                ->select('reg_periksa.jam_reg')
-                ->select('reg_periksa.no_rawat')
-                ->select('reg_periksa.no_reg')
-                ->select('poliklinik.nm_poli')
-                ->select('dokter.nm_dokter')
-                ->select('reg_periksa.status_lanjut')
-                ->select('penjab.png_jawab')
-                ->join('poliklinik', 'poliklinik.kd_poli = reg_periksa.kd_poli')
-                ->join('dokter', 'dokter.kd_dokter = reg_periksa.kd_dokter')
-                ->join('penjab', 'penjab.kd_pj = reg_periksa.kd_pj')
-                ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-                ->join('referensi_mobilejkn_bpjs', 'referensi_mobilejkn_bpjs.no_rawat = reg_periksa.no_rawat')
-                ->where('reg_periksa.tgl_registrasi', $tanggalperiksa)
-                ->where('reg_periksa.no_rkm_medis', $no_rkm_medis)
-                ->desc('referensi_mobilejkn_bpjs.nobooking')
-                ->oneArray();
-
-              if (!empty($result)) {
-                $dataUpdateWaktuAntrean = $this->updateWaktuAntreanBPJS($kodebooking, 3);
-                $this->sendDataWSBPJS('antrean/updatewaktu', $dataUpdateWaktuAntrean);
-
-                $data['status'] = 'ok';
-                $data['result'] = $result;
-              } else {
-                $data['status'] = 'err';
-                $data['result'] = 'Registrasi WS Berhasil. Tetapi Data Registrasi Tidak Tercatat.';
+              if ($_POST['jenis'] != 'BPJS') { //jika non BPJS
+                $jenispasien = 'NON JKN';
+                $nomorkartu = '';
+                $nomorreferensi = '';
               }
-            } else {
-              //delete record 
-              $data['status'] = 'err';
-              $data['result'] = 'Tambah Antrean BPJS gagal. ' . $responseTambahAntrean['metadata']['message'];
 
-              $result = $this->db('referensi_mobilejkn_bpjs')->select('no_rawat')->where('nobooking', $kodebooking)->oneArray();
-              $no_rawat = $result['no_rawat'];
+              $dataTambahAntrean = $this->tambahAntreanBPJS(
+                $kodebooking,
+                $jenispasien,
+                $nomorkartu,
+                $nik,
+                $nohp,
+                $kodepoli,
+                $namapoli,
+                $pasienbaru,
+                $norm,
+                $tanggalperiksa,
+                $kodedokter,
+                $namadokter,
+                $jampraktek,
+                $jeniskunjungan,
+                $nomorreferensi,
+                $nomorantrean,
+                $angkaantrean,
+                $estimasidilayani,
+                $sisakuotajkn,
+                $kuotajkn,
+                $sisakuotanonjkn,
+                $kuotanonjkn,
+                $keterangan
+              );
+              $responseTambahAntrean = $this->sendDataWSBPJS('antrean/add', $dataTambahAntrean);
+              $datajs = json_encode($dataTambahAntrean);
               // $this->db('mlite_settings')->save([
               //   'module' => 'debug',
-              //   'field' => 'post-registrasi responseTambahAntrean',
-              //   'value' => 'delete records ' . $no_rawat . ' | ' . $data['result']
+              //   'field' => 'post-registrasi datajs',
+              //   'value' => $datajs
               // ]);
-              $this->db('reg_periksa')->where('no_rawat', $no_rawat)->delete();
-              $this->db('referensi_mobilejkn_bpjs')->where('nobooking', $kodebooking)->delete();
+              if ($responseTambahAntrean['metadata']['code'] == '200') {
+
+                //check in antrean
+                date_default_timezone_set('Asia/Jakarta');
+                $sekarang  = date("Y-m-d");
+                $jamsekarang = date("H:i:s");
+                $query = $this->db()->pdo()->prepare("UPDATE referensi_mobilejkn_bpjs set status='Checkin',validasi='$sekarang $jamsekarang' where nobooking='$kodebooking'");
+                $query->execute();
+                //prepare data WS 
+                // $dataWS = $this->checkinAntreanRS($kodebooking);
+                //send data WS
+                // $responseCheckin = $this->sendDataWSRS('checkinantrean', $dataWS);
+
+                //get data registrasi untuk cetak
+                $result = $this->db('reg_periksa')
+                  ->select('reg_periksa.no_rkm_medis')
+                  ->select('referensi_mobilejkn_bpjs.nobooking')
+                  ->select('pasien.nm_pasien')
+                  ->select('pasien.alamat')
+                  ->select('reg_periksa.tgl_registrasi')
+                  ->select('reg_periksa.jam_reg')
+                  ->select('reg_periksa.no_rawat')
+                  ->select('reg_periksa.no_reg')
+                  ->select('poliklinik.nm_poli')
+                  ->select('dokter.nm_dokter')
+                  ->select('reg_periksa.status_lanjut')
+                  ->select('penjab.png_jawab')
+                  ->join('poliklinik', 'poliklinik.kd_poli = reg_periksa.kd_poli')
+                  ->join('dokter', 'dokter.kd_dokter = reg_periksa.kd_dokter')
+                  ->join('penjab', 'penjab.kd_pj = reg_periksa.kd_pj')
+                  ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                  ->join('referensi_mobilejkn_bpjs', 'referensi_mobilejkn_bpjs.no_rawat = reg_periksa.no_rawat')
+                  ->where('reg_periksa.tgl_registrasi', $tanggalperiksa)
+                  ->where('reg_periksa.no_rkm_medis', $no_rkm_medis)
+                  ->desc('referensi_mobilejkn_bpjs.nobooking')
+                  ->oneArray();
+
+                if (!empty($result)) {
+                  $dataUpdateWaktuAntrean = $this->updateWaktuAntreanBPJS($kodebooking, 3);
+                  $this->sendDataWSBPJS('antrean/updatewaktu', $dataUpdateWaktuAntrean);
+
+                  $data['status'] = 'ok';
+                  $data['result'] = $result;
+                } else {
+                  $data['status'] = 'err';
+                  $data['result'] = 'Registrasi WS Berhasil. Tetapi Data Registrasi Tidak Tercatat.';
+                }
+              } else {
+                //delete record 
+                $data['status'] = 'err';
+                $data['result'] = 'Tambah Antrean BPJS gagal. ' . $responseTambahAntrean['metadata']['message'];
+
+                $result = $this->db('referensi_mobilejkn_bpjs')->select('no_rawat')->where('nobooking', $kodebooking)->oneArray();
+                $no_rawat = $result['no_rawat'];
+                // $this->db('mlite_settings')->save([
+                //   'module' => 'debug',
+                //   'field' => 'post-registrasi responseTambahAntrean',
+                //   'value' => 'delete records ' . $no_rawat . ' | ' . $data['result']
+                // ]);
+                $this->db('reg_periksa')->where('no_rawat', $no_rawat)->delete();
+                $this->db('referensi_mobilejkn_bpjs')->where('nobooking', $kodebooking)->delete();
+              }
+            } else {
+              $data['status'] = 'err';
+              $data['result'] = 'Tambah Antrean RS gagal. ' . $responseAmbilAntrean['metadata']['message'];
             }
           } else {
             $data['status'] = 'err';
-            $data['result'] = 'Tambah Antrean RS gagal. ' . $responseAmbilAntrean['metadata']['message'];
+            $data['result'] = 'Tambah Antrean RS gagal. Terjadi kesalahan pada server RS. ';
           }
           // $data['status'] = 'ok';
           // $data['result'] = $responseAmbilAntrean;
@@ -3307,8 +3313,9 @@ class Site extends SiteModule
     // $result = file_get_contents($res);
     $data = json_decode($res, true);
     curl_close($ch);
-
-    return $data['response']['token'];
+    if ($data) {
+      return $data['response']['token'];
+    }
   }
 
   public function sendDataWSRS($path, $data)
