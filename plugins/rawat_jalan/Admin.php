@@ -894,11 +894,20 @@ class Admin extends AdminModule
     $settings = $this->settings('settings');
     $this->tpl->set('settings', $this->tpl->noParse_array(htmlspecialchars_array($settings)));
     $rawat_jalan = $this->db('reg_periksa')
+      ->select('reg_periksa.no_reg')
+      ->select('referensi_mobilejkn_bpjs.nobooking')
+      ->select('reg_periksa.no_rawat')
+      ->select('pasien.nm_pasien')
+      ->select('reg_periksa.no_rkm_medis')
+      ->select('poliklinik.nm_poli')
+      ->select('dokter.nm_dokter')
+      ->select('penjab.png_jawab')
       ->join('pasien', 'pasien.no_rkm_medis=reg_periksa.no_rkm_medis')
       ->join('poliklinik', 'poliklinik.kd_poli=reg_periksa.kd_poli')
       ->join('dokter', 'dokter.kd_dokter=reg_periksa.kd_dokter')
       ->join('penjab', 'penjab.kd_pj=reg_periksa.kd_pj')
-      ->where('no_rawat', $_GET['no_rawat'])
+      ->leftJoin('referensi_mobilejkn_bpjs', 'referensi_mobilejkn_bpjs.no_rawat=reg_periksa.no_rawat')
+      ->where('reg_periksa.no_rawat', $_GET['no_rawat'])
       ->oneArray();
     echo $this->draw('antrian.html', ['rawat_jalan' => $rawat_jalan]);
     exit();

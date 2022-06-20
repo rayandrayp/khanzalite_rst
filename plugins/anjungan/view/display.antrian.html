@@ -339,7 +339,8 @@
                                         <tr>
                                             <th scope="col">#</th>
                                             <th scope="col">Nomor Rujukan</th>
-                                            <th scope="col">Tanggal Kunjungan</th>
+                                            <th scope="col">Nomor SEP</th>
+                                            <th scope="col">Tanggal SEP</th>
                                             <th scope="col">Poli</th>
                                             <th scope="col">Pilih</th>
                                         </tr>
@@ -998,6 +999,7 @@
             //cek nomor BPJS/NIK
             // $('#infoContinue').click(function (e) {
             $('#cekNomor').click(function(e) {
+                $('#tabelRujukan tr').remove();
                 var value = $('#selectkepesertaan').val();
                 var nomor = "";
                 //console.log(value);
@@ -1016,7 +1018,7 @@
                             if (data.status == 'ok') {
                                 e.preventDefault();
                                 var responseJson = JSON.parse(data['response']);
-                                jsonRujukan = responseJson.rujukan;
+                                jsonRujukan = responseJson.histori;
                                 // console.log(responseJson);
                                 // console.log(responseJson.rujukan);
                                 // console.log(responseJson['rujukan']);
@@ -1026,9 +1028,10 @@
                                     var index = i + 1;
                                     trHTML += '<tr>' +
                                         '<th scope="row">' + index + '</th>' +
-                                        '<td>' + item.noKunjungan + '</td>' +
-                                        '<td>' + item.tglKunjungan + '</td>' +
-                                        '<td>' + item.poliRujukan.nama + '</td>' +
+                                        '<td>' + item.noRujukan + '</td>' +
+                                        '<td>' + item.noSep + '</td>' +
+                                        '<td>' + item.tglSep + '</td>' +
+                                        '<td>' + item.poli + '</td>' +
                                         '<td><button data-index-rujukan="' + i + '" class="btn btn-primary"  type="button">Pilih</button></td>' +
                                         '</tr>';
                                 });
@@ -1036,14 +1039,57 @@
                                 $('#tabelRujukan').append(trHTML);
                                 $('#tabelRujukanDiv').removeClass('d-none');
                             } else {
+                                // message = data.result;
                                 console.log(data.status);
-                                $('#messageText').text('Rujukan anda tidak ditemukan');
-                                $('#messageDiv').removeClass('d-none');
-                                // window.location.href = "{?=url('anjungan/pasien')?}";
+                                // $('#messageText').text('Rujukan anda tidak ditemukan');
+                                // $('#messageDiv').removeClass('d-none');
+                                // // window.location.href = "{?=url('anjungan/pasien')?}";
+                                $.ajax({
+                                    type: 'POST',
+                                    url: '{?=url()?}/anjungan/ajax?show=check-rujukan2',
+                                    dataType: "json",
+                                    data: {
+                                        no_bpjs: nomor
+                                    },
+                                    success: function(data) {
+                                        // console.log(data);
+                                        if (data.status == 'ok') {
+                                            e.preventDefault();
+                                            var responseJson = JSON.parse(data['response']);
+                                            jsonRujukan2 = responseJson.rujukan;
+                                            var trHTML = '';
+                                            var dataNoRujukan = '';
+                                            $.each(jsonRujukan2, function(i, item) {
+
+                                                var index = i + 1;
+                                                trHTML += '<tr>' +
+                                                    '<th scope="row">' + index + '</th>' +
+                                                    '<td>' + item.noKunjungan + '</td>' +
+                                                    '<td>' + '-' + '</td>' +
+                                                    '<td>' + item.tglKunjungan + '</td>' +
+                                                    '<td>' + item.poliRujukan.nama + '</td>' +
+                                                    '<td><button data-index-rujukan="' + i + '" class="btn btn-primary"  type="button">Pilih</button></td>' +
+                                                    '</tr>';
+                                                dataNoRujukan += '{"noRujukan":"' + item.noKunjungan + '"},';
+                                            });
+                                            dataNoRujukan = dataNoRujukan.substring(0,dataNoRujukan.length-1);
+                                            dataNoRujukan = '[' + dataNoRujukan + ']';
+                                            jsonRujukan = JSON.parse(dataNoRujukan);
+                                            // console.log(trHTML);
+                                            $('#tabelRujukan').append(trHTML);
+                                            $('#tabelRujukanDiv').removeClass('d-none');
+                                        } else {
+                                            console.log(data2.status);
+                                            $('#messageText').text('Rujukan anda tidak ditemukan');
+                                            $('#messageDiv').removeClass('d-none');
+                                            // window.location.href = "{?=url('anjungan/pasien')?}";
+                                        }
+                                    }
+                                });
                             }
                         }
                     });
-
+                    
                 } else if (value == 'nonbpjs') { //jika pasien non-BPJS
                     nomor = $('#no_ktp').val();
                     $.ajax({
@@ -1088,18 +1134,19 @@
             //jika rujukan dipilih
             $('#tabelRujukan').on('click', 'button.btn', function() {
                 let id = $(this).data('index-rujukan');
+                console.log(jsonRujukan);
                 var jsonData = jsonRujukan[id];
                 var todayDate = new Date().toISOString().slice(0, 10);
                 var nomor = $('#no_bpjs').val();
                 // console.log(jsonData);
-                // console.log(jsonData.peserta.mr.noMR);
+                // console.log(jsonData.noKartu);
 
                 $.ajax({
                     type: 'POST',
                     url: '{?=url()?}/anjungan/ajax?show=get-daftar',
                     dataType: "json",
                     data: {
-                        no_rkm_medis_daftar: jsonData.peserta.mr.noMR
+                        no_peserta: nomor
                     },
                     success: function(data) {
                         if (data.status == 'ok') {
@@ -1108,9 +1155,9 @@
                             $('.progress-bar').html('Step 2 of 3');
                             $('#myTab a[href="#poli"]').tab('show');
                             $('#no_rkm_medis_daftar').val(data.result.no_rkm_medis);
-                            $('#no_rujukan').val(jsonData.noKunjungan);
+                            $('#no_rujukan').val(jsonData.noRujukan);
                             $('#no_bpjs_daftar').val(nomor);
-                            $('#nik').val(jsonData.peserta.nik);
+                            $('#nik').val(data.result.no_ktp);
                             $('#nm_pasien_daftar').val(data.result.nm_pasien);
                             $('#alamat_daftar').val(data.result.alamat);
                             // $('#tgl_registrasi_daftar').val(todayDate);

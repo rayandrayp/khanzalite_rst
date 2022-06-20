@@ -1787,10 +1787,10 @@ class Site extends SiteModule
         break;
 
       case "get-daftar":
-        if (!empty($_POST['no_rkm_medis_daftar'])) {
+        if (!empty($_POST['no_peserta'])) {
           $data = array();
           $query = $this->db('pasien')
-            ->where('no_rkm_medis', $_POST['no_rkm_medis_daftar'])
+            ->where('no_peserta', $_POST['no_peserta'])
             ->oneArray();
           if (!empty($query)) {
             $data['status'] = 'ok';
@@ -2163,7 +2163,30 @@ class Site extends SiteModule
           $data = array();
           $no_bpjs = $_POST['no_bpjs'];
 
-          $responsePCARE = $this->getRujukanWSBPJS('', $no_bpjs);
+          $tglAkhir = date('Y-m-d');
+          $tglMulai = date('Y-m-d', strtotime('-90 days'));
+
+          $url = 'https://apijkn.bpjs-kesehatan.go.id/vclaim-rest/monitoring/HistoriPelayanan/NoKartu/' . $no_bpjs . '/tglMulai/' . $tglMulai . '/tglAkhir/' . $tglAkhir;
+          $responsePCARE = $this->getRujukanWSBPJS($url);
+
+          if ($responsePCARE['metaData']['code'] == '200') {
+            $data = $responsePCARE;
+            $data['status'] = 'ok';
+          } else {
+            $data['status'] = 'err';
+            $data['result'] = $responsePCARE['metaData']['message'];
+            // }
+          }
+          echo json_encode($data);
+        }
+        break;
+
+      case "check-rujukan2":
+        if (!empty($_POST['no_bpjs'])) {
+          $data = array();
+          $no_bpjs = $_POST['no_bpjs'];
+          $url = 'https://apijkn.bpjs-kesehatan.go.id/vclaim-rest/Rujukan/List/Peserta/' . $no_bpjs;
+          $responsePCARE = $this->getRujukanWSBPJS($url);
           // $this->db('mlite_settings')->save([
           //   'module' => 'debug',
           //   'field' => 'check-rujukan Pcare',
@@ -2173,7 +2196,8 @@ class Site extends SiteModule
             $data = $responsePCARE;
             $data['status'] = 'ok';
           } else {
-            $responseRS = $this->getRujukanWSBPJS('RS/', $no_bpjs);
+            $url = 'https://apijkn.bpjs-kesehatan.go.id/vclaim-rest/Rujukan/RS/List/Peserta/' . $no_bpjs;
+            $responseRS = $this->getRujukanWSBPJS($url);
             // $this->db('mlite_settings')->save([
             //   'module' => 'debug',
             //   'field' => 'check-rujukan RS',
@@ -2189,7 +2213,7 @@ class Site extends SiteModule
               //   'value' => 'RS gagal ' . $responsePCARE['metaData']['code'] . ' msg: ' . $responseRS['metaData']['message']
               // ]);
               $data['status'] = 'err';
-              $data['result'] = '';
+              $data['result'] = $responsePCARE['metaData']['message'];
             }
           }
           echo json_encode($data);
@@ -3170,7 +3194,7 @@ class Site extends SiteModule
     return $data;
   }
 
-  public function getRujukanWSBPJS($path, $no_peserta)
+  public function getRujukanWSBPJS($url)
   {
     $consid = "31533";
     $secretKey = "2lLD04E61A";
@@ -3184,9 +3208,75 @@ class Site extends SiteModule
 
     // base64 encode
     $encodedSignature = base64_encode($signature);
+    // $tglAkhir = date('Y-m-d');
+    // $tglMulai = date('Y-m-d', strtotime('-90 days'));
+
+    // $url = 'https://apijkn.bpjs-kesehatan.go.id/vclaim-rest/Rujukan/' . $path . 'List/Peserta/' . $no_peserta;
+    // $url = 'https://apijkn.bpjs-kesehatan.go.id/vclaim-rest/monitoring/HistoriPelayanan/NoKartu/' . $no_peserta . '/tglMulai/' . $tglMulai . '/tglAkhir/' . $tglAkhir;
+    // echo $url;
+
+    $header = array(
+      'Accept: application/json',
+      'X-Cons-ID: ' . $consid,
+      'X-Timestamp: ' . $tStamp,
+      'X-Signature: ' . $encodedSignature,
+      'user_key: ' . $user_key
+    );
+    // $this->db('mlite_settings')->save([
+    //   'module' => 'debug',
+    //   'field' => 'getRujukanWSBPJS_url',
+    //   'value' => $url
+    // ]);
+    // $this->db('mlite_settings')->save([
+    //   'module' => 'debug',
+    //   'field' => 'getRujukanWSBPJS_header',
+    //   'value' => 'X-Cons-ID ' . $consid . ' ;X-Timestamp ' . $tStamp . ' ;X-Signature ' . $encodedSignature . ' ;user_key ' . $user_key
+    // ]);
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+    curl_setopt($ch, CURLOPT_SSL_CIPHER_LIST, 'DEFAULT@SECLEVEL=1');
+
+    $res = curl_exec($ch);
+    //$result = file_get_contents($res);
+    $obj = json_decode($res, true);
+    $decryptData = $this->stringDecrypt($consid . $secretKey . $tStamp, $obj['response']);
+    $decompressData = $this->decompress($decryptData);
+    $data['metaData'] = $obj['metaData'];
+    $data['response'] = $decompressData;
+
+    curl_close($ch);
+
+    // $this->db('mlite_settings')->save([
+    //   'module' => 'debug',
+    //   'field' => 'check-getRujukanWSBPJS data',
+    //   'value' => $res
+    // ]);
+    return $data;
+  }
+
+  public function getRujukanWSVClaim($path, $no_peserta)
+  {
+    $consid = "31533";
+    $secretKey = "2lLD04E61A";
+    $user_key = "6129e4009acbd89f089be0aa5350f57d";
+
+    // Computes the timestamp
+    date_default_timezone_set('Asia/Jakarta');
+    $tStamp = strval(time() - strtotime('Y/m/d H:i:s'));
+    // Computes the signature by hashing the salt with the secret key as the key
+    $signature = hash_hmac('sha256', $consid . "&" . $tStamp, $secretKey, true);
+
+    // base64 encode
+    $encodedSignature = base64_encode($signature);
+    $tglAkhir = date('Y-m-d');
+    $tglMulai = date('Y-m-d', strtotime('-90 days'));
 
     $url = 'https://apijkn.bpjs-kesehatan.go.id/vclaim-rest/Rujukan/' . $path . 'List/Peserta/' . $no_peserta;
-
+    // $url = 'https://apijkn.bpjs-kesehatan.go.id/vclaim-rest/monitoring/HistoriPelayanan/NoKartu/' . $no_peserta . '/tglMulai/' . $tglMulai . '/tglAkhir/' . $tglAkhir;
+    // echo $url;
     $header = array(
       'Accept: application/json',
       'X-Cons-ID: ' . $consid,
@@ -3295,8 +3385,8 @@ class Site extends SiteModule
 
   public function getTokenWSRS()
   {
-    // $url = 'http://localhost/webapps/api-bpjsfktl/auth';
-    $url = 'https://rssoepraoen.simkeskhanza.com/webapps/api-bpjsfktl/auth';
+    $url = 'http://192.168.14.27/webapps/api-bpjsfktl/auth';
+    // $url = 'https://rssoepraoen.simkeskhanza.com/webapps/api-bpjsfktl/auth';
     $header = array(
       'Accept: application/json',
       'x-username: bridging_rstds',
@@ -3332,8 +3422,8 @@ class Site extends SiteModule
 
     //begin post data
     // API URL
-    $url = 'https://rssoepraoen.simkeskhanza.com/webapps/api-bpjsfktl/' . $path;
-    // $url = 'http://localhost/webapps/api-bpjsfktl/' . $path;
+    // $url = 'https://rssoepraoen.simkeskhanza.com/webapps/api-bpjsfktl/' . $path;
+    $url = 'http://192.168.14.27/webapps/api-bpjsfktl/' . $path;
     // $payload = array(
     //   'test' => 'data'
     // );

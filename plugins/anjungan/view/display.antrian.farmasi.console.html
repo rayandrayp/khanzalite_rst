@@ -266,16 +266,16 @@
   <script>
   $(document).ready(function() {
 
-    $("#display_antrean_obat").load("{?=url()?}/anjungan/ajax?show=tampilobat");
-    $("#print_antrean_obat").load("{?=url()?}/anjungan/ajax?show=printobat");
-    $("#display_antrean_racikan").load("{?=url()?}/anjungan/ajax?show=tampilracikan");
-    $("#print_antrean_racikan").load("{?=url()?}/anjungan/ajax?show=printracikan");
-    // setInterval(function(){
-    //   $("#display_antrean_obat").load("{?=url()?}/anjungan/ajax?show=tampilobat");
-    //   $("#print_antrean_obat").load("{?=url()?}/anjungan/ajax?show=printobat");
-    //   $("#display_antrean_racikan").load("{?=url()?}/anjungan/ajax?show=tampilracikan");
-    //   $("#print_antrean_racikan").load("{?=url()?}/anjungan/ajax?show=printracikan");
-    // }, 1000);
+    // $("#display_antrean_obat").load("{?=url()?}/anjungan/ajax?show=tampilobat");
+    // $("#print_antrean_obat").load("{?=url()?}/anjungan/ajax?show=printobat");
+    // $("#display_antrean_racikan").load("{?=url()?}/anjungan/ajax?show=tampilracikan");
+    // $("#print_antrean_racikan").load("{?=url()?}/anjungan/ajax?show=printracikan");
+    setInterval(function(){
+      $("#display_antrean_obat").load("{?=url()?}/anjungan/ajax?show=tampilobat");
+      $("#print_antrean_obat").load("{?=url()?}/anjungan/ajax?show=printobat");
+      $("#display_antrean_racikan").load("{?=url()?}/anjungan/ajax?show=tampilracikan");
+      $("#print_antrean_racikan").load("{?=url()?}/anjungan/ajax?show=printracikan");
+    }, 1000);
   })
 
   function printDiv(eleId){
