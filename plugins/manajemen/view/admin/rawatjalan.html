@@ -1,30 +1,30 @@
 <ul class="nav nav-tabs">
     <li><a href="{?=url([ADMIN,'manajemen','dashboard'])?}">Dashboard</a></li>
-    <li><a href="{?=url([ADMIN,'manajemen','pendaftaran'])?}">Pendaftaran</a></li>
+    <!-- <li><a href="{?=url([ADMIN,'manajemen','pendaftaran'])?}">Pendaftaran</a></li> -->
     <li class="active"><a href="{?=url([ADMIN,'manajemen','rawatjalan'])?}">Rawat Jalan</a></li>
     <li><a href="{?=url([ADMIN,'manajemen','rawatinap'])?}">Rawat Inap</a></li>
     <li><a href="{?=url([ADMIN,'manajemen','dokter'])?}">Dokter</a></li>
-    <li><a href="{?=url([ADMIN,'manajemen','laboratorium'])?}">Laboratorium</a></li>
-    <li><a href="{?=url([ADMIN,'manajemen','radiologi'])?}">Radiologi</a></li>
+    <!-- <li><a href="{?=url([ADMIN,'manajemen','laboratorium'])?}">Laboratorium</a></li> -->
+    <!-- <li><a href="{?=url([ADMIN,'manajemen','radiologi'])?}">Radiologi</a></li> -->
     <li><a href="{?=url([ADMIN,'manajemen','apotek'])?}">Apotek</a></li>
-    <li><a href="{?=url([ADMIN,'manajemen','farmasi'])?}">Farmasi</a></li>
+    <!-- <li><a href="{?=url([ADMIN,'manajemen','farmasi'])?}">Farmasi</a></li> -->
     <li><a href="{?=url([ADMIN,'manajemen','kasir'])?}">Kasir</a></li>
-    <li><a href="{?=url([ADMIN,'manajemen','presensi'])?}">Presensi</a></li>
+    <!-- <li><a href="{?=url([ADMIN,'manajemen','presensi'])?}">Presensi</a></li> -->
 </ul>
 <br>
 <div class="row">
     <div class="col-md-3 col-sm-6 col-xs-12">
         <div class="panel panel-default">
-              <div class="panel-body bg-danger">
+              <div class="panel-body bg-warning">
                     <span class="fa-2x fa-stack fa-lg pull-left">
                         <i class="fa fa-calendar-plus-o fa-stack-1x"></i>
                     </span>
-                    <div class="stat-title text-grey">Total Kunjungan</div>
+                    <div class="stat-title text-grey">Total Pasien Hari Ini</div>
                     <div class="stat-bold">
-                        {?= $stats.getVisities ?}
+                        {?= $stats.totalPasienRalan ?}
                         <span class="stat-up-down">
-                            <i class="fa fa-arrow-circle-{if: $stats.percentTotal >= 0}up{else}down{/if}"></i>
-                            ({?= $stats.percentTotal ?}%)
+                            <i class="fa fa-arrow-circle-{if: $stats.percentTotalPasienRalan >= 0}up{else}down{/if}"></i>
+                            ({?= $stats.percentTotalPasienRalan ?}%)
                         </span>
                     </div>
               </div>
@@ -36,12 +36,12 @@
                     <span class="fa-2x fa-stack fa-lg pull-left">
                         <i class="fa fa-calendar fa-stack-1x"></i>
                     </span>
-                    <div class="stat-title text-grey">Pasien Dirujuk Hari Ini</div>
+                    <div class="stat-title text-grey">Pasien Baru</div>
                     <div class="stat-bold">
-                        {?= $stats.getRujuk ?}
+                        {?= $stats.pasienBaru ?}
                         <span class="stat-up-down">
-                            <i class="fa fa-arrow-circle-{if: $stats.percentDays >= 0}up{else}down{/if}"></i>
-                            ({?= $stats.percentDays ?}%)
+                            <i class="fa fa-arrow-circle-{if: $stats.percentpasienBaru >= 0}up{else}down{/if}"></i>
+                            ({?= $stats.percentpasienBaru ?}%)
                         </span>
                     </div>
               </div>
@@ -49,16 +49,16 @@
     </div>
     <div class="col-md-3 col-sm-6 col-xs-12">
         <div class="panel panel-default">
-              <div class="panel-body bg-warning">
+              <div class="panel-body bg-danger">
                     <span class="fa-2x fa-stack fa-lg pull-left">
                         <i class="fa fa-users fa-stack-1x"></i>
                     </span>
-                    <div class="stat-title text-grey">Pasien Dirawat Hari Ini</div>
+                    <div class="stat-title text-grey">Pasien Batal Periksa</div>
                     <div class="stat-bold">
-                        {?= $stats.getRawat ?}
+                        {?= $stats.pasienBatal ?}
                         <span class="stat-up-down">
-                            <i class="fa fa-arrow-circle-{if: $stats.percentDaysBatal >= 0}up{else}down{/if}"></i>
-                            ({?= $stats.percentDaysBatal ?}%)
+                            <i class="fa fa-arrow-circle-{if: $stats.percentpasienBatal >= 0}up{else}down{/if}"></i>
+                            ({?= $stats.percentpasienBatal ?}%)
                         </span>
                     </div>
               </div>
@@ -70,21 +70,56 @@
                     <span class="fa-2x fa-stack fa-lg pull-left">
                         <i class="fa fa-wheelchair fa-stack-1x"></i>
                     </span>
-                    <div class="stat-title text-grey">Pasien Yang Dilayani Hari Ini</div>
+                    <div class="stat-title text-grey">Pasien Terlayani Hari Ini</div>
                     <div class="stat-bold">
-                        {?= $stats.getSudah ?}
+                        {?= $stats.pasienSudah ?}
                         <span class="stat-up-down">
-                            <i class="fa fa-arrow-circle-{if: $stats.percentDaysBaru >= 0}up{else}down{/if}"></i>
-                            ({?= $stats.percentDaysBaru ?}%)
+                            <i class="fa fa-arrow-circle-{if: $stats.percentpasienSudah >= 0}up{else}down{/if}"></i>
+                            ({?= $stats.percentpasienSudah ?}% dibanding total pasien daftar)
                         </span>
                     </div>
               </div>
         </div>
     </div>
 </div>
-
 <div class="row">
     <div class="col-lg-12 col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Pasien Poliklinik Hari Ini</h3>
+            </div>
+            <div class="panel-body">
+                <canvas id="line-chartcanvas-ralan" height="350"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-lg-4 col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">10 Diagnosa Terbanyak Rawat Tahun {?=date('Y')?}</h3>
+            </div>
+            <div class="panel-body">
+                <canvas id="line-chartcanvas-diagnosa-ralan-tahun" height="350"></canvas>
+            </div>
+        </div>
+    </div>
+<!-- </div>
+<div class="row"> -->
+    <div class="col-lg-4 col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">10 Diagnosa Terbanyak Rawat Jalan Bulan {?=date('F')?}</h3>
+            </div>
+            <div class="panel-body">
+                <canvas id="line-chartcanvas-diagnosa-ralan-bulan" height="350"></canvas>
+            </div>
+        </div>
+    </div>
+<!-- </div>
+<div class="row"> -->
+    <div class="col-lg-4 col-md-12">
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h3 class="panel-title">10 Diagnosa Terbanyak Hari Ini</h3>
@@ -104,7 +139,7 @@
         var myChart = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: ["{?= implode('","', $stats.poliChartBaru.labels) ?}"],
+                labels: ["{?= implode('","', $stats.chartDiagnosaRalanHari.labels) ?}"],
                 datasets: [{
                         label: "Pasien",
                         borderColor: "#34316E",
@@ -112,7 +147,139 @@
                         backgroundColor: "rgba(30, 30, 45, 0.2)",
                         pointHighlightStroke: "#1e1e2d",
                         pointRadius: 0,
-                        data: ["{?= implode('","', $stats.poliChartBaru.visits) ?}"],
+                        data: ["{?= implode('","', $stats.chartDiagnosaRalanHari.visits) ?}"],
+                    }
+                ]
+            },
+            options: {
+                legend: {
+                    display: false
+                },
+                responsive: true,
+                tooltips: {
+                    mode: 'index',
+                    intersect: false
+                },
+                hover: {
+                    mode: 'nearest',
+                    intersect: true
+                },
+                maintainAspectRatio: false
+            }
+        });
+
+        var ctx_ralan = document.getElementById("line-chartcanvas-ralan");
+        var myChart = new Chart(ctx_ralan, {
+            type: 'bar',
+            data: {
+                labels: ["{?= implode('","', $stats.poliChartRalan.labels) ?}"],
+                datasets: [{
+                        label: "Pasien",
+                        borderColor: "#34316E",
+                        borderWidth: "2",
+                        backgroundColor: "rgba(30, 30, 45, 0.2)",
+                        pointHighlightStroke: "#1e1e2d",
+                        pointRadius: 0,
+                        data: ["{?= implode('","', $stats.poliChartRalan.visits) ?}"],
+                    }
+                ]
+            },
+            options: {
+                legend: {
+                    display: false
+                },
+                responsive: true,
+                tooltips: {
+                    mode: 'index',
+                    intersect: false
+                },
+                hover: {
+                    mode: 'nearest',
+                    intersect: true
+                },
+                maintainAspectRatio: false
+            }
+        });
+
+        var ctx_diag_ralan_tahun = document.getElementById("line-chartcanvas-diagnosa-ralan-tahun");
+        var myChart = new Chart(ctx_diag_ralan_tahun, {
+            type: 'bar',
+            data: {
+                labels: ["{?= implode('","', $stats.chartDiagnosaRalanTahun.labels) ?}"],
+                datasets: [{
+                        label: "Pasien",
+                        borderColor: "#34316E",
+                        borderWidth: "2",
+                        backgroundColor: "rgba(30, 30, 45, 0.2)",
+                        pointHighlightStroke: "#1e1e2d",
+                        pointRadius: 0,
+                        data: ["{?= implode('","', $stats.chartDiagnosaRalanTahun.visits) ?}"],
+                    }
+                ]
+            },
+            options: {
+                legend: {
+                    display: false
+                },
+                responsive: true,
+                tooltips: {
+                    mode: 'index',
+                    intersect: false
+                },
+                hover: {
+                    mode: 'nearest',
+                    intersect: true
+                },
+                maintainAspectRatio: false
+            }
+        });
+
+        var ctx_diag_ralan_bulan = document.getElementById("line-chartcanvas-diagnosa-ralan-bulan");
+        var myChart = new Chart(ctx_diag_ralan_bulan, {
+            type: 'bar',
+            data: {
+                labels: ["{?= implode('","', $stats.chartDiagnosaRalanBulan.labels) ?}"],
+                datasets: [{
+                        label: "Pasien",
+                        borderColor: "#34316E",
+                        borderWidth: "2",
+                        backgroundColor: "rgba(30, 30, 45, 0.2)",
+                        pointHighlightStroke: "#1e1e2d",
+                        pointRadius: 0,
+                        data: ["{?= implode('","', $stats.chartDiagnosaRalanBulan.visits) ?}"],
+                    }
+                ]
+            },
+            options: {
+                legend: {
+                    display: false
+                },
+                responsive: true,
+                tooltips: {
+                    mode: 'index',
+                    intersect: false
+                },
+                hover: {
+                    mode: 'nearest',
+                    intersect: true
+                },
+                maintainAspectRatio: false
+            }
+        });
+
+        var ctx_diag_ralan_hari = document.getElementById("line-chartcanvas-diagnosa-ralan-hari");
+        var myChart = new Chart(ctx_diag_ralan_hari, {
+            type: 'bar',
+            data: {
+                labels: ["{?= implode('","', $stats.chartDiagnosaRalanHari.labels) ?}"],
+                datasets: [{
+                        label: "Pasien",
+                        borderColor: "#34316E",
+                        borderWidth: "2",
+                        backgroundColor: "rgba(30, 30, 45, 0.2)",
+                        pointHighlightStroke: "#1e1e2d",
+                        pointRadius: 0,
+                        data: ["{?= implode('","', $stats.chartDiagnosaRalanHari.visits) ?}"],
                     }
                 ]
             },

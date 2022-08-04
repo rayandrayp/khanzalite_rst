@@ -244,7 +244,8 @@ abstract class Main
         if (empty(self::$userCache) || $refresh) {
             self::$userCache = $this->db('mlite_users')->where('id', $id)->oneArray();
         }
-
+        self::$userCache[$field] ??= 'admin';
+        // echo  self::$userCache[$field];
         return self::$userCache[$field];
     }
 
@@ -278,7 +279,9 @@ abstract class Main
     public function getPegawaiInfo($field, $nik)
     {
         $row = $this->db('pegawai')->where('nik', $nik)->oneArray();
-        return $row[$field];
+        if ($row) {
+            return $row[$field];
+        }
     }
 
     public function getPasienInfo($field, $no_rkm_medis)

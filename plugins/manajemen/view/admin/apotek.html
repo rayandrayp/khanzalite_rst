@@ -1,15 +1,15 @@
 <ul class="nav nav-tabs">
     <li><a href="{?=url([ADMIN,'manajemen','dashboard'])?}">Dashboard</a></li>
-    <li><a href="{?=url([ADMIN,'manajemen','pendaftaran'])?}">Pendaftaran</a></li>
+    <!-- <li><a href="{?=url([ADMIN,'manajemen','pendaftaran'])?}">Pendaftaran</a></li> -->
     <li><a href="{?=url([ADMIN,'manajemen','rawatjalan'])?}">Rawat Jalan</a></li>
     <li><a href="{?=url([ADMIN,'manajemen','rawatinap'])?}">Rawat Inap</a></li>
     <li><a href="{?=url([ADMIN,'manajemen','dokter'])?}">Dokter</a></li>
-    <li><a href="{?=url([ADMIN,'manajemen','laboratorium'])?}">Laboratorium</a></li>
-    <li><a href="{?=url([ADMIN,'manajemen','radiologi'])?}">Radiologi</a></li>
+    <!-- <li><a href="{?=url([ADMIN,'manajemen','laboratorium'])?}">Laboratorium</a></li> -->
+    <!-- <li><a href="{?=url([ADMIN,'manajemen','radiologi'])?}">Radiologi</a></li> -->
     <li class="active"><a href="{?=url([ADMIN,'manajemen','apotek'])?}">Apotek</a></li>
-    <li><a href="{?=url([ADMIN,'manajemen','farmasi'])?}">Farmasi</a></li>
+    <!-- <li><a href="{?=url([ADMIN,'manajemen','farmasi'])?}">Farmasi</a></li> -->
     <li><a href="{?=url([ADMIN,'manajemen','kasir'])?}">Kasir</a></li>
-    <li><a href="{?=url([ADMIN,'manajemen','presensi'])?}">Presensi</a></li>
+    <!-- <li><a href="{?=url([ADMIN,'manajemen','presensi'])?}">Presensi</a></li> -->
 </ul>
 <br>
 <!-- <div class="row">
@@ -106,7 +106,7 @@
             data: {
                 labels: ["{?= implode('","', $stats.poliChart.labels) ?}"],
                 datasets: [{
-                        label: "Pasien",
+                        label: "Jumlah Resep",
                         borderColor: "#34316E",
                         borderWidth: "2",
                         backgroundColor: "rgba(30, 30, 45, 0.2)",

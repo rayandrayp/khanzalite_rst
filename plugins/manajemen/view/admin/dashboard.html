@@ -1,137 +1,290 @@
 <ul class="nav nav-tabs">
     <li class="active"><a href="{?=url([ADMIN,'manajemen','dashboard'])?}">Dashboard</a></li>
-    <li><a href="{?=url([ADMIN,'manajemen','pendaftaran'])?}">Pendaftaran</a></li>
+    <!-- <li><a href="{?=url([ADMIN,'manajemen','pendaftaran'])?}">Pendaftaran</a></li> -->
     <li><a href="{?=url([ADMIN,'manajemen','rawatjalan'])?}">Rawat Jalan</a></li>
     <li><a href="{?=url([ADMIN,'manajemen','rawatinap'])?}">Rawat Inap</a></li>
     <li><a href="{?=url([ADMIN,'manajemen','dokter'])?}">Dokter</a></li>
-    <li><a href="{?=url([ADMIN,'manajemen','laboratorium'])?}">Laboratorium</a></li>
-    <li><a href="{?=url([ADMIN,'manajemen','radiologi'])?}">Radiologi</a></li>
+    <!-- <li><a href="{?=url([ADMIN,'manajemen','laboratorium'])?}">Laboratorium</a></li> -->
+    <!-- <li><a href="{?=url([ADMIN,'manajemen','radiologi'])?}">Radiologi</a></li> -->
     <li><a href="{?=url([ADMIN,'manajemen','apotek'])?}">Apotek</a></li>
-    <li><a href="{?=url([ADMIN,'manajemen','farmasi'])?}">Farmasi</a></li>
+    <!-- <li><a href="{?=url([ADMIN,'manajemen','farmasi'])?}">Farmasi</a></li> -->
     <li><a href="{?=url([ADMIN,'manajemen','kasir'])?}">Kasir</a></li>
-    <li><a href="{?=url([ADMIN,'manajemen','presensi'])?}">Presensi</a></li>
+    <!-- <li><a href="{?=url([ADMIN,'manajemen','presensi'])?}">Presensi</a></li> -->
 </ul>
 <br>
 <div class="row">
-    <div class="col-md-3 col-sm-6 col-xs-12">
+    <!-- Bagian Ralan -->
+    <div class="col-md-6 col-sm-12">
+        <div class="row">
+            <div class="col-lg-4 col-md-6 col-sm-6 col-xs-12">
+                <div class="panel panel-default">
+                      <div class="panel-body bg-info">
+                            <!-- <span class="fa-2x fa-stack fa-lg pull-left">
+                                <i class="fa fa-calendar fa-stack-1x"></i>
+                            </span> -->
+                            <div class="stat-title text-grey">Kunjungan Ralan Tahun Ini</div>
+                            <div class="stat-bold">
+                                {?= $stats.getYearVisitiesRalan ?}
+                                <span class="stat-up-down">
+                                    <i class="fa fa-arrow-circle-{if: $stats.percentYear >= 0}up{else}down{/if}"></i>
+                                    ({?= $stats.percentYearRalan ?}%)
+                                </span>
+                            </div>
+                      </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 col-sm-6 col-xs-12">
+                <div class="panel panel-default">
+                      <div class="panel-body bg-warning">
+                            <!-- <span class="fa-2x fa-stack fa-lg pull-left">
+                                <i class="fa fa-users fa-stack-1x"></i>
+                            </span> -->
+                            <div class="stat-title text-grey">Kunjungan Ralan Bulan Ini</div>
+                            <div class="stat-bold">
+                                {?= $stats.getMonthVisitiesRalan ?}
+                                <span class="stat-up-down">
+                                    <i class="fa fa-arrow-circle-{if: $stats.percentMonth >= 0}up{else}down{/if}"></i>
+                                    ({?= $stats.percentMonthRalan ?}%)
+                                </span>
+                            </div>
+                      </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 col-sm-6 col-xs-12">
+                <div class="panel panel-default">
+                      <div class="panel-body bg-success">
+                            <!-- <span class="fa-2x fa-stack fa-lg pull-left">
+                                <i class="fa fa-wheelchair fa-stack-1x"></i>
+                            </span> -->
+                            <div class="stat-title text-grey">Kunjungan Ralan Hari Ini</div>
+                            <div class="stat-bold">
+                                {?= $stats.getDayVisitiesRalan ?}
+                                <span class="stat-up-down">
+                                    <i class="fa fa-arrow-circle-{if: $stats.percentDays >= 0}up{else}down{/if}"></i>
+                                    ({?= $stats.percentDaysRalan ?}%)
+                                </span>
+                            </div>
+                      </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12 col-md-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Pasien Poliklinik Hari Ini</h3>
+                    </div>
+                    <div class="panel-body">
+                        <canvas id="line-chartcanvas-ralan" height="350"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12 col-md-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">10 Diagnosa Terbanyak Rawat Jalan Bulan {?=date('F', strtotime('-1 month'))?}</h3>
+                    </div>
+                    <div class="panel-body">
+                        <canvas id="line-chartcanvas-diagnosa-ralan-bulan" height="350"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12 col-md-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">10 Diagnosa Terbanyak Rawat Jalan Hari Ini</h3>
+                    </div>
+                    <div class="panel-body">
+                        <canvas id="line-chartcanvas-diagnosa-ralan-hari" height="350"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bagian Ranap -->
+    <div class="col-md-6 col-sm-12">
+        <div class="row">
+            <div class="col-lg-3 col-md-6 col-sm-6 col-xs-12">
+                <div class="panel panel-default">
+                    <div class="panel-body bg-success">
+                          <!-- <span class="fa-2x fa-stack fa-lg pull-left">
+                              <i class="fa fa-wheelchair fa-stack-1x"></i>
+                          </span> -->
+                          <div class="stat-title text-grey">Pasien Ranap Hari Ini</div>
+                          <div class="stat-bold">
+                              {?= $stats.getDayVisitiesRanap ?}
+                              <!-- <span class="stat-up-down">
+                                  <i class="fa fa-arrow-circle-{if: $stats.percentDays >= 0}up{else}down{/if}"></i>
+                                  ({?= $stats.percentDaysRanap ?}%)
+                              </span> -->
+                          </div>
+                    </div>
+              </div>
+            </div>
+            <div class="col-lg-3 col-md-6 col-sm-6 col-xs-12">
+                <div class="panel panel-default">
+                    <div class="panel-body bg-info">
+                          <!-- <span class="fa-2x fa-stack fa-lg pull-left">
+                              <i class="fa fa-calendar fa-stack-1x"></i>
+                          </span> -->
+                          <div class="stat-title text-grey">BOR {?=date('F',strtotime('-1 month'))?}</div>
+                          <div class="stat-bold">
+                              {?= $stats.getBORBulan ?}%
+                              <!-- <span class="stat-up-down">
+                                  <i class="fa fa-arrow-circle-{if: $stats.percentYear >= 0}up{else}down{/if}"></i>
+                                  ({?= $stats.percentYear ?}%)
+                              </span> -->
+                          </div>
+                    </div>
+              </div>
+            </div>
+            <div class="col-lg-3 col-md-6 col-sm-6 col-xs-12">
+                <div class="panel panel-default">
+                      <div class="panel-body bg-warning">
+                            <!-- <span class="fa-2x fa-stack fa-lg pull-left">
+                                <i class="fa fa-users fa-stack-1x"></i>
+                            </span> -->
+                            <div class="stat-title text-grey">LOS {?=date('F',strtotime('-1 month'))?}</div>
+                            <div class="stat-bold">
+                                {?= $stats.getALOS ?}
+                                <!-- <span class="stat-up-down">
+                                    <i class="fa fa-arrow-circle-{if: $stats.percentMonth >= 0}up{else}down{/if}"></i>
+                                    ({?= $stats.percentMonth ?}%)
+                                </span> -->
+                            </div>
+                      </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 col-sm-6 col-xs-12">
+                <div class="panel panel-default">
+                      <div class="panel-body bg-success">
+                            <!-- <span class="fa-2x fa-stack fa-lg pull-left">
+                                <i class="fa fa-wheelchair fa-stack-1x"></i>
+                            </span> -->
+                            <div class="stat-title text-grey">TOI {?=date('F',strtotime('-1 month'))?}</div>
+                            <div class="stat-bold">
+                                {?= $stats.getTOI ?}
+                                <!-- <span class="stat-up-down">
+                                    <i class="fa fa-arrow-circle-{if: $stats.percentDays >= 0}up{else}down{/if}"></i>
+                                    ({?= $stats.percentDays ?}%)
+                                </span> -->
+                            </div>
+                      </div>
+                </div>
+            </div>
+        </div>
+        <div class="row"> 
+            <div class="col-lg-12 col-md-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Pasien Rawat Inap Hari Ini</h3>
+                    </div>
+                    <div class="panel-body">
+                        <canvas id="line-chartcanvas-ranap" height="350"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12 col-md-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">10 Diagnosa Terbanyak Rawat Inap Bulan {?=date('F', strtotime('-1 month'))?}</h3>
+                    </div>
+                    <div class="panel-body">
+                        <canvas id="line-chartcanvas-diagnosa-ranap-bulan" height="350"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12 col-md-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">10 Diagnosa Terbanyak Rawat Inap Yang Masuk Hari Ini</h3>
+                    </div>
+                    <div class="panel-body">
+                        <canvas id="line-chartcanvas-diagnosa-ranap-hari" height="350"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<div class="row">
+    <div class="col-md-4 col-sm-6 col-xs-12">
         <div class="panel panel-default">
               <div class="panel-body bg-danger">
                     <span class="fa-2x fa-stack fa-lg pull-left">
                         <i class="fa fa-calendar-plus-o fa-stack-1x"></i>
                     </span>
-                    <div class="stat-title text-grey">Total Kunjungan</div>
+                    <div class="stat-title text-grey">Total Pendapatan Bulan {?=date('F')?}</div>
                     <div class="stat-bold">
-                        {?= $stats.getVisities ?}
+                        {?= $stats.getTotalRevenueMonth ?}
                         <span class="stat-up-down">
-                            <i class="fa fa-arrow-circle-{if: $stats.percentTotal >= 0}up{else}down{/if}"></i>
-                            ({?= $stats.percentTotal ?}%)
+                            <i class="fa fa-arrow-circle-{if: $stats.percentRevenueMonth >= 0}up{else}down{/if}"></i>
+                            ({?= $stats.percentRevenueMonth ?}%)
                         </span>
                     </div>
               </div>
         </div>
     </div>
-    <div class="col-md-3 col-sm-6 col-xs-12">
+    <div class="col-md-4 col-sm-6 col-xs-12">
         <div class="panel panel-default">
               <div class="panel-body bg-info">
                     <span class="fa-2x fa-stack fa-lg pull-left">
                         <i class="fa fa-calendar fa-stack-1x"></i>
                     </span>
-                    <div class="stat-title text-grey">Kunjungan Tahun Ini</div>
+                    <div class="stat-title text-grey">Pendapatan Rajal Bulan {?=date('F')?}</div>
                     <div class="stat-bold">
-                        {?= $stats.getYearVisities ?}
+                        Cash : {?= $stats.getRevenueRJMonth ?}
                         <span class="stat-up-down">
-                            <i class="fa fa-arrow-circle-{if: $stats.percentYear >= 0}up{else}down{/if}"></i>
-                            ({?= $stats.percentYear ?}%)
+                            <i class="fa fa-arrow-circle-{if: $stats.percentRevenueRJMonth >= 0}up{else}down{/if}"></i>
+                            ({?= $stats.percentRevenueRJMonth ?}%)
+                        </span>
+                        Piutang : 0
+                        <span class="stat-up-down">
+                            <i class="fa fa-arrow-circle-{if: $stats.percentRevenueRJMonth >= 0}up{else}down{/if}"></i>
+                            <!-- ({?= $stats.percentRevenueRJMonth ?}%) -->
                         </span>
                     </div>
               </div>
         </div>
     </div>
-    <div class="col-md-3 col-sm-6 col-xs-12">
+    <div class="col-md-4 col-sm-6 col-xs-12">
         <div class="panel panel-default">
               <div class="panel-body bg-warning">
                     <span class="fa-2x fa-stack fa-lg pull-left">
                         <i class="fa fa-users fa-stack-1x"></i>
                     </span>
-                    <div class="stat-title text-grey">Kunjungan Bulan Ini</div>
+                    <div class="stat-title text-grey">Pendapatan Ranap Bulan {?=date('F')?}</div>
                     <div class="stat-bold">
-                        {?= $stats.getMonthVisities ?}
+                        Cash : {?= $stats.getRevenueRIMonth ?}
                         <span class="stat-up-down">
-                            <i class="fa fa-arrow-circle-{if: $stats.percentMonth >= 0}up{else}down{/if}"></i>
-                            ({?= $stats.percentMonth ?}%)
+                            <i class="fa fa-arrow-circle-{if: $stats.percentRevenueRIMonth >= 0}up{else}down{/if}"></i>
+                            ({?= $stats.percentRevenueRIMonth ?}%)
+                        </span>
+                        Piutang : 0
+                        <span class="stat-up-down">
+                            <i class="fa fa-arrow-circle-{if: $stats.percentRevenueRIMonth >= 0}up{else}down{/if}"></i>
+                            <!-- ({?= $stats.percentRevenueRIMonth ?}%) -->
                         </span>
                     </div>
               </div>
         </div>
     </div>
-    <div class="col-md-3 col-sm-6 col-xs-12">
-        <div class="panel panel-default">
-              <div class="panel-body bg-success">
-                    <span class="fa-2x fa-stack fa-lg pull-left">
-                        <i class="fa fa-wheelchair fa-stack-1x"></i>
-                    </span>
-                    <div class="stat-title text-grey">Kunjungan Hari Ini</div>
-                    <div class="stat-bold">
-                        {?= $stats.getCurrentVisities ?}
-                        <span class="stat-up-down">
-                            <i class="fa fa-arrow-circle-{if: $stats.percentDays >= 0}up{else}down{/if}"></i>
-                            ({?= $stats.percentDays ?}%)
-                        </span>
-                    </div>
-              </div>
-        </div>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-lg-12 col-md-12">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h3 class="panel-title">Poliklinik Hari Ini</h3>
-            </div>
-            <div class="panel-body">
-                <canvas id="line-chartcanvas" height="350"></canvas>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-lg-4 col-md-4">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h3 class="panel-title">Status Perawatan {?=date('Y')?}</h3>
-            </div>
-            <div class="panel-body">
-                <canvas id="medical-treatment-chart" height="200"></canvas>
-            </div>
-        </div>
-    </div>
-    <div class="col-lg-4 col-md-4">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h3 class="panel-title">Kunjungan Tahun {?=date('Y')?}</h3>
-            </div>
-            <div class="panel-body">
-                <canvas id="heart-surgery-chart" height="200"></canvas>
-            </div>
-        </div>
-    </div>
-    <div class="col-lg-4 col-md-4">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h3 class="panel-title">Cara Bayar Tahun {?=date('Y')?}</h3>
-            </div>
-            <div class="panel-body">
-                <canvas id="total-revenue-chart" height="200"></canvas>
-            </div>
-        </div>
-    </div>
-</div>
-
+</div> 
 <div class="row">
     <!-- New Patients -->
-    <div class="col-md-8 col-lg-8">
+    <!-- <div class="col-md-8 col-lg-8">
         <div class="panel panel-default">
             <div class="panel-heading">
                 <a class="pull-right badge" href="{?=url(ADMIN.'/pasien/manage')?}" style="background-color:#ffcc00;">Semua</a>
@@ -165,11 +318,11 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> -->
     <!-- End New Patients -->
 
     <!-- Doctors List -->
-    <div class="col-md-4 col-lg-4">
+    <!-- <div class="col-md-4 col-lg-4">
         <div class="panel panel-default doctor-list">
             <div class="panel-heading">
                 <a class="pull-right badge" href="{?=url(ADMIN.'/informasi/jadwal')?}">Semua</a>
@@ -187,7 +340,7 @@
                 {/loop}
             </div>
         </div>
-    </div>
+    </div> -->
     <!-- End Doctors List -->
 
 </div>
@@ -195,11 +348,11 @@
 <script type="text/javascript">
     $(function () {
         //line chart
-        var ctx = document.getElementById("line-chartcanvas");
-        var myChart = new Chart(ctx, {
+        var ctx_ralan = document.getElementById("line-chartcanvas-ralan");
+        var myChart = new Chart(ctx_ralan, {
             type: 'bar',
             data: {
-                labels: ["{?= implode('","', $stats.poliChart.labels) ?}"],
+                labels: ["{?= implode('","', $stats.poliChartRalan.labels) ?}"],
                 datasets: [{
                         label: "Pasien",
                         borderColor: "#34316E",
@@ -207,7 +360,7 @@
                         backgroundColor: "rgba(30, 30, 45, 0.2)",
                         pointHighlightStroke: "#1e1e2d",
                         pointRadius: 0,
-                        data: ["{?= implode('","', $stats.poliChart.visits) ?}"],
+                        data: ["{?= implode('","', $stats.poliChartRalan.visits) ?}"],
                     }
                 ]
             },
@@ -228,106 +381,172 @@
             }
         });
 
-        //Medical treatment chart
-        var ctx2 = document.getElementById("medical-treatment-chart");
-        var myChart2 = new Chart(ctx2, {
-            type: 'line',
+        var ctx_ranap = document.getElementById("line-chartcanvas-ranap");
+        var myChart = new Chart(ctx_ranap, {
+            type: 'bar',
             data: {
-                labels: ["{?= implode('","', $stats.RanapTahunChart.labels) ?}"],
-                datasets: [
-                {
-                    label: "Dirawat",
-                    borderColor: "#F58634",
-                    borderWidth: "2",
-                    backgroundColor: "transparent",
-                    pointHighlightStroke: "#1e1e2d",
-                    pointRadius: 0,
-                    data: ["{?= implode(',', $stats.RanapTahunChart.visits) ?}"],
-                },
-                {
-                    label: "Dirujuk",
-                    borderColor: "#34316E",
-                    borderWidth: "2",
-                    backgroundColor: "transparent",
-                    pointHighlightStroke: "#1e1e2d",
-                    pointRadius: 0,
-                    data: ["{?= implode(',', $stats.RujukTahunChart.visits) ?}"],
-                }
-                ]
-            },
-            options: {
-                legend: {
-                    display: false
-                },
-                tooltips: {
-                    mode: 'index',
-                    intersect: false
-                },
-                hover: {
-                    mode: 'nearest',
-                    intersect: true
-                },
-                responsive: true,
-                maintainAspectRatio: false
-            }
-        });
-
-        //Heart surgery chart
-        var ctx1 = document.getElementById("heart-surgery-chart");
-        var myChart1 = new Chart(ctx1, {
-            type: 'line',
-            data: {
-                labels: ["{?= implode('","', $stats.KunjunganTahunChart.labels) ?}"],
-                datasets: [
-                {
-                    label: "{?=date('Y')?}",
-                    borderColor: "#F58634",
-                    borderWidth: "2",
-                    backgroundColor: "transparent",
-                    pointHighlightStroke: "#1e1e2d",
-                    pointRadius: 0,
-                    data: ["{?= implode(',', $stats.KunjunganTahunChart.visits) ?}"],
-                }
-                ]
-            },
-            options: {
-                legend: {
-                    display: false
-                },
-                responsive: true,
-                tooltips: {
-                    mode: 'index',
-                    intersect: false
-                },
-                hover: {
-                    mode: 'nearest',
-                    intersect: true
-                },
-                maintainAspectRatio: false
-            }
-        });
-
-        //Toal Revenue Doughnut chart
-        var ctx2 = document.getElementById("total-revenue-chart");
-        var myChart2 = new Chart(ctx2, {
-            type: 'doughnut',
-            data: {
-                labels: [
-                    "Tunai",
-                    "BPJS",
-                    "Lain-Lain"
-                ],
+                labels: ["{?= implode('","', $stats.poliChartRanap.labels) ?}"],
                 datasets: [{
-                    backgroundColor: ["#4caf50", "#34316E", "#F58634"],
-                    pointRadius: 0,
-                    data: ["{$stats.tunai.count}", "{$stats.bpjs.count}", "{$stats.lainnya.count}"],
-                }]
+                        label: "Pasien",
+                        borderColor: "#34316E",
+                        borderWidth: "2",
+                        backgroundColor: "rgba(30, 30, 45, 0.2)",
+                        pointHighlightStroke: "#1e1e2d",
+                        pointRadius: 0,
+                        data: ["{?= implode('","', $stats.poliChartRanap.visits) ?}"],
+                    }
+                ]
             },
             options: {
+                legend: {
+                    display: false
+                },
                 responsive: true,
+                tooltips: {
+                    mode: 'index',
+                    intersect: false
+                },
+                hover: {
+                    mode: 'nearest',
+                    intersect: true
+                },
                 maintainAspectRatio: false
             }
         });
+
+        //chart diagnosa
+        var ctx_diag_ralan_bulan = document.getElementById("line-chartcanvas-diagnosa-ralan-bulan");
+        var myChart = new Chart(ctx_diag_ralan_bulan, {
+            type: 'bar',
+            data: {
+                labels: ["{?= implode('","', $stats.chartDiagnosaRalanBulan.labels) ?}"],
+                datasets: [{
+                        label: "Pasien",
+                        borderColor: "#34316E",
+                        borderWidth: "2",
+                        backgroundColor: "rgba(30, 30, 45, 0.2)",
+                        pointHighlightStroke: "#1e1e2d",
+                        pointRadius: 0,
+                        data: ["{?= implode('","', $stats.chartDiagnosaRalanBulan.visits) ?}"],
+                    }
+                ]
+            },
+            options: {
+                legend: {
+                    display: false
+                },
+                responsive: true,
+                tooltips: {
+                    mode: 'index',
+                    intersect: false
+                },
+                hover: {
+                    mode: 'nearest',
+                    intersect: true
+                },
+                maintainAspectRatio: false
+            }
+        });
+
+        var ctx_diag_ralan_hari = document.getElementById("line-chartcanvas-diagnosa-ralan-hari");
+        var myChart = new Chart(ctx_diag_ralan_hari, {
+            type: 'bar',
+            data: {
+                labels: ["{?= implode('","', $stats.chartDiagnosaRalanHari.labels) ?}"],
+                datasets: [{
+                        label: "Pasien",
+                        borderColor: "#34316E",
+                        borderWidth: "2",
+                        backgroundColor: "rgba(30, 30, 45, 0.2)",
+                        pointHighlightStroke: "#1e1e2d",
+                        pointRadius: 0,
+                        data: ["{?= implode('","', $stats.chartDiagnosaRalanHari.visits) ?}"],
+                    }
+                ]
+            },
+            options: {
+                legend: {
+                    display: false
+                },
+                responsive: true,
+                tooltips: {
+                    mode: 'index',
+                    intersect: false
+                },
+                hover: {
+                    mode: 'nearest',
+                    intersect: true
+                },
+                maintainAspectRatio: false
+            }
+        });
+
+        var ctx_diag_ranap_bulan = document.getElementById("line-chartcanvas-diagnosa-ranap-bulan");
+        var myChart = new Chart(ctx_diag_ranap_bulan, {
+            type: 'bar',
+            data: {
+                labels: ["{?= implode('","', $stats.chartDiagnosaRanapBulan.labels) ?}"],
+                datasets: [{
+                        label: "Pasien",
+                        borderColor: "#34316E",
+                        borderWidth: "2",
+                        backgroundColor: "rgba(30, 30, 45, 0.2)",
+                        pointHighlightStroke: "#1e1e2d",
+                        pointRadius: 0,
+                        data: ["{?= implode('","', $stats.chartDiagnosaRanapBulan.visits) ?}"],
+                    }
+                ]
+            },
+            options: {
+                legend: {
+                    display: false
+                },
+                responsive: true,
+                tooltips: {
+                    mode: 'index',
+                    intersect: false
+                },
+                hover: {
+                    mode: 'nearest',
+                    intersect: true
+                },
+                maintainAspectRatio: false
+            }
+        });
+
+        var ctx_diag_ranap_hari = document.getElementById("line-chartcanvas-diagnosa-ranap-hari");
+        var myChart = new Chart(ctx_diag_ranap_hari, {
+            type: 'bar',
+            data: {
+                labels: ["{?= implode('","', $stats.chartDiagnosaRanapHari.labels) ?}"],
+                datasets: [{
+                        label: "Pasien",
+                        borderColor: "#34316E",
+                        borderWidth: "2",
+                        backgroundColor: "rgba(30, 30, 45, 0.2)",
+                        pointHighlightStroke: "#1e1e2d",
+                        pointRadius: 0,
+                        data: ["{?= implode('","', $stats.chartDiagnosaRanapHari.visits) ?}"],
+                    }
+                ]
+            },
+            options: {
+                legend: {
+                    display: false
+                },
+                responsive: true,
+                tooltips: {
+                    mode: 'index',
+                    intersect: false
+                },
+                hover: {
+                    mode: 'nearest',
+                    intersect: true
+                },
+                maintainAspectRatio: false
+            }
+        });
+
     });
 
 </script>

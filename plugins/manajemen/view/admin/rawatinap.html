@@ -1,15 +1,15 @@
 <ul class="nav nav-tabs">
     <li><a href="{?=url([ADMIN,'manajemen','dashboard'])?}">Dashboard</a></li>
-    <li><a href="{?=url([ADMIN,'manajemen','pendaftaran'])?}">Pendaftaran</a></li>
+    <!-- <li><a href="{?=url([ADMIN,'manajemen','pendaftaran'])?}">Pendaftaran</a></li> -->
     <li><a href="{?=url([ADMIN,'manajemen','rawatjalan'])?}">Rawat Jalan</a></li>
     <li class="active"><a href="{?=url([ADMIN,'manajemen','rawatinap'])?}">Rawat Inap</a></li>
     <li><a href="{?=url([ADMIN,'manajemen','dokter'])?}">Dokter</a></li>
-    <li><a href="{?=url([ADMIN,'manajemen','laboratorium'])?}">Laboratorium</a></li>
-    <li><a href="{?=url([ADMIN,'manajemen','radiologi'])?}">Radiologi</a></li>
+    <!-- <li><a href="{?=url([ADMIN,'manajemen','laboratorium'])?}">Laboratorium</a></li> -->
+    <!-- <li><a href="{?=url([ADMIN,'manajemen','radiologi'])?}">Radiologi</a></li> -->
     <li><a href="{?=url([ADMIN,'manajemen','apotek'])?}">Apotek</a></li>
-    <li><a href="{?=url([ADMIN,'manajemen','farmasi'])?}">Farmasi</a></li>
+    <!-- <li><a href="{?=url([ADMIN,'manajemen','farmasi'])?}">Farmasi</a></li> -->
     <li><a href="{?=url([ADMIN,'manajemen','kasir'])?}">Kasir</a></li>
-    <li><a href="{?=url([ADMIN,'manajemen','presensi'])?}">Presensi</a></li>
+    <!-- <li><a href="{?=url([ADMIN,'manajemen','presensi'])?}">Presensi</a></li> -->
 </ul>
 <br>
 <div class="row">
@@ -19,13 +19,13 @@
                     <span class="fa-2x fa-stack fa-lg pull-left">
                         <i class="fa fa-calendar-plus-o fa-stack-1x"></i>
                     </span>
-                    <div class="stat-title text-grey">Total Kunjungan</div>
+                    <div class="stat-title text-grey">Jumlah Pasien Rawat Inap</div>
                     <div class="stat-bold">
-                        {?= $stats.getVisities ?}
-                        <span class="stat-up-down">
+                        {?= $stats.getRanap ?}
+                        <!-- <span class="stat-up-down">
                             <i class="fa fa-arrow-circle-{if: $stats.percentTotal >= 0}up{else}down{/if}"></i>
                             ({?= $stats.percentTotal ?}%)
-                        </span>
+                        </span> -->
                     </div>
               </div>
         </div>
@@ -95,7 +95,95 @@
         </div>
     </div>
 </div>
-
+<div class="row">
+    <div class="col-lg-1"></div>
+    <div class="col-lg-2 col-md-6 col-sm-6 col-xs-12">
+        <div class="panel panel-default">
+              <div class="panel-body bg-info">
+                    <span class="fa-2x fa-stack fa-lg pull-left">
+                        <i class="fa fa-calendar fa-stack-1x"></i>
+                    </span>
+                    <div class="stat-title text-grey">BOR {?=date('F',strtotime('-1 month'))?}</div>
+                    <div class="stat-bold">
+                        {?= $stats.getBORBulan ?}%
+                        <!-- <span class="stat-up-down">
+                            <i class="fa fa-arrow-circle-{if: $stats.percentYear >= 0}up{else}down{/if}"></i>
+                            ({?= $stats.percentYear ?}%)
+                        </span> -->
+                    </div>
+              </div>
+        </div>
+    </div>
+    <div class="col-lg-2 col-md-6 col-sm-6 col-xs-12">
+        <div class="panel panel-default">
+              <div class="panel-body bg-warning">
+                    <span class="fa-2x fa-stack fa-lg pull-left">
+                        <i class="fa fa-users fa-stack-1x"></i>
+                    </span>
+                    <div class="stat-title text-grey">LOS {?=date('F',strtotime('-1 month'))?}</div>
+                    <div class="stat-bold">
+                        {?= $stats.getALOS ?}
+                        <!-- <span class="stat-up-down">
+                            <i class="fa fa-arrow-circle-{if: $stats.percentMonth >= 0}up{else}down{/if}"></i>
+                            ({?= $stats.percentMonth ?}%)
+                        </span> -->
+                    </div>
+              </div>
+        </div>
+    </div>
+    <div class="col-lg-2 col-md-6 col-sm-6 col-xs-12">
+        <div class="panel panel-default">
+              <div class="panel-body bg-success">
+                    <span class="fa-2x fa-stack fa-lg pull-left">
+                        <i class="fa fa-wheelchair fa-stack-1x"></i>
+                    </span>
+                    <div class="stat-title text-grey">TOI {?=date('F',strtotime('-1 month'))?}</div>
+                    <div class="stat-bold">
+                        {?= $stats.getTOI ?}
+                        <!-- <span class="stat-up-down">
+                            <i class="fa fa-arrow-circle-{if: $stats.percentDays >= 0}up{else}down{/if}"></i>
+                            ({?= $stats.percentDays ?}%)
+                        </span> -->
+                    </div>
+              </div>
+        </div>
+    </div>
+    <div class="col-lg-2 col-md-6 col-sm-6 col-xs-12">
+        <div class="panel panel-default">
+              <div class="panel-body bg-success">
+                    <span class="fa-2x fa-stack fa-lg pull-left">
+                        <i class="fa fa-wheelchair fa-stack-1x"></i>
+                    </span>
+                    <div class="stat-title text-grey">GDR {?=date('F',strtotime('-1 month'))?}</div>
+                    <div class="stat-bold">
+                        {?= $stats.getGDR ?} &permil;
+                        <!-- <span class="stat-up-down">
+                            <i class="fa fa-arrow-circle-{if: $stats.percentDays >= 0}up{else}down{/if}"></i>
+                            ({?= $stats.percentDays ?}%)
+                        </span> -->
+                    </div>
+              </div>
+        </div>
+    </div>
+    <div class="col-lg-2 col-md-6 col-sm-6 col-xs-12">
+        <div class="panel panel-default">
+              <div class="panel-body bg-success">
+                    <span class="fa-2x fa-stack fa-lg pull-left">
+                        <i class="fa fa-wheelchair fa-stack-1x"></i>
+                    </span>
+                    <div class="stat-title text-grey">NDR {?=date('F',strtotime('-1 month'))?}</div>
+                    <div class="stat-bold">
+                        {?= $stats.getNDR ?} &permil;
+                        <!-- <span class="stat-up-down">
+                            <i class="fa fa-arrow-circle-{if: $stats.percentDays >= 0}up{else}down{/if}"></i>
+                            ({?= $stats.percentDays ?}%)
+                        </span> -->
+                    </div>
+              </div>
+        </div>
+    </div>
+    <div class="col-lg-1"></div>
+</div>
 
 <script type="text/javascript">
     $(function () {

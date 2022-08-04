@@ -740,6 +740,9 @@
         $(function() {
 
             var jsonRujukan;
+            var dataRujukanUtama = '';
+            var dataRujukanHistori = '';
+            var dataRujukan = '';
             var jam_praktek = "";
             // var kodesubspesialis = "";
 
@@ -1002,10 +1005,74 @@
                 $('#tabelRujukan tr').remove();
                 var value = $('#selectkepesertaan').val();
                 var nomor = "";
+                dataRujukanUtama = '';
+                dataRujukanHistori = '';
                 //console.log(value);
                 if (value == 'bpjs') { //jika pasien BPJS
                     nomor = $('#no_bpjs').val();
+                    var nik = "";
+                    var index = 0;
                     // console.log(nomor);
+
+                    //get rujukan utama
+                    $.ajax({
+                        type: 'POST',
+                        url: '{?=url()?}/anjungan/ajax?show=check-rujukan2',
+                        dataType: "json",
+                        data: {
+                            no_bpjs: nomor
+                        },
+                        success: function(data) {
+                            // console.log(data);
+                            if (data.status == 'ok') {
+                                e.preventDefault();
+                                var responseJson = JSON.parse(data['response']);
+                                jsonRujukan2 = responseJson.rujukan;
+                                var trHTML = '';
+                                $.each(jsonRujukan2, function(i, item) {
+                                    // console.log(item.tglKunjungan.substring(0, 4) + " | " + new Date().getFullYear());
+                                    nik = item.peserta.nik;
+                                    if (item.tglKunjungan.substring(0, 4) == new Date().getFullYear()) {
+                                        index = i + 1;
+                                        console.log(index);
+                                        var codebutton = "";
+
+                                        let date_1 = new Date(item.tglKunjungan.substring(8, 2) + '/' + item.tglKunjungan.substring(5, 2) + '/' + item.tglKunjungan.substring(0, 4));
+                                        let date_2 = new Date();
+                                        let difference = date_1.getTime() - date_2.getTime();
+                                        let TotalDays = Math.ceil(difference / (1000 * 3600 * 24));
+                                        if (TotalDays > 90) {
+                                            codebutton = '<td>Rujukan Tidak Aktif</td>';
+                                        } else {
+                                            codebutton = '<td><button data-index-rujukan="' + (index - 1) + '" class="btn btn-primary"  type="button">Pilih</button></td>';
+                                        }
+                                        trHTML += '<tr>' +
+                                            '<th scope="row">' + index + '</th>' +
+                                            '<td>' + item.noKunjungan + '</td>' +
+                                            '<td>' + '-' + '</td>' +
+                                            '<td>' + item.tglKunjungan + '</td>' +
+                                            '<td>' + item.poliRujukan.nama + '</td>' +
+                                            codebutton +
+                                            '</tr>';
+                                        dataRujukanUtama += '{"noRujukan":"' + item.noKunjungan + '" , "nik":"' + item.peserta.nik + '"},';
+                                    }
+                                });
+                                dataRujukanUtama = dataRujukanUtama.substring(0, dataRujukanUtama.length - 1);
+                                // dataRujukanUtama = '[' + dataRujukanUtama + ']';
+                                // jsonRujukan = JSON.parse(dataRujukanUtama);
+                                console.log("dataRujukanUtama "+dataRujukanUtama);
+                                $('#tabelRujukan').append(trHTML);
+                                $('#tabelRujukanDiv').removeClass('d-none');
+                            } else {
+                                console.log("dataRujukanUtama "+data.status);
+                                $('#messageText').text('Rujukan anda tidak ditemukan');
+                                $('#messageDiv').removeClass('d-none');
+                                // window.location.href = "{?=url('anjungan/pasien')?}";
+                            }
+                        }
+                    });
+
+                    //get histori rujukan
                     $.ajax({
                         type: 'POST',
                         url: '{?=url()?}/anjungan/ajax?show=check-rujukan',
@@ -1018,78 +1085,42 @@
                             if (data.status == 'ok') {
                                 e.preventDefault();
                                 var responseJson = JSON.parse(data['response']);
-                                jsonRujukan = responseJson.histori;
+                                jsonhistori = responseJson.histori;
                                 // console.log(responseJson);
                                 // console.log(responseJson.rujukan);
                                 // console.log(responseJson['rujukan']);
                                 var trHTML = '';
-                                $.each(jsonRujukan, function(i, item) {
-
-                                    var index = i + 1;
-                                    trHTML += '<tr>' +
-                                        '<th scope="row">' + index + '</th>' +
-                                        '<td>' + item.noRujukan + '</td>' +
-                                        '<td>' + item.noSep + '</td>' +
-                                        '<td>' + item.tglSep + '</td>' +
-                                        '<td>' + item.poli + '</td>' +
-                                        '<td><button data-index-rujukan="' + i + '" class="btn btn-primary"  type="button">Pilih</button></td>' +
-                                        '</tr>';
+                                $.each(jsonhistori, function(i, item) {
+                                    // console.log(item.tglSep.substring(0, 4) + " | " + new Date().getFullYear());
+                                    if (item.tglSep.substring(0, 4) == new Date().getFullYear()) {
+                                        index = index + 1;
+                                        console.log(index);
+                                        trHTML += '<tr>' +
+                                            '<th scope="row">' + index + '</th>' +
+                                            '<td>' + item.noRujukan + '</td>' +
+                                            '<td>' + item.noSep + '</td>' +
+                                            '<td>' + item.tglSep + '</td>' +
+                                            '<td>' + item.poli + '</td>' +
+                                            '<td><button data-index-rujukan="' + (index - 1) + '" class="btn btn-primary"  type="button">Pilih</button></td>' +
+                                            '</tr>';
+                                        dataRujukanHistori += '{"noRujukan":"' + item.noRujukan + '" , "nik":"' + nik + '"},';
+                                    }
                                 });
-                                // console.log(trHTML);
+                                dataRujukanHistori = dataRujukanHistori.substring(0, dataRujukanHistori.length - 1);
+                                console.log("dataRujukanHistori "+dataRujukanHistori);
                                 $('#tabelRujukan').append(trHTML);
                                 $('#tabelRujukanDiv').removeClass('d-none');
                             } else {
                                 // message = data.result;
-                                console.log(data.status);
+                                console.log("dataRujukanHistori "+data.status);
                                 // $('#messageText').text('Rujukan anda tidak ditemukan');
                                 // $('#messageDiv').removeClass('d-none');
                                 // // window.location.href = "{?=url('anjungan/pasien')?}";
-                                $.ajax({
-                                    type: 'POST',
-                                    url: '{?=url()?}/anjungan/ajax?show=check-rujukan2',
-                                    dataType: "json",
-                                    data: {
-                                        no_bpjs: nomor
-                                    },
-                                    success: function(data) {
-                                        // console.log(data);
-                                        if (data.status == 'ok') {
-                                            e.preventDefault();
-                                            var responseJson = JSON.parse(data['response']);
-                                            jsonRujukan2 = responseJson.rujukan;
-                                            var trHTML = '';
-                                            var dataNoRujukan = '';
-                                            $.each(jsonRujukan2, function(i, item) {
 
-                                                var index = i + 1;
-                                                trHTML += '<tr>' +
-                                                    '<th scope="row">' + index + '</th>' +
-                                                    '<td>' + item.noKunjungan + '</td>' +
-                                                    '<td>' + '-' + '</td>' +
-                                                    '<td>' + item.tglKunjungan + '</td>' +
-                                                    '<td>' + item.poliRujukan.nama + '</td>' +
-                                                    '<td><button data-index-rujukan="' + i + '" class="btn btn-primary"  type="button">Pilih</button></td>' +
-                                                    '</tr>';
-                                                dataNoRujukan += '{"noRujukan":"' + item.noKunjungan + '"},';
-                                            });
-                                            dataNoRujukan = dataNoRujukan.substring(0,dataNoRujukan.length-1);
-                                            dataNoRujukan = '[' + dataNoRujukan + ']';
-                                            jsonRujukan = JSON.parse(dataNoRujukan);
-                                            // console.log(trHTML);
-                                            $('#tabelRujukan').append(trHTML);
-                                            $('#tabelRujukanDiv').removeClass('d-none');
-                                        } else {
-                                            console.log(data2.status);
-                                            $('#messageText').text('Rujukan anda tidak ditemukan');
-                                            $('#messageDiv').removeClass('d-none');
-                                            // window.location.href = "{?=url('anjungan/pasien')?}";
-                                        }
-                                    }
-                                });
                             }
                         }
                     });
-                    
+
                 } else if (value == 'nonbpjs') { //jika pasien non-BPJS
                     nomor = $('#no_ktp').val();
                     $.ajax({
@@ -1134,12 +1165,25 @@
             //jika rujukan dipilih
             $('#tabelRujukan').on('click', 'button.btn', function() {
                 let id = $(this).data('index-rujukan');
+                console.log('dataRujukanUtama ' + dataRujukanUtama);
+                console.log('dataRujukanHistori ' + dataRujukanHistori);
+                if (dataRujukanHistori == '') {
+                    dataRujukan = '[' + dataRujukanUtama + ']';
+                    jsonRujukan = JSON.parse(dataRujukan);
+                } else if (dataRujukanUtama == '') {
+                    dataRujukan = '[' + dataRujukanHistori + ']';
+                    jsonRujukan = JSON.parse(dataRujukan);
+                } else {
+                    dataRujukan = '[' + dataRujukanUtama + ',' + dataRujukanHistori + ']';
+                    jsonRujukan = JSON.parse(dataRujukan);
+                }
                 console.log(jsonRujukan);
+                console.log('id ' + id);
                 var jsonData = jsonRujukan[id];
                 var todayDate = new Date().toISOString().slice(0, 10);
                 var nomor = $('#no_bpjs').val();
-                // console.log(jsonData);
-                // console.log(jsonData.noKartu);
+                console.log(jsonData);
+                console.log(jsonData.noKartu);
 
                 $.ajax({
                     type: 'POST',

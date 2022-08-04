@@ -1,15 +1,15 @@
 <ul class="nav nav-tabs">
     <li><a href="{?=url([ADMIN,'manajemen','dashboard'])?}">Dashboard</a></li>
-    <li><a href="{?=url([ADMIN,'manajemen','pendaftaran'])?}">Pendaftaran</a></li>
+    <!-- <li><a href="{?=url([ADMIN,'manajemen','pendaftaran'])?}">Pendaftaran</a></li> -->
     <li><a href="{?=url([ADMIN,'manajemen','rawatjalan'])?}">Rawat Jalan</a></li>
     <li><a href="{?=url([ADMIN,'manajemen','rawatinap'])?}">Rawat Inap</a></li>
     <li><a href="{?=url([ADMIN,'manajemen','dokter'])?}">Dokter</a></li>
-    <li><a href="{?=url([ADMIN,'manajemen','laboratorium'])?}">Laboratorium</a></li>
-    <li><a href="{?=url([ADMIN,'manajemen','radiologi'])?}">Radiologi</a></li>
+    <!-- <li><a href="{?=url([ADMIN,'manajemen','laboratorium'])?}">Laboratorium</a></li> -->
+    <!-- <li><a href="{?=url([ADMIN,'manajemen','radiologi'])?}">Radiologi</a></li> -->
     <li><a href="{?=url([ADMIN,'manajemen','apotek'])?}">Apotek</a></li>
-    <li><a href="{?=url([ADMIN,'manajemen','farmasi'])?}">Farmasi</a></li>
+    <!-- <li><a href="{?=url([ADMIN,'manajemen','farmasi'])?}">Farmasi</a></li> -->
     <li class="active"><a href="{?=url([ADMIN,'manajemen','kasir'])?}">Kasir</a></li>
-    <li><a href="{?=url([ADMIN,'manajemen','presensi'])?}">Presensi</a></li>
+    <!-- <li><a href="{?=url([ADMIN,'manajemen','presensi'])?}">Presensi</a></li> -->
 </ul>
 <br>
 <div class="row">
@@ -19,12 +19,12 @@
                     <span class="fa-2x fa-stack fa-lg pull-left">
                         <i class="fa fa-calendar-plus-o fa-stack-1x"></i>
                     </span>
-                    <div class="stat-title text-grey">Total Pendapatan Hari Ini</div>
+                    <div class="stat-title text-grey">Total Pendapatan Bulan {?=date('F')?}</div>
                     <div class="stat-bold">
-                        {?= $stats.getVisities ?}
+                        {?= $stats.getTotalRevenueMonth ?}
                         <span class="stat-up-down">
-                            <i class="fa fa-arrow-circle-{if: $stats.percentTotal >= 0}up{else}down{/if}"></i>
-                            ({?= $stats.percentTotal ?}%)
+                            <i class="fa fa-arrow-circle-{if: $stats.percentRevenueMonth >= 0}up{else}down{/if}"></i>
+                            ({?= $stats.percentRevenueMonth ?}%)
                         </span>
                     </div>
               </div>
@@ -36,12 +36,17 @@
                     <span class="fa-2x fa-stack fa-lg pull-left">
                         <i class="fa fa-calendar fa-stack-1x"></i>
                     </span>
-                    <div class="stat-title text-grey">Pendapatan Rajal Hari Ini</div>
+                    <div class="stat-title text-grey">Pendapatan Rajal Bulan {?=date('F')?}</div>
                     <div class="stat-bold">
-                        {?= $stats.getRanapIn ?}
+                        Cash : {?= $stats.getRevenueRJMonth ?}
                         <span class="stat-up-down">
-                            <i class="fa fa-arrow-circle-{if: $stats.percentYear >= 0}up{else}down{/if}"></i>
-                            ({?= $stats.percentIn ?}%)
+                            <i class="fa fa-arrow-circle-{if: $stats.percentRevenueRJMonth >= 0}up{else}down{/if}"></i>
+                            ({?= $stats.percentRevenueRJMonth ?}%)
+                        </span>
+                        Piutang : 0
+                        <span class="stat-up-down">
+                            <i class="fa fa-arrow-circle-{if: $stats.percentRevenueRJMonth >= 0}up{else}down{/if}"></i>
+                            <!-- ({?= $stats.percentRevenueRJMonth ?}%) -->
                         </span>
                     </div>
               </div>
@@ -53,12 +58,17 @@
                     <span class="fa-2x fa-stack fa-lg pull-left">
                         <i class="fa fa-users fa-stack-1x"></i>
                     </span>
-                    <div class="stat-title text-grey">Pendapatan Ranap Hari Ini</div>
+                    <div class="stat-title text-grey">Pendapatan Ranap Bulan {?=date('F')?}</div>
                     <div class="stat-bold">
-                        {?= $stats.getDapat ?}
+                        Cash : {?= $stats.getRevenueRIMonth ?}
                         <span class="stat-up-down">
-                            <i class="fa fa-arrow-circle-{if: $stats.percentMonth >= 0}up{else}down{/if}"></i>
-                            ({?= $stats.percentOut ?}%)
+                            <i class="fa fa-arrow-circle-{if: $stats.percentRevenueRIMonth >= 0}up{else}down{/if}"></i>
+                            ({?= $stats.percentRevenueRIMonth ?}%)
+                        </span>
+                        Piutang : 0
+                        <span class="stat-up-down">
+                            <i class="fa fa-arrow-circle-{if: $stats.percentRevenueRIMonth >= 0}up{else}down{/if}"></i>
+                            <!-- ({?= $stats.percentRevenueRIMonth ?}%) -->
                         </span>
                     </div>
               </div>
@@ -72,10 +82,10 @@
                     </span>
                     <div class="stat-title text-grey">Pendapatan Lain Lain Hari Ini</div>
                     <div class="stat-bold">
-                        {?= $stats.getRanapDead ?}
+                        {?= $stats.getRevenueOthers?}
                         <span class="stat-up-down">
                             <i class="fa fa-arrow-circle-{if: $stats.percentDays >= 0}up{else}down{/if}"></i>
-                            ({?= $stats.percentDead ?}%)
+                            ({?= $stats.percentRevenueOthers ?}%)
                         </span>
                     </div>
               </div>

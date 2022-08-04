@@ -748,6 +748,8 @@ class Admin extends AdminModule
 
     if ($_POST['stts'] == 'Berkas Dikirim') {
       if (!$this->db('mutasi_berkas')->where('no_rawat', $_POST['no_rawat'])->oneArray()) {
+        // $this->core->db()->pdo()->exec("INSERT INTO `mutasi_berkas` (no_rawat, status, dikirim, diterima, kembali, tidakada, ranap) 
+        // VALUES ('" . $_POST['no_rawat'] . "','Sudah Diterima','$datetime','0000-00-00 00:00:00','0000-00-00 00:00:00','0000-00-00 00:00:00','0000-00-00 00:00:00')");
         $this->db('mutasi_berkas')->save([
           'no_rawat' => $_POST['no_rawat'],
           'status' => 'Sudah Dikirim',
@@ -760,6 +762,8 @@ class Admin extends AdminModule
       }
     } else if ($_POST['stts'] == 'Berkas Diterima') {
       if (!$this->db('mutasi_berkas')->where('no_rawat', $_POST['no_rawat'])->oneArray()) {
+        // $this->core->db()->pdo()->exec("INSERT INTO `mutasi_berkas` (no_rawat, status, dikirim, diterima, kembali, tidakada, ranap) 
+        // VALUES ('" . $_POST['no_rawat'] . "','Sudah Diterima','$datetime','$datetime','0000-00-00 00:00:00','0000-00-00 00:00:00','0000-00-00 00:00:00')");
         $this->db('mutasi_berkas')->save([
           'no_rawat' => $_POST['no_rawat'],
           'status' => 'Sudah Diterima',
@@ -777,16 +781,17 @@ class Admin extends AdminModule
       }
       //cek jika sudah ada record
       if (empty($this->db('temporary2')->where('temp2', $_POST['no_rawat'])->oneArray())) {
-
+        // echo $_POST['no_rawat'] . ' tidak ada ' . $time;
         $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->save($_POST);
 
         //add waktu pasien saat mulai layan
-        $this->db('temporary2')->save([
-          'temp1' => 'waktupasien',
-          'temp2' => $_POST['no_rawat'],
-          'temp3' => $time,
-          'temp4' => '-'
-        ]);
+        $this->core->db()->pdo()->exec("INSERT INTO `temporary2` (temp1, temp2, temp3, temp4) VALUES ('waktupasien', '" . $_POST['no_rawat'] . "','$time','-')");
+        // $this->db('temporary2')->save([
+        //   'temp1' => 'waktupasien',
+        //   'temp2' => $_POST['no_rawat'],
+        //   'temp3' => $time,
+        //   'temp4' => '-'
+        // ]);
       }
 
       if ($kodebooking != '') {
@@ -1318,14 +1323,14 @@ class Admin extends AdminModule
     $tgl_awal = $_POST['tgl_awal'];
     $tgl_akhir = $_POST['tgl_akhir'];
     $igd = $this->settings->get('settings.igd');
-    $this->core->db()->pdo()->exec("INSERT INTO `mlite_temporary` (
-        `temp1`,`temp2`,`temp3`,`temp4`,`temp5`,`temp6`,`temp7`,`temp8`,`temp9`,`temp10`,`temp11`,`temp12`,`temp13`,`temp14`,`temp15`,`temp16`,`temp17`,`temp18`,`temp19`
-      )
-      SELECT *
-      FROM `reg_periksa`
-      WHERE `kd_poli` <> '$igd'
-      AND `tgl_registrasi` BETWEEN '$tgl_awal' AND '$tgl_akhir'
-      ");
+    // $this->core->db()->pdo()->exec("INSERT INTO `mlite_temporary` (
+    //     `temp1`,`temp2`,`temp3`,`temp4`,`temp5`,`temp6`,`temp7`,`temp8`,`temp9`,`temp10`,`temp11`,`temp12`,`temp13`,`temp14`,`temp15`,`temp16`,`temp17`,`temp18`,`temp19`
+    //   )
+    //   SELECT *
+    //   FROM `reg_periksa`
+    //   WHERE `kd_poli` <> '$igd'
+    //   AND `tgl_registrasi` BETWEEN '$tgl_awal' AND '$tgl_akhir'
+    //   ");
     exit();
   }
 

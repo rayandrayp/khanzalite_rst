@@ -1416,15 +1416,18 @@ class Site extends SiteModule
         break;
 
       case "simpanloket":
-        $this->db('mlite_antrian_loket')
-          ->save([
-            'kd' => NULL,
-            'type' => 'Loket',
-            'noantrian' => $_GET['noantrian'],
-            'postdate' => date('Y-m-d'),
-            'start_time' => date('H:i:s'),
-            'end_time' => '00:00:00'
-          ]);
+        $this->core->db()->pdo()->exec("INSERT INTO `mlite_antrian_loket` (type, noantrian, postdate, start_time, end_time, loket) 
+          VALUES ('Loket', '" . $_GET['noantrian'] . "','" . date('Y-m-d') . "','" . date('H:i:s') . "','00:00:00','Admisi')
+        ");
+        // $this->db('mlite_antrian_loket')
+        //   ->save([
+        //     'kd' => NULL,
+        //     'type' => 'Loket',
+        //     'noantrian' => $_GET['noantrian'],
+        //     'postdate' => date('Y-m-d'),
+        //     'start_time' => date('H:i:s'),
+        //     'end_time' => '00:00:00'
+        //   ]);
         //redirect(url('anjungan/pasien'));
         break;
 
@@ -1508,10 +1511,17 @@ class Site extends SiteModule
         break;
 
       case "tampilobat":
-        $result = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'LIKE', 'Obat%')->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
+        $date = date('Y-m-d');
+        $strQuery = "SELECT noantrian FROM mlite_antrian_loket 
+                      WHERE type LIKE 'Obat%' AND postdate = '$date' ORDER BY start_time DESC";
+        // echo $strQuery;
+        $query = $this->db()->pdo()->prepare($strQuery);
+        $query->execute();
+        $result = $query->fetchAll(\PDO::FETCH_ASSOC);
+        // $result = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'LIKE', 'Obat%')->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
 
         if ($result) {
-          $noantrian = $result['noantrian'];
+          $noantrian = $result[0]['noantrian'];
         } else {
           $noantrian = 0;
         }
@@ -1532,10 +1542,16 @@ class Site extends SiteModule
         break;
 
       case "printobat":
-        $result = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'LIKE', 'Obat%')->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
+        $date = date('Y-m-d');
+        $strQuery = "SELECT noantrian FROM mlite_antrian_loket 
+                      WHERE type LIKE 'Obat%' AND postdate = '$date' ORDER BY start_time DESC";
+        $query = $this->db()->pdo()->prepare($strQuery);
+        $query->execute();
+        $result = $query->fetchAll(\PDO::FETCH_ASSOC);
+        // $result = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'LIKE', 'Obat%')->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
 
         if ($result) {
-          $noantrian = $result['noantrian'];
+          $noantrian = $result[0]['noantrian'];
         } else {
           $noantrian = 0;
         }
@@ -1579,16 +1595,20 @@ class Site extends SiteModule
 
       case "simpanobat":
         $kdbooking = $_GET['kdbooking'];
-        $this->db('mlite_antrian_loket')
-          ->save([
-            'kd' => NULL,
-            'type' => 'Obat#' . $kdbooking,
-            'noantrian' => $_GET['noantrian'],
-            'postdate' => date('Y-m-d'),
-            'start_time' => date('H:i:s'),
-            'end_time' => '00:00:00',
-            'loket' => 'Obat'
-          ]);
+        $this->core->db()->pdo()->exec("INSERT INTO `mlite_antrian_loket` (type, noantrian, postdate, start_time, end_time, loket) 
+        VALUES ('Obat#$kdbooking', '" . $_GET['noantrian'] . "','" . date('Y-m-d') . "','" . date('H:i:s') . "','00:00:00','Obat')
+        ");
+
+        // $this->db('mlite_antrian_loket')
+        //   ->save([
+        //     'kd' => NULL,
+        //     'type' => 'Obat#' . $kdbooking,
+        //     'noantrian' => $_GET['noantrian'],
+        //     'postdate' => date('Y-m-d'),
+        //     'start_time' => date('H:i:s'),
+        //     'end_time' => '00:00:00',
+        //     'loket' => 'Obat'
+        //   ]);
         //redirect(url('anjungan/pasien'));
         $dataUpdateWaktuAntrean = $this->updateWaktuAntreanBPJS($kdbooking, 6);
         $response = $this->sendDataWSBPJS('antrean/updatewaktu', $dataUpdateWaktuAntrean);
@@ -1673,16 +1693,19 @@ class Site extends SiteModule
 
       case "simpanracikan":
         $kdbooking = $_GET['kdbooking'];
-        $this->db('mlite_antrian_loket')
-          ->save([
-            'kd' => NULL,
-            'type' => 'Racikan#' . $kdbooking,
-            'noantrian' => $_GET['noantrian'],
-            'postdate' => date('Y-m-d'),
-            'start_time' => date('H:i:s'),
-            'end_time' => '00:00:00',
-            'loket' => 'Racikan'
-          ]);
+        $this->core->db()->pdo()->exec("INSERT INTO `mlite_antrian_loket` (type, noantrian, postdate, start_time, end_time, loket) 
+        VALUES ('Racikan#$kdbooking', '" . $_GET['noantrian'] . "','" . date('Y-m-d') . "','" . date('H:i:s') . "','00:00:00','Racikan')
+        ");
+        // $this->db('mlite_antrian_loket')
+        //   ->save([
+        //     'kd' => NULL,
+        //     'type' => 'Racikan#' . $kdbooking,
+        //     'noantrian' => $_GET['noantrian'],
+        //     'postdate' => date('Y-m-d'),
+        //     'start_time' => date('H:i:s'),
+        //     'end_time' => '00:00:00',
+        //     'loket' => 'Racikan'
+        //   ]);
         $dataUpdateWaktuAntrean = $this->updateWaktuAntreanBPJS($kdbooking, 6);
         $response = $this->sendDataWSBPJS('antrean/updatewaktu', $dataUpdateWaktuAntrean);
         if ($response['metadata']['code'] != '200') {

@@ -65,7 +65,7 @@ class QueryWrapper
             'primary_key'   => 'id',
             'error_mode'    => \PDO::ERRMODE_WARNING,
             'json_options'  => JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT,
-            ], $options);
+        ], $options);
         static::$db = new \PDO($dsn, $user, $pass);
         static::$db->setAttribute(\PDO::ATTR_ERRMODE, static::$options['error_mode']);
     }
@@ -149,7 +149,7 @@ class QueryWrapper
             if (empty($this->conditions) || strpos(end($this->conditions), '(') !== false) {
                 array_push($this->conditions, '(');
             } else {
-                array_push($this->conditions, $ao.' (');
+                array_push($this->conditions, $ao . ' (');
             }
 
             call_user_func($column, $this);
@@ -474,7 +474,7 @@ class QueryWrapper
                 $columns = implode(',', array_keys($this->sets));
                 $this->set_binds = array_values($this->sets);
                 $qs = implode(',', array_fill(0, count($this->sets), '?'));
-                $sql = "INSERT INTO $this->table($columns) VALUES($qs)";
+                // $sql = "INSERT INTO $this->table($columns) VALUES($qs)";
                 $this->condition_binds = array();
 
                 return $sql;
@@ -533,7 +533,7 @@ class QueryWrapper
             if (is_int($bind)) {
                 $pdo_param = \PDO::PARAM_INT;
             }
-            $st->bindValue($key+1, $bind, $pdo_param);
+            $st->bindValue($key + 1, $bind, $pdo_param);
         }
         $st->execute();
         static::$last_sqls[] = $sql;
