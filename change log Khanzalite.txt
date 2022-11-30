@@ -111,3 +111,6 @@ Khanza Lite Change log
 
 - DB
     Tambah table record_antrian_mobilejkn
+
+07/12/2022
+- Menambahkan dan menyesuaikan isi dashboard manajemen

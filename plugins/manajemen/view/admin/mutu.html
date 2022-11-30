@@ -1,0 +1,968 @@
+<ul class="nav nav-tabs">
+    <li><a href="{?=url([ADMIN,'manajemen','dashboard'])?}">Dashboard</a></li>
+    <!-- <li><a href="{?=url([ADMIN,'manajemen','pendaftaran'])?}">Pendaftaran</a></li> -->
+    <li><a href="{?=url([ADMIN,'manajemen','rawatjalan'])?}">Rawat Jalan</a></li>
+    <li><a href="{?=url([ADMIN,'manajemen','rawatinap'])?}">Rawat Inap</a></li>
+    <li><a href="{?=url([ADMIN,'manajemen','dokter'])?}">Dokter</a></li>
+    <!-- <li><a href="{?=url([ADMIN,'manajemen','laboratorium'])?}">Laboratorium</a></li> -->
+    <!-- <li><a href="{?=url([ADMIN,'manajemen','radiologi'])?}">Radiologi</a></li> -->
+    <li><a href="{?=url([ADMIN,'manajemen','apotek'])?}">Apotek</a></li>
+    <!-- <li><a href="{?=url([ADMIN,'manajemen','farmasi'])?}">Farmasi</a></li> -->
+    <li><a href="{?=url([ADMIN,'manajemen','kasir'])?}">Kasir</a></li>
+    <!-- <li><a href="{?=url([ADMIN,'manajemen','presensi'])?}">Presensi</a></li> -->
+    <li class="active"><a href="{?=url([ADMIN,'manajemen','mutu'])?}">Indikator Mutu</a></li>
+</ul>
+<br>
+<div class="row">
+    <div class="col-lg-4 col-md-4">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Kepatuhan Kebersihan Tangan</h3>
+            </div>
+            <div class="panel-body">
+                <canvas id="line-chartcanvas-kebersihan_tangan" height="350"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 col-md-4">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Kepatuhan Penggunaan APD</h3>
+            </div>
+            <div class="panel-body">
+                <canvas id="line-chartcanvas-apd" height="350"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 col-md-4">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Kepatuhan Identifikasi Pasien</h3>
+            </div>
+            <div class="panel-body">
+                <canvas id="line-chartcanvas-identifikasi" height="350"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-4 col-md-4">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Waktu Tanggap Operasi SC Emergensi</h3>
+            </div>
+            <div class="panel-body">
+                <canvas id="line-chartcanvas-operasisc" height="350"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 col-md-4">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Waktu Tunggu Rawat Jalan</h3>
+            </div>
+            <div class="panel-body">
+                <canvas id="line-chartcanvas-waktutunggu" height="350"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 col-md-4">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Penundaan Operasi Elektif</h3>
+            </div>
+            <div class="panel-body">
+                <canvas id="line-chartcanvas-penundaanok" height="350"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-4 col-md-4">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Waktu Visite Dokter</h3>
+            </div>
+            <div class="panel-body">
+                <canvas id="line-chartcanvas-visitedokter" height="350"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 col-md-4">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Hasil Kritis Laboratorium</h3>
+            </div>
+            <div class="panel-body">
+                <canvas id="line-chartcanvas-laboratorium" height="350"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 col-md-4">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Waktu Tanggap Komplain</h3>
+            </div>
+            <div class="panel-body">
+                <canvas id="line-chartcanvas-komplain" height="350"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-4 col-md-4">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Penggunaan Formularium Nasional</h3>
+            </div>
+            <div class="panel-body">
+                <canvas id="line-chartcanvas-fornas" height="350"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 col-md-4">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Kepatuhan Clinical Pathway</h3>
+            </div>
+            <div class="panel-body">
+                <canvas id="line-chartcanvas-clinicalpathway" height="350"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 col-md-4">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Upaya Pencegahan Risiko Pasien Jatuh</h3>
+            </div>
+            <div class="panel-body">
+                <canvas id="line-chartcanvas-risikojatuh" height="350"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-lg-4 col-md-4">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Kepuasan Pasien</h3>
+            </div>
+            <div class="panel-body">
+                <canvas id="line-chartcanvas-kepuasanpasien" height="350"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(function () {
+        //line chart
+        var ctx = document.getElementById("line-chartcanvas-kebersihan_tangan");
+        var myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ["{?= implode('","', $stats.poliChartKebersihanTangan.labels) ?}"],
+                datasets: [{
+                        label: "RST dr. Soepraoen",
+                        fill: false,
+                        borderColor: 'blue',
+                        tension: 0.1,
+                        data: ["{?= implode('","', $stats.poliChartKebersihanTangan.visits) ?}"],
+                    },{
+                        label: "Standar Nasional",
+                        data: [85,85,85,85,85,85,85,85,85,85,85,85],
+                        fill: false,
+                        borderColor: 'orange',
+                        tension: 0.1,
+                    }
+                ]
+            },
+            options: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        fontColor: "#000000",
+                    }
+                },
+                responsive: true,
+                tooltips: {
+                    mode: 'index',
+                    intersect: false
+                },
+                hover: {
+                    mode: 'nearest',
+                    intersect: true
+                },
+                scales: {
+                    xAxes: [{
+                            display: true,
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Month'
+                            }
+                        }],
+                    yAxes: [{
+                            display: true,
+                            ticks: {
+                                beginAtZero: true,
+                                steps: 10,
+                                stepValue: 5,
+                                max: 100
+                            }
+                        }]
+                },
+                maintainAspectRatio: false
+            }
+        });
+
+    });
+
+    $(function () {
+        //line chart
+        var ctx = document.getElementById("line-chartcanvas-apd");
+        var myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ["{?= implode('","', $stats.poliChartAPD.labels) ?}"],
+                datasets: [{
+                        label: "RST dr. Soepraoen",
+                        fill: false,
+                        borderColor: 'blue',
+                        tension: 0.1,
+                        data: ["{?= implode('","', $stats.poliChartAPD.visits) ?}"],
+                    },{
+                        label: "Standar Nasional",
+                        data: [100,100,100,100,100,100,100,100,100,100,100,100],
+                        fill: false,
+                        borderColor: 'orange',
+                        tension: 0.1,
+                    }
+                ]
+            },
+            options: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        fontColor: "#000000",
+                    }
+                },
+                responsive: true,
+                tooltips: {
+                    mode: 'index',
+                    intersect: false
+                },
+                hover: {
+                    mode: 'nearest',
+                    intersect: true
+                },
+                scales: {
+                    xAxes: [{
+                            display: true,
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Month'
+                            }
+                        }],
+                    yAxes: [{
+                            display: true,
+                            ticks: {
+                                beginAtZero: true,
+                                steps: 10,
+                                stepValue: 5,
+                                max: 100
+                            }
+                        }]
+                },
+                maintainAspectRatio: false
+            }
+        });
+
+    });
+
+    $(function () {
+        //line chart
+        var ctx = document.getElementById("line-chartcanvas-identifikasi");
+        var myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ["{?= implode('","', $stats.poliChartIdentifikasi.labels) ?}"],
+                datasets: [{
+                        label: "RST dr. Soepraoen",
+                        fill: false,
+                        borderColor: 'blue',
+                        tension: 0.1,
+                        data: ["{?= implode('","', $stats.poliChartIdentifikasi.visits) ?}"],
+                    },{
+                        label: "Standar Nasional",
+                        data: [100,100,100,100,100,100,100,100,100,100,100,100],
+                        fill: false,
+                        borderColor: 'orange',
+                        tension: 0.1,
+                    }
+                ]
+            },
+            options: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        fontColor: "#000000",
+                    }
+                },
+                responsive: true,
+                tooltips: {
+                    mode: 'index',
+                    intersect: false
+                },
+                hover: {
+                    mode: 'nearest',
+                    intersect: true
+                },
+                scales: {
+                    xAxes: [{
+                            display: true,
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Month'
+                            }
+                        }],
+                    yAxes: [{
+                            display: true,
+                            ticks: {
+                                beginAtZero: true,
+                                steps: 10,
+                                stepValue: 5,
+                                max: 100
+                            }
+                        }]
+                },
+                maintainAspectRatio: false
+            }
+        });
+    });
+
+    $(function () {
+        //line chart
+        var ctx = document.getElementById("line-chartcanvas-operasisc");
+        var myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ["{?= implode('","', $stats.poliChartOperasiSC.labels) ?}"],
+                datasets: [{
+                        label: "RST dr. Soepraoen",
+                        fill: false,
+                        borderColor: 'blue',
+                        tension: 0.1,
+                        data: ["{?= implode('","', $stats.poliChartOperasiSC.visits) ?}"],
+                    },{
+                        label: "Standar Nasional",
+                        data: [100,100,100,100,100,100,100,100,100,100,100,100],
+                        fill: false,
+                        borderColor: 'orange',
+                        tension: 0.1,
+                    }
+                ]
+            },
+            options: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        fontColor: "#000000",
+                    }
+                },
+                responsive: true,
+                tooltips: {
+                    mode: 'index',
+                    intersect: false
+                },
+                hover: {
+                    mode: 'nearest',
+                    intersect: true
+                },
+                scales: {
+                    xAxes: [{
+                            display: true,
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Month'
+                            }
+                        }],
+                    yAxes: [{
+                            display: true,
+                            ticks: {
+                                beginAtZero: true,
+                                steps: 10,
+                                stepValue: 5,
+                                max: 100
+                            }
+                        }]
+                },
+                maintainAspectRatio: false
+            }
+        });
+    });
+
+
+    $(function () {
+        //line chart
+        var ctx = document.getElementById("line-chartcanvas-waktutunggu");
+        var myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ["{?= implode('","', $stats.poliChartWaktuTunggu.labels) ?}"],
+                datasets: [{
+                        label: "RST dr. Soepraoen",
+                        fill: false,
+                        borderColor: 'blue',
+                        tension: 0.1,
+                        data: ["{?= implode('","', $stats.poliChartWaktuTunggu.visits) ?}"],
+                    },{
+                        label: "Standar Nasional",
+                        data: [60,60,60,60,60,60,60,60,60,60,60,60],
+                        fill: false,
+                        borderColor: 'orange',
+                        tension: 0.1,
+                    }
+                ]
+            },
+            options: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        fontColor: "#000000",
+                    }
+                },
+                responsive: true,
+                tooltips: {
+                    mode: 'index',
+                    intersect: false
+                },
+                hover: {
+                    mode: 'nearest',
+                    intersect: true
+                },
+                scales: {
+                    xAxes: [{
+                            display: true,
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Month'
+                            }
+                        }],
+                    yAxes: [{
+                            display: true,
+                            ticks: {
+                                beginAtZero: true,
+                                steps: 10,
+                                stepValue: 5,
+                                max: 100
+                            }
+                        }]
+                },
+                maintainAspectRatio: false
+            }
+        });
+    });
+
+    $(function () {
+        //line chart
+        var ctx = document.getElementById("line-chartcanvas-penundaanok");
+        var myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ["{?= implode('","', $stats.poliChartPenundaanOK.labels) ?}"],
+                datasets: [{
+                        label: "RST dr. Soepraoen",
+                        fill: false,
+                        borderColor: 'blue',
+                        tension: 0.1,
+                        data: ["{?= implode('","', $stats.poliChartPenundaanOK.visits) ?}"],
+                    },{
+                        label: "Standar Nasional",
+                        data: [5,5,5,5,5,5,5,5,5,5,5,5],
+                        fill: false,
+                        borderColor: 'orange',
+                        tension: 0.1,
+                    }
+                ]
+            },
+            options: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        fontColor: "#000000",
+                    }
+                },
+                responsive: true,
+                tooltips: {
+                    mode: 'index',
+                    intersect: false
+                },
+                hover: {
+                    mode: 'nearest',
+                    intersect: true
+                },
+                scales: {
+                    xAxes: [{
+                            display: true,
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Month'
+                            }
+                        }],
+                    yAxes: [{
+                            display: true,
+                            ticks: {
+                                beginAtZero: true,
+                                steps: 0.5,
+                                stepValue: 0.5,
+                                max: 25
+                            }
+                        }]
+                },
+                maintainAspectRatio: false
+            }
+        });
+    });
+
+    $(function () {
+        //line chart
+        var ctx = document.getElementById("line-chartcanvas-visitedokter");
+        var myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ["{?= implode('","', $stats.poliChartVisiteDokter.labels) ?}"],
+                datasets: [{
+                        label: "RST dr. Soepraoen",
+                        fill: false,
+                        borderColor: 'blue',
+                        tension: 0.1,
+                        data: ["{?= implode('","', $stats.poliChartVisiteDokter.visits) ?}"],
+                    },{
+                        label: "Standar Nasional",
+                        data: [80,80,80,80,80,80,80,80,80,80,80,80],
+                        fill: false,
+                        borderColor: 'orange',
+                        tension: 0.1,
+                    }
+                ]
+            },
+            options: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        fontColor: "#000000",
+                    }
+                },
+                responsive: true,
+                tooltips: {
+                    mode: 'index',
+                    intersect: false
+                },
+                hover: {
+                    mode: 'nearest',
+                    intersect: true
+                },
+                scales: {
+                    xAxes: [{
+                            display: true,
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Month'
+                            }
+                        }],
+                    yAxes: [{
+                            display: true,
+                            ticks: {
+                                beginAtZero: true,
+                                steps: 10,
+                                stepValue: 5,
+                                max: 100
+                            }
+                        }]
+                },
+                maintainAspectRatio: false
+            }
+        });
+    });
+
+    $(function () {
+        //line chart
+        var ctx = document.getElementById("line-chartcanvas-laboratorium");
+        var myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ["{?= implode('","', $stats.poliChartLab.labels) ?}"],
+                datasets: [{
+                        label: "RST dr. Soepraoen",
+                        fill: false,
+                        borderColor: 'blue',
+                        tension: 0.1,
+                        data: ["{?= implode('","', $stats.poliChartLab.visits) ?}"],
+                    },{
+                        label: "Standar Nasional",
+                        data: [100,100,100,100,100,100,100,100,100,100,100,100],
+                        fill: false,
+                        borderColor: 'orange',
+                        tension: 0.1,
+                    }
+                ]
+            },
+            options: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        fontColor: "#000000",
+                    }
+                },
+                responsive: true,
+                tooltips: {
+                    mode: 'index',
+                    intersect: false
+                },
+                hover: {
+                    mode: 'nearest',
+                    intersect: true
+                },
+                scales: {
+                    xAxes: [{
+                            display: true,
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Month'
+                            }
+                        }],
+                    yAxes: [{
+                            display: true,
+                            ticks: {
+                                beginAtZero: true,
+                                steps: 10,
+                                stepValue: 5,
+                                max: 100
+                            }
+                        }]
+                },
+                maintainAspectRatio: false
+            }
+        });
+    });
+
+    $(function () {
+        //line chart
+        var ctx = document.getElementById("line-chartcanvas-komplain");
+        var myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ["{?= implode('","', $stats.poliChartKomplain.labels) ?}"],
+                datasets: [{
+                        label: "RST dr. Soepraoen",
+                        fill: false,
+                        borderColor: 'blue',
+                        tension: 0.1,
+                        data: ["{?= implode('","', $stats.poliChartKomplain.visits) ?}"],
+                    },{
+                        label: "Standar Nasional",
+                        data: [75,75,75,75,75,75,75,75,75,75,75,75],
+                        fill: false,
+                        borderColor: 'orange',
+                        tension: 0.1,
+                    }
+                ]
+            },
+            options: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        fontColor: "#000000",
+                    }
+                },
+                responsive: true,
+                tooltips: {
+                    mode: 'index',
+                    intersect: false
+                },
+                hover: {
+                    mode: 'nearest',
+                    intersect: true
+                },
+                scales: {
+                    xAxes: [{
+                            display: true,
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Month'
+                            }
+                        }],
+                    yAxes: [{
+                            display: true,
+                            ticks: {
+                                beginAtZero: true,
+                                steps: 10,
+                                stepValue: 5,
+                                max: 100
+                            }
+                        }]
+                },
+                maintainAspectRatio: false
+            }
+        });
+    });
+
+    $(function () {
+        //line chart
+        var ctx = document.getElementById("line-chartcanvas-fornas");
+        var myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ["{?= implode('","', $stats.poliChartFornas.labels) ?}"],
+                datasets: [{
+                        label: "RST dr. Soepraoen",
+                        fill: false,
+                        borderColor: 'blue',
+                        tension: 0.1,
+                        data: ["{?= implode('","', $stats.poliChartFornas.visits) ?}"],
+                    },{
+                        label: "Standar Nasional",
+                        data: [80,80,80,80,80,80,80,80,80,80,80,80],
+                        fill: false,
+                        borderColor: 'orange',
+                        tension: 0.1,
+                    }
+                ]
+            },
+            options: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        fontColor: "#000000",
+                    }
+                },
+                responsive: true,
+                tooltips: {
+                    mode: 'index',
+                    intersect: false
+                },
+                hover: {
+                    mode: 'nearest',
+                    intersect: true
+                },
+                scales: {
+                    xAxes: [{
+                            display: true,
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Month'
+                            }
+                        }],
+                    yAxes: [{
+                            display: true,
+                            ticks: {
+                                beginAtZero: true,
+                                steps: 10,
+                                stepValue: 5,
+                                max: 100
+                            }
+                        }]
+                },
+                maintainAspectRatio: false
+            }
+        });
+    });
+    $(function () {
+        //line chart
+        var ctx = document.getElementById("line-chartcanvas-clinicalpathway");
+        var myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ["{?= implode('","', $stats.poliChartClinicalPathway.labels) ?}"],
+                datasets: [{
+                        label: "RST dr. Soepraoen",
+                        fill: false,
+                        borderColor: 'blue',
+                        tension: 0.1,
+                        data: ["{?= implode('","', $stats.poliChartClinicalPathway.visits) ?}"],
+                    },{
+                        label: "Standar Nasional",
+                        data: [80,80,80,80,80,80,80,80,80,80,80,80],
+                        fill: false,
+                        borderColor: 'orange',
+                        tension: 0.1,
+                    }
+                ]
+            },
+            options: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        fontColor: "#000000",
+                    }
+                },
+                responsive: true,
+                tooltips: {
+                    mode: 'index',
+                    intersect: false
+                },
+                hover: {
+                    mode: 'nearest',
+                    intersect: true
+                },
+                scales: {
+                    xAxes: [{
+                            display: true,
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Month'
+                            }
+                        }],
+                    yAxes: [{
+                            display: true,
+                            ticks: {
+                                beginAtZero: true,
+                                steps: 10,
+                                stepValue: 5,
+                                max: 100
+                            }
+                        }]
+                },
+                maintainAspectRatio: false
+            }
+        });
+    });
+
+    $(function () {
+        //line chart
+        var ctx = document.getElementById("line-chartcanvas-risikojatuh");
+        var myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ["{?= implode('","', $stats.poliChartRisikoJatuh.labels) ?}"],
+                datasets: [{
+                        label: "RST dr. Soepraoen",
+                        fill: false,
+                        borderColor: 'blue',
+                        tension: 0.1,
+                        data: ["{?= implode('","', $stats.poliChartRisikoJatuh.visits) ?}"],
+                    },{
+                        label: "Standar Nasional",
+                        data: [100,100,100,100,100,100,100,100,100,100,100,100],
+                        fill: false,
+                        borderColor: 'orange',
+                        tension: 0.1,
+                    }
+                ]
+            },
+            options: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        fontColor: "#000000",
+                    }
+                },
+                responsive: true,
+                tooltips: {
+                    mode: 'index',
+                    intersect: false
+                },
+                hover: {
+                    mode: 'nearest',
+                    intersect: true
+                },
+                scales: {
+                    xAxes: [{
+                            display: true,
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Month'
+                            }
+                        }],
+                    yAxes: [{
+                            display: true,
+                            ticks: {
+                                beginAtZero: true,
+                                steps: 10,
+                                stepValue: 5,
+                                max: 100
+                            }
+                        }]
+                },
+                maintainAspectRatio: false
+            }
+        });
+    });
+    
+    $(function () {
+        //line chart
+        var ctx = document.getElementById("line-chartcanvas-kepuasanpasien");
+        var myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ["{?= implode('","', $stats.poliChartKepuasanPasien.labels) ?}"],
+                datasets: [{
+                        label: "RST dr. Soepraoen",
+                        fill: false,
+                        borderColor: 'blue',
+                        tension: 0.1,
+                        data: ["{?= implode('","', $stats.poliChartKepuasanPasien.visits) ?}"],
+                    },{
+                        label: "Standar Nasional",
+                        data: [80,80,80,80,80,80,80,80,80,80,80,80],
+                        fill: false,
+                        borderColor: 'orange',
+                        tension: 0.1,
+                    }
+                ]
+            },
+            options: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        fontColor: "#000000",
+                    }
+                },
+                responsive: true,
+                tooltips: {
+                    mode: 'index',
+                    intersect: false
+                },
+                hover: {
+                    mode: 'nearest',
+                    intersect: true
+                },
+                scales: {
+                    xAxes: [{
+                            display: true,
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Month'
+                            }
+                        }],
+                    yAxes: [{
+                            display: true,
+                            ticks: {
+                                beginAtZero: true,
+                                steps: 10,
+                                stepValue: 5,
+                                max: 100
+                            }
+                        }]
+                },
+                maintainAspectRatio: false
+            }
+        });
+    });
+</script> 

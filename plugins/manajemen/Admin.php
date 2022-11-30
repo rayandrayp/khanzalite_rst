@@ -3,6 +3,7 @@
 namespace Plugins\Manajemen;
 
 use Systems\AdminModule;
+use Systems\Lib\QueryWrapper;
 
 class Admin extends AdminModule
 {
@@ -68,9 +69,11 @@ class Admin extends AdminModule
         $borBulan = ($lamaInapBulan / ($jumlahBed * $jmlhari)) * 100;
         $alos = $lamaInapBulan / $jumlahPasien;
         $toi = (($jumlahBed * $jmlhari) - $lamaInapBulan) / $jumlahPasien;
+        $bto = $jumlahPasien / $jumlahBed;
         $stats['getBORBulan'] = number_format($borBulan, 2, ',', '.');
         $stats['getALOS'] = number_format($alos, 2, ',', '.');
         $stats['getTOI'] = number_format($toi, 2, ',', '.');
+        $stats['getBTO'] = number_format($bto, 2, ',', '.');
 
         $stats['poliChartRanap'] = $this->countKamarInap();
 
@@ -86,6 +89,7 @@ class Admin extends AdminModule
         $revenueAllBulanIni = $revenueBulanIni['Ralan'] + $revenueBulanIni['Ranap'];
         $revenueAllBulanLalu = $revenueBulanLalu['Ralan'] + $revenueBulanLalu['Ranap'];
         $stats['getTotalRevenueMonth'] = number_format($revenueAllBulanIni, 0, '', '.');
+        $stats['percentRevenueMonth'] = 0;
         if ($stats['getTotalRevenueMonth'] != 0) {
             $stats['percentRevenueMonth'] = number_format((($revenueAllBulanIni - $revenueAllBulanLalu) / $revenueAllBulanIni) * 100, 0, '', '.');
         }
@@ -322,12 +326,14 @@ class Admin extends AdminModule
     public function getFarmasi()
     {
         $this->core->addCSS(url(MODULES . '/manajemen/css/admin/style.css'));
+        $this->core->addJS(url(BASE_DIR . '/assets/jscripts/Chart.bundle.min.js'));
         return $this->draw('farmasi.html');
     }
 
     public function getKasir()
     {
         $this->core->addCSS(url(MODULES . '/manajemen/css/admin/style.css'));
+        $this->core->addJS(url(BASE_DIR . '/assets/jscripts/Chart.bundle.min.js'));
         $settings = htmlspecialchars_array($this->settings('manajemen'));
 
         $revenueBulanIni = $this->getRevenueRIRJ(date('Y-m'));
@@ -335,6 +341,7 @@ class Admin extends AdminModule
         $revenueAllBulanIni = $revenueBulanIni['Ralan'] + $revenueBulanIni['Ranap'];
         $revenueAllBulanLalu = $revenueBulanLalu['Ralan'] + $revenueBulanLalu['Ranap'];
         $stats['getTotalRevenueMonth'] = number_format($revenueAllBulanIni, 0, '', '.');
+        $stats['percentRevenueMonth'] = 0;
         if ($stats['getTotalRevenueMonth'] != 0) {
             $stats['percentRevenueMonth'] = number_format((($revenueAllBulanIni - $revenueAllBulanLalu) / $revenueAllBulanIni) * 100, 0, '', '.');
         }
@@ -351,7 +358,45 @@ class Admin extends AdminModule
         $stats['getRevenueOthers'] = 0;
         $stats['percentRevenueOthers'] = 0;
 
+
+        $stats['getCaraBayar'] = $this->getCaraBayar();
+
+        $stats['tunai'] = $this->db('reg_periksa')->select(['count' => 'COUNT(DISTINCT no_rawat)'])->where('kd_pj', 'A09')->like('tgl_registrasi', date('Y') . '%')->oneArray();
+        $stats['bpjs'] = $this->db('reg_periksa')->select(['count' => 'COUNT(DISTINCT no_rawat)'])->where('kd_pj', 'BPJ')->orWhere('kd_pj', 'A65')->like('tgl_registrasi', date('Y') . '%')->oneArray();
+        $stats['lainnya'] = $this->db('reg_periksa')->select(['count' => 'COUNT(DISTINCT no_rawat)'])->where('kd_pj', '!=', 'A09')->where('kd_pj', '!=', 'BPJ')->like('tgl_registrasi', date('Y') . '%')->oneArray();
+
+        var_dump($stats);
         return $this->draw('kasir.html', [
+            'settings' => $settings,
+            'stats' => $stats,
+        ]);
+    }
+
+    public function getMutu()
+    {
+        $this->core->addCSS(url(MODULES . '/manajemen/css/admin/style.css'));
+        $this->core->addJS(url(BASE_DIR . '/assets/jscripts/Chart.bundle.min.js'));
+        $settings = htmlspecialchars_array($this->settings('manajemen'));
+
+        $stats['poliChartKebersihanTangan'] = $this->poliChartKebersihanTangan();
+        $stats['poliChartAPD'] = $this->poliChartAPD();
+        $stats['poliChartIdentifikasi'] = $this->poliChartIdentifikasi();
+        $stats['poliChartOperasiSC'] = $this->poliChartOperasiSC();
+        $stats['poliChartWaktuTunggu'] = $this->poliChartWaktuTunggu();
+        $stats['poliChartPenundaanOK'] = $this->poliChartPenundaanOK();
+        $stats['poliChartVisiteDokter'] = $this->poliChartVisiteDokter();
+        //connect to DB laborat
+        QueryWrapper::connect("mysql:host=" . DBHOST . ";port=" . DBPORT . ";dbname=laborat", DBUSER, DBPASS);
+        $stats['poliChartLab'] = $this->poliChartLab();
+        //connect back to DB sik
+        QueryWrapper::connect("mysql:host=" . DBHOST . ";port=" . DBPORT . ";dbname=" . DBNAME . "", DBUSER, DBPASS);
+        $stats['poliChartKomplain'] = $this->poliChartKomplain();
+        $stats['poliChartFornas'] = $this->poliChartFornas();
+        $stats['poliChartClinicalPathway'] = $this->poliChartClinicalPathway();
+        $stats['poliChartRisikoJatuh'] = $this->poliChartRisikoJatuh();
+        $stats['poliChartKepuasanPasien'] = $this->poliChartKepuasanPasien();
+
+        return $this->draw('mutu.html', [
             'settings' => $settings,
             'stats' => $stats,
         ]);
@@ -1544,4 +1589,1041 @@ class Admin extends AdminModule
     //     // echo $jmlbed . ' * ' . $jmlhari . '-' . $lama . ' / ' . $jmlpasien;
     //     return $toi;
     // }
+
+    public function poliChartKebersihanTangan()
+    {
+        $year = date("Y");
+        $query = $this->db()->pdo()->prepare("SELECT LEFT(tanggal, 7) AS bulan, ruangan,
+                        SUM(CASE WHEN sebelum_kontak_pasien = 'HR' OR sebelum_kontak_pasien = 'HW' THEN 1 ELSE 0 END) kol_1,
+                        SUM(CASE WHEN sebelum_tindakan_aseptik = 'HR' OR sebelum_tindakan_aseptik = 'HW' THEN 1 ELSE 0 END) kol_2,
+                        SUM(CASE WHEN setelah_kontak_pasien = 'HR' OR setelah_kontak_pasien = 'HW' THEN 1 ELSE 0 END) kol_3,
+                        SUM(CASE WHEN setelah_kontak_cairan = 'HR' OR setelah_kontak_cairan = 'HW' THEN 1 ELSE 0 END) kol_4,
+                        SUM(CASE WHEN setelah_kontak_alat = 'HR' OR setelah_kontak_alat = 'HW' THEN 1 ELSE 0 END) kol_5,
+                        SUM(CASE WHEN cucitangan <> '' THEN 5 ELSE 0 END) opp
+                        FROM mutu_kebersihantangan
+                        WHERE tanggal LIKE '$year%'
+                        GROUP BY LEFT(tanggal, 7)");
+        $query->execute();
+        $data = $query->fetchAll(\PDO::FETCH_ASSOC);
+
+        $data_1 = 0;
+        $data_2 = 0;
+        $data_3 = 0;
+        $data_4 = 0;
+        $data_5 = 0;
+        $data_6 = 0;
+        $data_7 = 0;
+        $data_8 = 0;
+        $data_9 = 0;
+        $data_10 = 0;
+        $data_11 = 0;
+        $data_12 = 0;
+        foreach ($data as $value) {
+            $prosentase = round((($value['kol_1'] + $value['kol_2'] + $value['kol_3'] + $value['kol_4'] + $value['kol_5']) / $value['opp']) * 100);
+            switch ($value['bulan']) {
+                case $year . '-01':
+                    $data_1 = $prosentase;
+                    break;
+                case $year . '-02':
+                    $data_2 = $prosentase;
+                    break;
+                case $year . '-03':
+                    $data_3 = $prosentase;
+                    break;
+                case $year . '-04':
+                    $data_4 = $prosentase;
+                    break;
+                case $year . '-05':
+                    $data_5 = $prosentase;
+                    break;
+                case $year . '-06':
+                    $data_6 = $prosentase;
+                    break;
+                case $year . '-07':
+                    $data_7 = $prosentase;
+                    break;
+                case $year . '-08':
+                    $data_8 = $prosentase;
+                    break;
+                case $year . '-09':
+                    $data_9 = $prosentase;
+                    break;
+                case $year . '-10':
+                    $data_10 = $prosentase;
+                    break;
+                case $year . '-11':
+                    $data_11 = $prosentase;
+                    break;
+                case $year . '-12':
+                    $data_12 = $prosentase;
+                    break;
+            }
+        }
+        $return = [
+            'labels'  => ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'Nopember', 'Desember'],
+            'visits'  => [$data_1, $data_2, $data_3, $data_4, $data_5, $data_6, $data_7, $data_8, $data_9, $data_10, $data_11, $data_12],
+        ];
+        return $return;
+    }
+
+    public function poliChartAPD()
+    {
+
+        $year = date("Y");
+        $query = $this->db()->pdo()->prepare("SELECT LEFT(tanggal, 7) AS bulan,
+                                    SUM(CASE WHEN level_apd = '1' AND masker_bedah = 'IYA' THEN 1 ELSE 0 END) level1_1,
+                                    SUM(CASE WHEN level_apd = '1' AND gaun = 'IYA' THEN 1 ELSE 0 END) level1_2,
+                                    SUM(CASE WHEN level_apd = '1' AND handscoon = 'IYA' THEN 1 ELSE 0 END) level1_3,
+                                    SUM(CASE WHEN level_apd = '2' AND masker_bedah = 'IYA' THEN 1 ELSE 0 END) level2_1,
+                                    SUM(CASE WHEN level_apd = '2' AND gaun = 'IYA' THEN 1 ELSE 0 END) level2_2,
+                                    SUM(CASE WHEN level_apd = '2' AND faceshield = 'IYA' THEN 1 ELSE 0 END) level2_3,
+                                    SUM(CASE WHEN level_apd = '2' AND nursecap = 'IYA' THEN 1 ELSE 0 END) level2_4,
+                                    SUM(CASE WHEN level_apd = '2' AND handscoon = 'IYA' THEN 1 ELSE 0 END) level2_5,
+                                    SUM(CASE WHEN level_apd = '3' AND masker_n95 = 'IYA' THEN 1 ELSE 0 END) level3_1,
+                                    SUM(CASE WHEN level_apd = '3' AND hazmat = 'IYA' THEN 1 ELSE 0 END) level3_2,
+                                    SUM(CASE WHEN level_apd = '3' AND handscoon = 'IYA' THEN 1 ELSE 0 END) level3_3,
+                                    SUM(CASE WHEN level_apd = '3' AND nursecap = 'IYA' THEN 1 ELSE 0 END) level3_4,
+                                    SUM(CASE WHEN level_apd = '3' AND faceshield = 'IYA' THEN 1 ELSE 0 END) level3_5,
+                                    SUM(CASE WHEN level_apd = '3' AND goggle = 'IYA' THEN 1 ELSE 0 END) level3_6,
+                                    SUM(CASE WHEN level_apd = '3' AND sepatuboot = 'IYA' THEN 1 ELSE 0 END) level3_7,
+                                    SUM(CASE WHEN level_apd = '1' THEN 1 ELSE 0 END) n_1,
+                                    SUM(CASE WHEN level_apd = '2' THEN 1 ELSE 0 END) n_2,
+                                    SUM(CASE WHEN level_apd = '3' THEN 1 ELSE 0 END) n_3
+                                    FROM mutu_kepatuhanapd
+                                    WHERE tanggal LIKE '$year%'
+                                    GROUP BY LEFT(tanggal, 7)");
+        $query->execute();
+        $data = $query->fetchAll(\PDO::FETCH_ASSOC);
+
+        $data_1 = 0;
+        $data_2 = 0;
+        $data_3 = 0;
+        $data_4 = 0;
+        $data_5 = 0;
+        $data_6 = 0;
+        $data_7 = 0;
+        $data_8 = 0;
+        $data_9 = 0;
+        $data_10 = 0;
+        $data_11 = 0;
+        $data_12 = 0;
+
+        foreach ($data as $value) {
+            if ($value['n_1'] != 0)
+                $nilai_1 = round((($value['level1_1'] + $value['level1_2'] + $value['level1_3']) / ($value['n_1'] * 3)) * 100);
+            if ($value['n_2'] != 0)
+                $nilai_2 = round((($value['level2_1'] + $value['level2_2'] + $value['level2_3'] + $value['level2_4'] + $value['level2_5']) / ($value['n_2'] * 5)) * 100);
+            if ($value['n_3'] != 0)
+                $nilai_3 = round((($value['level3_1'] + $value['level3_2'] + $value['level3_3'] + $value['level3_4'] + $value['level3_5'] + $value['level3_6'] + $value['level3_7']) / ($value['n_3'] * 7)) * 100);
+            $prosentase = round(($nilai_1 + $nilai_2 + $nilai_3) / 3);
+            switch ($value['bulan']) {
+                case $year . '-01':
+                    $data_1 = $prosentase;
+                    break;
+                case $year . '-02':
+                    $data_2 = $prosentase;
+                    break;
+                case $year . '-03':
+                    $data_3 = $prosentase;
+                    break;
+                case $year . '-04':
+                    $data_4 = $prosentase;
+                    break;
+                case $year . '-05':
+                    $data_5 = $prosentase;
+                    break;
+                case $year . '-06':
+                    $data_6 = $prosentase;
+                    break;
+                case $year . '-07':
+                    $data_7 = $prosentase;
+                    break;
+                case $year . '-08':
+                    $data_8 = $prosentase;
+                    break;
+                case $year . '-09':
+                    $data_9 = $prosentase;
+                    break;
+                case $year . '-10':
+                    $data_10 = $prosentase;
+                    break;
+                case $year . '-11':
+                    $data_11 = $prosentase;
+                    break;
+                case $year . '-12':
+                    $data_12 = $prosentase;
+                    break;
+            }
+        }
+        $return = [
+            'labels'  => ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'Nopember', 'Desember'],
+            'visits'  => [$data_1, $data_2, $data_3, $data_4, $data_5, $data_6, $data_7, $data_8, $data_9, $data_10, $data_11, $data_12],
+        ];
+        return $return;
+    }
+
+    public function poliChartIdentifikasi()
+    {
+        $year = date("Y");
+        $query = $this->db()->pdo()->prepare("SELECT LEFT(tanggal, 7) AS bulan,
+                                    SUM(CASE WHEN pemberian_obat = 'IYA' AND pemberian_nutrisi = 'IYA' AND pemberian_darah = 'IYA' AND pengambilan_specimen = 'IYA' AND sebelum_diagnostik = 'IYA' THEN 1 ELSE 0 END) kol_1,
+                                    COUNT(tanggal) AS jml
+                                    FROM mutu_identifikasipasien
+                                    WHERE tanggal LIKE '$year%'
+                                    GROUP BY LEFT(tanggal, 7)");
+        $query->execute();
+        $data = $query->fetchAll(\PDO::FETCH_ASSOC);
+
+        $data_1 = 0;
+        $data_2 = 0;
+        $data_3 = 0;
+        $data_4 = 0;
+        $data_5 = 0;
+        $data_6 = 0;
+        $data_7 = 0;
+        $data_8 = 0;
+        $data_9 = 0;
+        $data_10 = 0;
+        $data_11 = 0;
+        $data_12 = 0;
+
+        foreach ($data as $value) {
+            $prosentase = round(($value['kol_1'] / $value['jml']) * 100);
+            switch ($value['bulan']) {
+                case $year . '-01':
+                    $data_1 = $prosentase;
+                    break;
+                case $year . '-02':
+                    $data_2 = $prosentase;
+                    break;
+                case $year . '-03':
+                    $data_3 = $prosentase;
+                    break;
+                case $year . '-04':
+                    $data_4 = $prosentase;
+                    break;
+                case $year . '-05':
+                    $data_5 = $prosentase;
+                    break;
+                case $year . '-06':
+                    $data_6 = $prosentase;
+                    break;
+                case $year . '-07':
+                    $data_7 = $prosentase;
+                    break;
+                case $year . '-08':
+                    $data_8 = $prosentase;
+                    break;
+                case $year . '-09':
+                    $data_9 = $prosentase;
+                    break;
+                case $year . '-10':
+                    $data_10 = $prosentase;
+                    break;
+                case $year . '-11':
+                    $data_11 = $prosentase;
+                    break;
+                case $year . '-12':
+                    $data_12 = $prosentase;
+                    break;
+            }
+        }
+        $return = [
+            'labels'  => ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'Nopember', 'Desember'],
+            'visits'  => [$data_1, $data_2, $data_3, $data_4, $data_5, $data_6, $data_7, $data_8, $data_9, $data_10, $data_11, $data_12],
+        ];
+        return $return;
+    }
+
+    public function poliChartOperasiSC()
+    {
+        $year = date("Y");
+        $query = $this->db()->pdo()->prepare("SELECT LEFT(tgl_registrasi, 7) AS bulan, COUNT(tgl_registrasi) AS jml,
+                                    SUM(CASE WHEN skor = '1' THEN 1 ELSE 0 END) kol_d
+                                    FROM mutu_ketepatansccito
+                                    WHERE tgl_registrasi LIKE '$year%' 
+                                    GROUP BY LEFT(tgl_registrasi, 7)");
+        $query->execute();
+        $data = $query->fetchAll(\PDO::FETCH_ASSOC);
+
+        $data_1 = 0;
+        $data_2 = 0;
+        $data_3 = 0;
+        $data_4 = 0;
+        $data_5 = 0;
+        $data_6 = 0;
+        $data_7 = 0;
+        $data_8 = 0;
+        $data_9 = 0;
+        $data_10 = 0;
+        $data_11 = 0;
+        $data_12 = 0;
+
+        foreach ($data as $value) {
+            $prosentase = round(($value['kol_d'] / $value['jml']) * 100);
+            switch ($value['bulan']) {
+                case $year . '-01':
+                    $data_1 = $prosentase;
+                    break;
+                case $year . '-02':
+                    $data_2 = $prosentase;
+                    break;
+                case $year . '-03':
+                    $data_3 = $prosentase;
+                    break;
+                case $year . '-04':
+                    $data_4 = $prosentase;
+                    break;
+                case $year . '-05':
+                    $data_5 = $prosentase;
+                    break;
+                case $year . '-06':
+                    $data_6 = $prosentase;
+                    break;
+                case $year . '-07':
+                    $data_7 = $prosentase;
+                    break;
+                case $year . '-08':
+                    $data_8 = $prosentase;
+                    break;
+                case $year . '-09':
+                    $data_9 = $prosentase;
+                    break;
+                case $year . '-10':
+                    $data_10 = $prosentase;
+                    break;
+                case $year . '-11':
+                    $data_11 = $prosentase;
+                    break;
+                case $year . '-12':
+                    $data_12 = $prosentase;
+                    break;
+            }
+        }
+        $return = [
+            'labels'  => ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'Nopember', 'Desember'],
+            'visits'  => [$data_1, $data_2, $data_3, $data_4, $data_5, $data_6, $data_7, $data_8, $data_9, $data_10, $data_11, $data_12],
+        ];
+        return $return;
+    }
+
+    public function poliChartWaktuTunggu()
+    {
+        $year = date("Y");
+        $query = $this->db()->pdo()->prepare("SELECT LEFT(r.tgl_registrasi, 7) AS bulan, COUNT(r.tgl_registrasi) AS jml,
+            SUM(CASE WHEN ROUND(((TIME_TO_SEC(t.temp4) - TIME_TO_SEC(r.jam_reg))/60) ,0) > 180 THEN 1 ELSE 0 END) kol_d,
+            SUM(CASE WHEN ROUND(((TIME_TO_SEC(t.temp4) - TIME_TO_SEC(r.jam_reg))/60) ,0) <= 180 THEN 1 ELSE 0 END) kol_n
+            FROM reg_periksa r 
+            INNER JOIN temporary2 t ON t.temp2 = r.no_rawat
+            WHERE r.tgl_registrasi LIKE '$year%' 
+            GROUP BY LEFT(r.tgl_registrasi, 7)");
+        $query->execute();
+        $data = $query->fetchAll(\PDO::FETCH_ASSOC);
+
+        $data_1 = 0;
+        $data_2 = 0;
+        $data_3 = 0;
+        $data_4 = 0;
+        $data_5 = 0;
+        $data_6 = 0;
+        $data_7 = 0;
+        $data_8 = 0;
+        $data_9 = 0;
+        $data_10 = 0;
+        $data_11 = 0;
+        $data_12 = 0;
+
+        foreach ($data as $value) {
+            $prosentase = round(($value['kol_n'] / ($value['kol_n'] + $value['kol_d'])) * 100);
+            switch ($value['bulan']) {
+                case $year . '-01':
+                    $data_1 = $prosentase;
+                    break;
+                case $year . '-02':
+                    $data_2 = $prosentase;
+                    break;
+                case $year . '-03':
+                    $data_3 = $prosentase;
+                    break;
+                case $year . '-04':
+                    $data_4 = $prosentase;
+                    break;
+                case $year . '-05':
+                    $data_5 = $prosentase;
+                    break;
+                case $year . '-06':
+                    $data_6 = $prosentase;
+                    break;
+                case $year . '-07':
+                    $data_7 = $prosentase;
+                    break;
+                case $year . '-08':
+                    $data_8 = $prosentase;
+                    break;
+                case $year . '-09':
+                    $data_9 = $prosentase;
+                    break;
+                case $year . '-10':
+                    $data_10 = $prosentase;
+                    break;
+                case $year . '-11':
+                    $data_11 = $prosentase;
+                    break;
+                case $year . '-12':
+                    $data_12 = $prosentase;
+                    break;
+            }
+        }
+        $return = [
+            'labels'  => ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'Nopember', 'Desember'],
+            'visits'  => [$data_1, $data_2, $data_3, $data_4, $data_5, $data_6, $data_7, $data_8, $data_9, $data_10, $data_11, $data_12],
+        ];
+        return $return;
+    }
+    public function poliChartPenundaanOK()
+    {
+        $year = date("Y");
+        $query = $this->db()->pdo()->prepare("SELECT LEFT(bo.tanggal, 7) AS bulan, COUNT(bo.tanggal) AS jml,
+                                    SUM(CASE WHEN DATEDIFF(LEFT(o.tgl_operasi, 10),LEFT(bo.tanggal, 10)) > 1 THEN 1 ELSE 0 END) kol_d
+                                    FROM booking_operasi bo
+                                    INNER JOIN operasi o ON o.no_rawat = bo.no_rawat
+                                    WHERE bo.tanggal LIKE '$year%'
+                                    GROUP BY LEFT(bo.tanggal, 7)");
+        $query->execute();
+        $data = $query->fetchAll(\PDO::FETCH_ASSOC);
+
+        $data_1 = 0;
+        $data_2 = 0;
+        $data_3 = 0;
+        $data_4 = 0;
+        $data_5 = 0;
+        $data_6 = 0;
+        $data_7 = 0;
+        $data_8 = 0;
+        $data_9 = 0;
+        $data_10 = 0;
+        $data_11 = 0;
+        $data_12 = 0;
+
+        foreach ($data as $value) {
+            $prosentase = ($value['kol_d'] / $value['jml']) * 100;
+            switch ($value['bulan']) {
+                case $year . '-01':
+                    $data_1 = $prosentase;
+                    break;
+                case $year . '-02':
+                    $data_2 = $prosentase;
+                    break;
+                case $year . '-03':
+                    $data_3 = $prosentase;
+                    break;
+                case $year . '-04':
+                    $data_4 = $prosentase;
+                    break;
+                case $year . '-05':
+                    $data_5 = $prosentase;
+                    break;
+                case $year . '-06':
+                    $data_6 = $prosentase;
+                    break;
+                case $year . '-07':
+                    $data_7 = $prosentase;
+                    break;
+                case $year . '-08':
+                    $data_8 = $prosentase;
+                    break;
+                case $year . '-09':
+                    $data_9 = $prosentase;
+                    break;
+                case $year . '-10':
+                    $data_10 = $prosentase;
+                    break;
+                case $year . '-11':
+                    $data_11 = $prosentase;
+                    break;
+                case $year . '-12':
+                    $data_12 = $prosentase;
+                    break;
+            }
+        }
+        $return = [
+            'labels'  => ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'Nopember', 'Desember'],
+            'visits'  => [$data_1, $data_2, $data_3, $data_4, $data_5, $data_6, $data_7, $data_8, $data_9, $data_10, $data_11, $data_12],
+        ];
+        return $return;
+    }
+
+    public function poliChartVisiteDokter()
+    {
+        $year = date("Y");
+        $query = $this->db()->pdo()->prepare("SELECT LEFT(tgl_perawatan, 7) AS bulan, COUNT(tgl_perawatan) AS jml,
+                                        SUM(CASE WHEN jam_rawat >= '06:00:00' AND jam_rawat <= '14:00:00' THEN 1 ELSE 0 END) kol_d
+                                        FROM rawat_inap_dr
+                                        WHERE tgl_perawatan LIKE '$year%' 
+                                        GROUP BY LEFT(tgl_perawatan, 7)");
+        $query->execute();
+        $data = $query->fetchAll(\PDO::FETCH_ASSOC);
+
+        $data_1 = 0;
+        $data_2 = 0;
+        $data_3 = 0;
+        $data_4 = 0;
+        $data_5 = 0;
+        $data_6 = 0;
+        $data_7 = 0;
+        $data_8 = 0;
+        $data_9 = 0;
+        $data_10 = 0;
+        $data_11 = 0;
+        $data_12 = 0;
+
+        foreach ($data as $value) {
+            $prosentase = round(($value['kol_d'] / $value['jml']) * 100);
+            switch ($value['bulan']) {
+                case $year . '-01':
+                    $data_1 = $prosentase;
+                    break;
+                case $year . '-02':
+                    $data_2 = $prosentase;
+                    break;
+                case $year . '-03':
+                    $data_3 = $prosentase;
+                    break;
+                case $year . '-04':
+                    $data_4 = $prosentase;
+                    break;
+                case $year . '-05':
+                    $data_5 = $prosentase;
+                    break;
+                case $year . '-06':
+                    $data_6 = $prosentase;
+                    break;
+                case $year . '-07':
+                    $data_7 = $prosentase;
+                    break;
+                case $year . '-08':
+                    $data_8 = $prosentase;
+                    break;
+                case $year . '-09':
+                    $data_9 = $prosentase;
+                    break;
+                case $year . '-10':
+                    $data_10 = $prosentase;
+                    break;
+                case $year . '-11':
+                    $data_11 = $prosentase;
+                    break;
+                case $year . '-12':
+                    $data_12 = $prosentase;
+                    break;
+            }
+        }
+        $return = [
+            'labels'  => ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'Nopember', 'Desember'],
+            'visits'  => [$data_1, $data_2, $data_3, $data_4, $data_5, $data_6, $data_7, $data_8, $data_9, $data_10, $data_11, $data_12],
+        ];
+        return $return;
+    }
+
+    public function poliChartLab()
+    {
+        $year = date("Y");
+
+        $check_db = $this->db()->pdo()->query("SELECT LEFT(tanggal, 7) AS bulan, COUNT(tanggal) AS jml,
+                                SUM(CASE WHEN ROUND(((TIME_TO_SEC(jam_keluar) - TIME_TO_SEC(jam_terima))/60) ,0) <= 240 THEN 1 ELSE 0 END) kol_d
+                                FROM data_penderita
+                                WHERE tanggal LIKE '$year%' 
+                                GROUP BY LEFT(tanggal, 7)");
+        $check_db->execute();
+
+        // $query = $this->db()->pdo()->prepare("SELECT LEFT(tgl_perawatan, 7) AS bulan, COUNT(tgl_perawatan) AS jml,
+        //                                 SUM(CASE WHEN jam_rawat >= '06:00:00' AND jam_rawat <= '14:00:00' THEN 1 ELSE 0 END) kol_d
+        //                                 FROM rawat_inap_dr
+        //                                 WHERE tgl_perawatan LIKE '$year%' 
+        //                                 GROUP BY LEFT(tgl_perawatan, 7)");
+        // $query->execute();
+        $data = $check_db->fetchAll(\PDO::FETCH_ASSOC);
+
+        $data_1 = 0;
+        $data_2 = 0;
+        $data_3 = 0;
+        $data_4 = 0;
+        $data_5 = 0;
+        $data_6 = 0;
+        $data_7 = 0;
+        $data_8 = 0;
+        $data_9 = 0;
+        $data_10 = 0;
+        $data_11 = 0;
+        $data_12 = 0;
+
+        foreach ($data as $value) {
+            $prosentase = round(($value['kol_d'] / $value['jml']) * 100);
+            switch ($value['bulan']) {
+                case $year . '-01':
+                    $data_1 = $prosentase;
+                    break;
+                case $year . '-02':
+                    $data_2 = $prosentase;
+                    break;
+                case $year . '-03':
+                    $data_3 = $prosentase;
+                    break;
+                case $year . '-04':
+                    $data_4 = $prosentase;
+                    break;
+                case $year . '-05':
+                    $data_5 = $prosentase;
+                    break;
+                case $year . '-06':
+                    $data_6 = $prosentase;
+                    break;
+                case $year . '-07':
+                    $data_7 = $prosentase;
+                    break;
+                case $year . '-08':
+                    $data_8 = $prosentase;
+                    break;
+                case $year . '-09':
+                    $data_9 = $prosentase;
+                    break;
+                case $year . '-10':
+                    $data_10 = $prosentase;
+                    break;
+                case $year . '-11':
+                    $data_11 = $prosentase;
+                    break;
+                case $year . '-12':
+                    $data_12 = $prosentase;
+                    break;
+            }
+        }
+        $return = [
+            'labels'  => ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'Nopember', 'Desember'],
+            'visits'  => [$data_1, $data_2, $data_3, $data_4, $data_5, $data_6, $data_7, $data_8, $data_9, $data_10, $data_11, $data_12],
+        ];
+        return $return;
+    }
+
+    public function poliChartKomplain()
+    {
+        $year = date("Y");
+
+        $query = $this->db()->pdo()->prepare("SELECT LEFT(tgl_komplain, 7) AS bulan, COUNT(tgl_komplain) AS jml,
+                                        SUM(CASE WHEN ROUND(((TIME_TO_SEC(jam_tanggap) - TIME_TO_SEC(jam_komplain))/60) ,0) <= 60 AND DATEDIFF(tgl_tanggap,tgl_komplain) < 1 THEN 1 ELSE 0 END) kol_d
+                                        FROM mutu_tanggapkomplain
+                                        WHERE tgl_komplain LIKE '$year%' 
+                                        GROUP BY LEFT(tgl_komplain, 7)");
+        $query->execute();
+        $data = $query->fetchAll(\PDO::FETCH_ASSOC);
+
+        $data_1 = 0;
+        $data_2 = 0;
+        $data_3 = 0;
+        $data_4 = 0;
+        $data_5 = 0;
+        $data_6 = 0;
+        $data_7 = 0;
+        $data_8 = 0;
+        $data_9 = 0;
+        $data_10 = 0;
+        $data_11 = 0;
+        $data_12 = 0;
+
+        foreach ($data as $value) {
+            $prosentase = round(($value['kol_d'] / $value['jml']) * 100);
+            switch ($value['bulan']) {
+                case $year . '-01':
+                    $data_1 = $prosentase;
+                    break;
+                case $year . '-02':
+                    $data_2 = $prosentase;
+                    break;
+                case $year . '-03':
+                    $data_3 = $prosentase;
+                    break;
+                case $year . '-04':
+                    $data_4 = $prosentase;
+                    break;
+                case $year . '-05':
+                    $data_5 = $prosentase;
+                    break;
+                case $year . '-06':
+                    $data_6 = $prosentase;
+                    break;
+                case $year . '-07':
+                    $data_7 = $prosentase;
+                    break;
+                case $year . '-08':
+                    $data_8 = $prosentase;
+                    break;
+                case $year . '-09':
+                    $data_9 = $prosentase;
+                    break;
+                case $year . '-10':
+                    $data_10 = $prosentase;
+                    break;
+                case $year . '-11':
+                    $data_11 = $prosentase;
+                    break;
+                case $year . '-12':
+                    $data_12 = $prosentase;
+                    break;
+            }
+        }
+        $return = [
+            'labels'  => ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'Nopember', 'Desember'],
+            'visits'  => [$data_1, $data_2, $data_3, $data_4, $data_5, $data_6, $data_7, $data_8, $data_9, $data_10, $data_11, $data_12],
+        ];
+        return $return;
+    }
+
+    public function poliChartFornas()
+    {
+        $year = date("Y");
+        $query = $this->db()->pdo()->prepare("SELECT LEFT(d.tgl_perawatan, 7) AS bulan,
+                            SUM(CASE WHEN db.kode_kategori = 'K01' THEN 1 ELSE 0 END) fornas,
+                            SUM(CASE WHEN db.kode_kategori = 'K02' THEN 1 ELSE 0 END) nonfornas
+                            FROM detail_pemberian_obat d
+                            INNER JOIN reg_periksa rp ON rp.no_rawat = d.no_rawat
+                            INNER JOIN databarang db ON db.kode_brng = d.kode_brng
+                            INNER JOIN pasien p ON p.no_rkm_medis = rp.no_rkm_medis
+                            WHERE d.tgl_perawatan LIKE '$year%' AND rp.no_rkm_medis NOT IN (SELECT no_rkm_medis FROM pasien_tni) AND db.kode_kategori <> '-'
+                            GROUP BY LEFT(d.tgl_perawatan, 7)");
+        $query->execute();
+        $data = $query->fetchAll(\PDO::FETCH_ASSOC);
+
+        $data_1 = 0;
+        $data_2 = 0;
+        $data_3 = 0;
+        $data_4 = 0;
+        $data_5 = 0;
+        $data_6 = 0;
+        $data_7 = 0;
+        $data_8 = 0;
+        $data_9 = 0;
+        $data_10 = 0;
+        $data_11 = 0;
+        $data_12 = 0;
+
+        foreach ($data as $value) {
+            $prosentase = round(($value['fornas'] / ($value['fornas'] + $value['nonfornas'])) * 100);
+            switch ($value['bulan']) {
+                case $year . '-01':
+                    $data_1 = $prosentase;
+                    break;
+                case $year . '-02':
+                    $data_2 = $prosentase;
+                    break;
+                case $year . '-03':
+                    $data_3 = $prosentase;
+                    break;
+                case $year . '-04':
+                    $data_4 = $prosentase;
+                    break;
+                case $year . '-05':
+                    $data_5 = $prosentase;
+                    break;
+                case $year . '-06':
+                    $data_6 = $prosentase;
+                    break;
+                case $year . '-07':
+                    $data_7 = $prosentase;
+                    break;
+                case $year . '-08':
+                    $data_8 = $prosentase;
+                    break;
+                case $year . '-09':
+                    $data_9 = $prosentase;
+                    break;
+                case $year . '-10':
+                    $data_10 = $prosentase;
+                    break;
+                case $year . '-11':
+                    $data_11 = $prosentase;
+                    break;
+                case $year . '-12':
+                    $data_12 = $prosentase;
+                    break;
+            }
+        }
+        $return = [
+            'labels'  => ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'Nopember', 'Desember'],
+            'visits'  => [$data_1, $data_2, $data_3, $data_4, $data_5, $data_6, $data_7, $data_8, $data_9, $data_10, $data_11, $data_12],
+        ];
+        return $return;
+    }
+
+    public function poliChartClinicalPathway()
+    {
+        $year = date("Y");
+        $query = $this->db()->pdo()->prepare("SELECT LEFT(tgl_data, 7) AS bulan, COUNT(tgl_data) AS jml,
+                                        SUM(CASE WHEN patuh = 'IYA' THEN 1 ELSE 0 END) kol_d
+                                        FROM mutu_kepatuhanclinicalpathway
+                                        WHERE tgl_data LIKE '$year%' 
+                                        GROUP BY LEFT(tgl_data, 7)");
+        $query->execute();
+        $data = $query->fetchAll(\PDO::FETCH_ASSOC);
+
+        $data_1 = 0;
+        $data_2 = 0;
+        $data_3 = 0;
+        $data_4 = 0;
+        $data_5 = 0;
+        $data_6 = 0;
+        $data_7 = 0;
+        $data_8 = 0;
+        $data_9 = 0;
+        $data_10 = 0;
+        $data_11 = 0;
+        $data_12 = 0;
+
+        foreach ($data as $value) {
+            $prosentase = round(($value['kol_d'] / $value['jml']) * 100);
+            switch ($value['bulan']) {
+                case $year . '-01':
+                    $data_1 = $prosentase;
+                    break;
+                case $year . '-02':
+                    $data_2 = $prosentase;
+                    break;
+                case $year . '-03':
+                    $data_3 = $prosentase;
+                    break;
+                case $year . '-04':
+                    $data_4 = $prosentase;
+                    break;
+                case $year . '-05':
+                    $data_5 = $prosentase;
+                    break;
+                case $year . '-06':
+                    $data_6 = $prosentase;
+                    break;
+                case $year . '-07':
+                    $data_7 = $prosentase;
+                    break;
+                case $year . '-08':
+                    $data_8 = $prosentase;
+                    break;
+                case $year . '-09':
+                    $data_9 = $prosentase;
+                    break;
+                case $year . '-10':
+                    $data_10 = $prosentase;
+                    break;
+                case $year . '-11':
+                    $data_11 = $prosentase;
+                    break;
+                case $year . '-12':
+                    $data_12 = $prosentase;
+                    break;
+            }
+        }
+        $return = [
+            'labels'  => ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'Nopember', 'Desember'],
+            'visits'  => [$data_1, $data_2, $data_3, $data_4, $data_5, $data_6, $data_7, $data_8, $data_9, $data_10, $data_11, $data_12],
+        ];
+        return $return;
+    }
+
+    public function poliChartRisikoJatuh()
+    {
+        $year = date("Y");
+        $query = $this->db()->pdo()->prepare("SELECT LEFT(tgl_data, 7) AS bulan, COUNT(tgl_data) AS jml,
+                                        SUM(CASE WHEN patuh = 'IYA' THEN 1 ELSE 0 END) kol_d
+                                        FROM mutu_pencegahanpasienjatuh
+                                        WHERE tgl_data LIKE '$year%' 
+                                        GROUP BY LEFT(tgl_data, 7)");
+        $query->execute();
+        $data = $query->fetchAll(\PDO::FETCH_ASSOC);
+
+        $data_1 = 0;
+        $data_2 = 0;
+        $data_3 = 0;
+        $data_4 = 0;
+        $data_5 = 0;
+        $data_6 = 0;
+        $data_7 = 0;
+        $data_8 = 0;
+        $data_9 = 0;
+        $data_10 = 0;
+        $data_11 = 0;
+        $data_12 = 0;
+
+        foreach ($data as $value) {
+            $prosentase = round(($value['kol_d'] / $value['jml']) * 100);
+            switch ($value['bulan']) {
+                case $year . '-01':
+                    $data_1 = $prosentase;
+                    break;
+                case $year . '-02':
+                    $data_2 = $prosentase;
+                    break;
+                case $year . '-03':
+                    $data_3 = $prosentase;
+                    break;
+                case $year . '-04':
+                    $data_4 = $prosentase;
+                    break;
+                case $year . '-05':
+                    $data_5 = $prosentase;
+                    break;
+                case $year . '-06':
+                    $data_6 = $prosentase;
+                    break;
+                case $year . '-07':
+                    $data_7 = $prosentase;
+                    break;
+                case $year . '-08':
+                    $data_8 = $prosentase;
+                    break;
+                case $year . '-09':
+                    $data_9 = $prosentase;
+                    break;
+                case $year . '-10':
+                    $data_10 = $prosentase;
+                    break;
+                case $year . '-11':
+                    $data_11 = $prosentase;
+                    break;
+                case $year . '-12':
+                    $data_12 = $prosentase;
+                    break;
+            }
+        }
+        $return = [
+            'labels'  => ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'Nopember', 'Desember'],
+            'visits'  => [$data_1, $data_2, $data_3, $data_4, $data_5, $data_6, $data_7, $data_8, $data_9, $data_10, $data_11, $data_12],
+        ];
+        return $return;
+    }
+
+    public function poliChartKepuasanPasien()
+    {
+        $year = date("Y");
+        $_str = "SELECT LEFT(TIMESTAMP, 7) AS bulan, (SUM(CONVERT(REGEXP_SUBSTR(tersedia_alur_layanan,\"[0-9]+\"),SIGNED)/4)/(COUNT(tersedia_alur_layanan)) +SUM(CONVERT(REGEXP_SUBSTR(pelaks_alur_sesuai,\"[0-9]+\"),SIGNED)/4)/(COUNT(pelaks_alur_sesuai)) +SUM(CONVERT(REGEXP_SUBSTR(tersedia_persyaratan_layan,\"[0-9]+\"),SIGNED)/4)/(COUNT(tersedia_persyaratan_layan)) +SUM(CONVERT(REGEXP_SUBSTR(pelaks_persyaratan_sesuai,\"[0-9]+\"),SIGNED)/4)/(COUNT(pelaks_persyaratan_sesuai)) +SUM(CONVERT(REGEXP_SUBSTR(tersedia_informasi_biaya,\"[0-9]+\"),SIGNED)/4)/(COUNT(tersedia_informasi_biaya)) +SUM(CONVERT(REGEXP_SUBSTR(biaya_layan_terjangkau,\"[0-9]+\"),SIGNED)/4)/(COUNT(biaya_layan_terjangkau)) +SUM(CONVERT(REGEXP_SUBSTR(biaya_sesuai,\"[0-9]+\"),SIGNED)/4)/(COUNT(biaya_sesuai)) +SUM(CONVERT(REGEXP_SUBSTR(informasi_biaya_dimengerti,\"[0-9]+\"),SIGNED)/4)/(COUNT(informasi_biaya_dimengerti)) +SUM(CONVERT(REGEXP_SUBSTR(tersedia_informasi_waktu_layan,\"[0-9]+\"),SIGNED)/4)/(COUNT(tersedia_informasi_waktu_layan)) +SUM(CONVERT(REGEXP_SUBSTR(informasi_waktu_layan_terlihat,\"[0-9]+\"),SIGNED)/4)/(COUNT(informasi_waktu_layan_terlihat)) +SUM(CONVERT(REGEXP_SUBSTR(waktu_layan_wajar,\"[0-9]+\"),SIGNED)/4)/(COUNT(waktu_layan_wajar)) +SUM(CONVERT(REGEXP_SUBSTR(waktu_layan_berjalan_terus,\"[0-9]+\"),SIGNED)/4)/(COUNT(waktu_layan_berjalan_terus)) +SUM(CONVERT(REGEXP_SUBSTR(waktu_layan_sesuai_informasi,\"[0-9]+\"),SIGNED)/4)/(COUNT(waktu_layan_sesuai_informasi)) +SUM(CONVERT(REGEXP_SUBSTR(waktu_layan_sesuai_ketentuan,\"[0-9]+\"),SIGNED)/4)/(COUNT(waktu_layan_sesuai_ketentuan)) +SUM(CONVERT(REGEXP_SUBSTR(tersedia_meja_layan_unit,\"[0-9]+\"),SIGNED)/4)/(COUNT(tersedia_meja_layan_unit)) +SUM(CONVERT(REGEXP_SUBSTR(tersedia_tempat_parkir,\"[0-9]+\"),SIGNED)/4)/(COUNT(tersedia_tempat_parkir)) +SUM(CONVERT(REGEXP_SUBSTR(tersedia_ruang_tunggu_toilet,\"[0-9]+\"),SIGNED)/4)/(COUNT(tersedia_ruang_tunggu_toilet)) +SUM(CONVERT(REGEXP_SUBSTR(tersedia_sarana_khusus,\"[0-9]+\"),SIGNED)/4)/(COUNT(tersedia_sarana_khusus)) +SUM(CONVERT(REGEXP_SUBSTR(tersedia_kotak_pengaduan,\"[0-9]+\"),SIGNED)/4)/(COUNT(tersedia_kotak_pengaduan)) +SUM(CONVERT(REGEXP_SUBSTR(tersedia_app_mobile,\"[0-9]+\"),SIGNED)/4)/(COUNT(tersedia_app_mobile)) +SUM(CONVERT(REGEXP_SUBSTR(app_mobile_diakses,\"[0-9]+\"),SIGNED)/4)/(COUNT(app_mobile_diakses)) +SUM(CONVERT(REGEXP_SUBSTR(app_mobile_mudah_digunakan,\"[0-9]+\"),SIGNED)/4)/(COUNT(app_mobile_mudah_digunakan)) +SUM(CONVERT(REGEXP_SUBSTR(tersedia_informasi_di_app_mobile,\"[0-9]+\"),SIGNED)/4)/(COUNT(tersedia_informasi_di_app_mobile)) +SUM(CONVERT(REGEXP_SUBSTR(respon_cepat_app_mobile,\"[0-9]+\"),SIGNED)/4)/(COUNT(respon_cepat_app_mobile)) +SUM(CONVERT(REGEXP_SUBSTR(kepuasan_layan_app_mobile,\"[0-9]+\"),SIGNED)/4)/(COUNT(kepuasan_layan_app_mobile)) +SUM(CONVERT(REGEXP_SUBSTR(terdapat_petugas_standby,\"[0-9]+\"),SIGNED)/4)/(COUNT(terdapat_petugas_standby)) +SUM(CONVERT(REGEXP_SUBSTR(petugas_berseragam,\"[0-9]+\"),SIGNED)/4)/(COUNT(petugas_berseragam)) +SUM(CONVERT(REGEXP_SUBSTR(petugas_respon_cepat,\"[0-9]+\"),SIGNED)/4)/(COUNT(petugas_respon_cepat)) +SUM(CONVERT(REGEXP_SUBSTR(petugas_berpengalaman,\"[0-9]+\"),SIGNED)/4)/(COUNT(petugas_berpengalaman)) +SUM(CONVERT(REGEXP_SUBSTR(petugas_perilaku_sesuai,\"[0-9]+\"),SIGNED)/4)/(COUNT(petugas_perilaku_sesuai)) +SUM(CONVERT(REGEXP_SUBSTR(petugas_melayani_dengan_serius,\"[0-9]+\"),SIGNED)/4)/(COUNT(petugas_melayani_dengan_serius)) +SUM(CONVERT(REGEXP_SUBSTR(petugas_sabar,\"[0-9]+\"),SIGNED)/4)/(COUNT(petugas_sabar)) +SUM(CONVERT(REGEXP_SUBSTR(petugas_jawab_pertanyaan,\"[0-9]+\"),SIGNED)/4)/(COUNT(petugas_jawab_pertanyaan)) +SUM(CONVERT(REGEXP_SUBSTR(unit_layan_selalu_bersih,\"[0-9]+\"),SIGNED)/4)/(COUNT(unit_layan_selalu_bersih)) +SUM(CONVERT(REGEXP_SUBSTR(tersedia_tempat_sampah,\"[0-9]+\"),SIGNED)/4)/(COUNT(tersedia_tempat_sampah)) +SUM(CONVERT(REGEXP_SUBSTR(rutin_pembersihan_lingk,\"[0-9]+\"),SIGNED)/4)/(COUNT(rutin_pembersihan_lingk)) +SUM(CONVERT(REGEXP_SUBSTR(unit_tidak_meminta_uang_tambahan,\"[0-9]+\"),SIGNED)/4)/(COUNT(unit_tidak_meminta_uang_tambahan)) +SUM(CONVERT(REGEXP_SUBSTR(unit_layan_tidak_membedabedakan,\"[0-9]+\"),SIGNED)/4)/(COUNT(unit_layan_tidak_membedabedakan)) +SUM(CONVERT(REGEXP_SUBSTR(tidak_ada_calo,\"[0-9]+\"),SIGNED)/4)/(COUNT(tidak_ada_calo)) +SUM(CONVERT(REGEXP_SUBSTR(tidak_bayar_dokter_bidan,\"[0-9]+\"),SIGNED)/4)/(COUNT(tidak_bayar_dokter_bidan)))/40 AS kepuasan
+                    FROM mutu_kepuasan_2022
+                    WHERE TIMESTAMP LIKE '$year%' GROUP BY LEFT(TIMESTAMP, 7)";
+        $query = $this->db()->pdo()->prepare($_str);
+        $query->execute();
+        $data = $query->fetchAll(\PDO::FETCH_ASSOC);
+
+        $data_1 = 0;
+        $data_2 = 0;
+        $data_3 = 0;
+        $data_4 = 0;
+        $data_5 = 0;
+        $data_6 = 0;
+        $data_7 = 0;
+        $data_8 = 0;
+        $data_9 = 0;
+        $data_10 = 0;
+        $data_11 = 0;
+        $data_12 = 0;
+
+        foreach ($data as $value) {
+            $prosentase = round($value['kepuasan'] * 100);
+            switch ($value['bulan']) {
+                case $year . '-01':
+                    $data_1 = $prosentase;
+                    break;
+                case $year . '-02':
+                    $data_2 = $prosentase;
+                    break;
+                case $year . '-03':
+                    $data_3 = $prosentase;
+                    break;
+                case $year . '-04':
+                    $data_4 = $prosentase;
+                    break;
+                case $year . '-05':
+                    $data_5 = $prosentase;
+                    break;
+                case $year . '-06':
+                    $data_6 = $prosentase;
+                    break;
+                case $year . '-07':
+                    $data_7 = $prosentase;
+                    break;
+                case $year . '-08':
+                    $data_8 = $prosentase;
+                    break;
+                case $year . '-09':
+                    $data_9 = $prosentase;
+                    break;
+                case $year . '-10':
+                    $data_10 = $prosentase;
+                    break;
+                case $year . '-11':
+                    $data_11 = $prosentase;
+                    break;
+                case $year . '-12':
+                    $data_12 = $prosentase;
+                    break;
+            }
+        }
+        $return = [
+            'labels'  => ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'Nopember', 'Desember'],
+            'visits'  => [$data_1, $data_2, $data_3, $data_4, $data_5, $data_6, $data_7, $data_8, $data_9, $data_10, $data_11, $data_12],
+        ];
+        return $return;
+    }
+
+    public function getCaraBayar()
+    {
+        $year = date("Y");
+        $month = date("Y-m");
+        $day = date("Y-m-d");
+        $query = $this->db()->pdo()->prepare("SELECT 'year' AS jns, 
+                                SUM(CASE WHEN kd_pj IN ('A09') AND LEFT(tgl_registrasi, 4) = '$year' THEN 1 ELSE 0 END) umum,
+                                SUM(CASE WHEN kd_pj IN ('A65', 'BPJ') AND LEFT(tgl_registrasi, 4) = '$year' THEN 1 ELSE 0 END) bpjs,
+                                SUM(CASE WHEN kd_pj NOT IN ('A65', 'BPJ', 'A09') AND LEFT(tgl_registrasi, 4) = '$year' THEN 1 ELSE 0 END) lain
+                                FROM reg_periksa
+                                WHERE tgl_registrasi LIKE '$year%'
+                                GROUP BY LEFT(tgl_registrasi, 4)
+                                UNION 
+                                SELECT 'month' AS jns, 
+                                SUM(CASE WHEN kd_pj IN ('A09') AND LEFT(tgl_registrasi, 7) = '$month' THEN 1 ELSE 0 END) umum,
+                                SUM(CASE WHEN kd_pj IN ('A65', 'BPJ') AND LEFT(tgl_registrasi, 7) = '$month' THEN 1 ELSE 0 END) bpjs,
+                                SUM(CASE WHEN kd_pj NOT IN ('A65', 'BPJ', 'A09') AND LEFT(tgl_registrasi, 7) = '$month' THEN 1 ELSE 0 END) lain
+                                FROM reg_periksa
+                                WHERE tgl_registrasi LIKE '$month%'
+                                GROUP BY LEFT(tgl_registrasi,7)
+                                UNION 
+                                SELECT 'day' AS jns, 
+                                SUM(CASE WHEN kd_pj IN ('A09') AND tgl_registrasi = '$day' THEN 1 ELSE 0 END) umum,
+                                SUM(CASE WHEN kd_pj IN ('A65', 'BPJ') AND tgl_registrasi = '$day' THEN 1 ELSE 0 END) bpjs,
+                                SUM(CASE WHEN kd_pj NOT IN ('A65', 'BPJ', 'A09') AND tgl_registrasi = '$day' THEN 1 ELSE 0 END) lain
+                                FROM reg_periksa
+                                WHERE tgl_registrasi LIKE '$day'
+                                GROUP BY tgl_registrasi");
+        $query->execute();
+        $data = $query->fetchAll(\PDO::FETCH_ASSOC);
+        $return = [];
+        foreach ($data as $value) {
+            // array_push(
+            //     $return,
+            //     [$value['umum'], $value['bpjs'], $value['lain']]
+            // );
+            $return[$value['jns']] = [$value['umum'], $value['bpjs'], $value['lain']];
+            // switch ($value['jns']) {
+            //     case 'year':
+            //         $return = [
+            //             'year'  => [$value['umum'], $value['bpjs'], $value['lain']],
+            //         ];
+            //         break;
+            //     case 'month':
+            //         $return = [
+            //             'month'  => [$value['umum'], $value['bpjs'], $value['lain']],
+            //         ];
+            //         break;
+            //     case 'day':
+            //         $return = [
+            //             'day'  => [$value['umum'], $value['bpjs'], $value['lain']],
+            //         ];
+            //         break;
+            // }
+        }
+        return $return;
+    }
 }

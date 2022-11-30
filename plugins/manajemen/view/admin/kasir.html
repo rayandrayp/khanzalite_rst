@@ -10,6 +10,7 @@
     <!-- <li><a href="{?=url([ADMIN,'manajemen','farmasi'])?}">Farmasi</a></li> -->
     <li class="active"><a href="{?=url([ADMIN,'manajemen','kasir'])?}">Kasir</a></li>
     <!-- <li><a href="{?=url([ADMIN,'manajemen','presensi'])?}">Presensi</a></li> -->
+    <li><a href="{?=url([ADMIN,'manajemen','mutu'])?}">Indikator Mutu</a></li>
 </ul>
 <br>
 <div class="row">
@@ -92,15 +93,35 @@
         </div>
     </div>
 </div> 
-<!-- 
+
 <div class="row">
-    <div class="col-lg-12 col-md-12">
+    <div class="col-lg-4 col-md-4">
         <div class="panel panel-default">
             <div class="panel-heading">
-                <h3 class="panel-title">Resep Dokter Hari Ini</h3>
+                <h3 class="panel-title">Cara Bayar Tahun {?=date('Y')?}</h3>
             </div>
             <div class="panel-body">
-                <canvas id="line-chartcanvas" height="350"></canvas>
+                <canvas id="total-revenue-chart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 col-md-4">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Cara Bayar Bulan {?=date('F')?}</h3>
+            </div>
+            <div class="panel-body">
+                <canvas id="total-revenue-month-chart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 col-md-4">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Cara Bayar Hari Ini</h3>
+            </div>
+            <div class="panel-body">
+                <canvas id="total-revenue-day-chart" height="200"></canvas>
             </div>
         </div>
     </div>
@@ -109,40 +130,72 @@
 
 <script type="text/javascript">
     $(function () {
-        //line chart
-        var ctx = document.getElementById("line-chartcanvas");
-        var myChart = new Chart(ctx, {
-            type: 'bar',
+        //Total Revenue Doughnut chart
+        var ctx2 = document.getElementById("total-revenue-chart");
+        var myChart2 = new Chart(ctx2, {
+            type: 'pie',
             data: {
-                labels: ["{?= implode('","', $stats.poliChart.labels) ?}"],
+                labels: [
+                    "Tunai",
+                    "BPJS",
+                    "Lain-Lain"
+                ],
                 datasets: [{
-                        label: "Pasien",
-                        borderColor: "#34316E",
-                        borderWidth: "2",
-                        backgroundColor: "rgba(30, 30, 45, 0.2)",
-                        pointHighlightStroke: "#1e1e2d",
-                        pointRadius: 0,
-                        data: ["{?= implode('","', $stats.poliChart.visits) ?}"],
-                    }
-                ]
+                    backgroundColor: ["#4caf50", "#34316E", "#F58634"],
+                    pointRadius: 0,
+                    data:  ["{?= implode('","', $stats.getCaraBayar.year) ?}"],
+                }]
             },
             options: {
-                legend: {
-                    display: false
-                },
                 responsive: true,
-                tooltips: {
-                    mode: 'index',
-                    intersect: false
-                },
-                hover: {
-                    mode: 'nearest',
-                    intersect: true
-                },
                 maintainAspectRatio: false
             }
         });
-
     });
 
-</script> -->
+    $(function () {
+        var ctx2 = document.getElementById("total-revenue-month-chart");
+        var myChart2 = new Chart(ctx2, {
+            type: 'pie',
+            data: {
+                labels: [
+                    "Tunai",
+                    "BPJS",
+                    "Lain-Lain"
+                ],
+                datasets: [{
+                    backgroundColor: ["#4caf50", "#34316E", "#F58634"],
+                    pointRadius: 0,
+                    data:  ["{?= implode('","', $stats.getCaraBayar.month) ?}"],
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    });
+
+    $(function () {
+        var ctx2 = document.getElementById("total-revenue-day-chart");
+        var myChart2 = new Chart(ctx2, {
+            type: 'pie',
+            data: {
+                labels: [
+                    "Tunai",
+                    "BPJS",
+                    "Lain-Lain"
+                ],
+                datasets: [{
+                    backgroundColor: ["#4caf50", "#34316E", "#F58634"],
+                    pointRadius: 0,
+                    data:  ["{?= implode('","', $stats.getCaraBayar.day) ?}"],
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    });
+</script> 

@@ -1844,7 +1844,7 @@ class Site extends SiteModule
           $rows = $query->fetchAll(\PDO::FETCH_ASSOC);
 
           if (!empty($rows)) {
-            if ($this->db('reg_periksa')->where('no_rkm_medis', $_POST['no_rkm_medis'])->where('tgl_registrasi', $_POST['tgl_registrasi'])->oneArray()) {
+            if ($this->db('reg_periksa')->where('no_rkm_medis', $_POST['no_rkm_medis'])->where('tgl_registrasi', $_POST['tgl_registrasi'])->where('stts', '<>', 'Batal')->oneArray()) {
               $data['status'] = 'exist';
               $data['result'] = $rows;
             } else {
@@ -2193,7 +2193,25 @@ class Site extends SiteModule
           $responsePCARE = $this->getRujukanWSBPJS($url);
 
           if ($responsePCARE['metaData']['code'] == '200') {
-            $data = $responsePCARE;
+            $arr_str = '';
+            $dataResponse = json_decode($responsePCARE['response'], true);
+            // var_dump($dataResponse['histori']);
+            foreach ($dataResponse['histori'] as $a) {
+              // echo $a['noSep'] . ' ' . $this->checkNoSEP($a['noSep']);
+              if ($this->checkNoSEP($a['noSep']) && $a['jnsPelayanan'] == '1') {
+                // echo '{"noRujukan":"' . $a['noRujukan'] . '" , "noSep":"'  . $a['noSep'] . '", "tglSep":"'  . $a['tglSep'] . '", "poli":"'  . $a['poli'] . '"},';
+                $poli = "";
+                if ($a['poli'] == "") {
+                  $poli = "-";
+                } else {
+                  $poli = $a['poli'];
+                }
+                $arr_str = $arr_str . '{"noRujukan":"' . $a['noRujukan'] . '" , "noSep":"'  . $a['noSep'] . '", "tglSep":"'  . $a['tglSep'] . '", "poli":"'  . $poli . '"},';
+              }
+              // echo $arr_str;
+            }
+            $arr_str = substr($arr_str, 0, strlen($arr_str) - 1);
+            $data['result'] = '[' . $arr_str . ']';
             $data['status'] = 'ok';
           } else {
             $data['status'] = 'err';
@@ -2210,35 +2228,45 @@ class Site extends SiteModule
           $no_bpjs = $_POST['no_bpjs'];
           $url = 'https://apijkn.bpjs-kesehatan.go.id/vclaim-rest/Rujukan/List/Peserta/' . $no_bpjs;
           $responsePCARE = $this->getRujukanWSBPJS($url);
+          $url = 'https://apijkn.bpjs-kesehatan.go.id/vclaim-rest/Rujukan/RS/List/Peserta/' . $no_bpjs;
+          $responseRS = $this->getRujukanWSBPJS($url);
           // $this->db('mlite_settings')->save([
           //   'module' => 'debug',
           //   'field' => 'check-rujukan Pcare',
           //   'value' => 'PCare berhasil' . $responsePCARE['metaData']['code']
           // ]);
-          if ($responsePCARE['metaData']['code'] == '200') {
-            $data = $responsePCARE;
-            $data['status'] = 'ok';
+          // if ($responsePCARE['metaData']['code'] == '200') {
+          //   $data['pcare'] = $responsePCARE;
+          //   $data['statuspcare'] = 'ok';
+          // } else {
+          //   $data['statuspcare'] = 'err';
+          //   $data['resultpcare'] = $responsePCARE['metaData']['message'];
+          // }
+          // $this->db('mlite_settings')->save([
+          //   'module' => 'debug',
+          //   'field' => 'check-rujukan RS',
+          //   'value' => 'RS berhasil ' . $responseRS['metaData']['code']
+          // ]);
+          // if ($responseRS['metaData']['code'] == '200') {
+          //   $data['rs'] = $responseRS;
+          //   $data['statusrs'] = 'ok';
+          // } else {
+          //   // $this->db('mlite_settings')->save([
+          //   //   'module' => 'debug',
+          //   //   'field' => 'check-rujukan RS',
+          //   //   'value' => 'RS gagal ' . $responsePCARE['metaData']['code'] . ' msg: ' . $responseRS['metaData']['message']
+          //   // ]);
+          //   $data['statusrs'] = 'err';
+          //   $data['resultrs'] = $responsePCARE['metaData']['message'];
+          // }
+          if ($responsePCARE['metaData']['code'] != '200' && $responseRS['metaData']['code'] != '200') {
+            $data['status'] = 'err';
           } else {
-            $url = 'https://apijkn.bpjs-kesehatan.go.id/vclaim-rest/Rujukan/RS/List/Peserta/' . $no_bpjs;
-            $responseRS = $this->getRujukanWSBPJS($url);
-            // $this->db('mlite_settings')->save([
-            //   'module' => 'debug',
-            //   'field' => 'check-rujukan RS',
-            //   'value' => 'RS berhasil ' . $responseRS['metaData']['code']
-            // ]);
-            if ($responseRS['metaData']['code'] == '200') {
-              $data = $responseRS;
-              $data['status'] = 'ok';
-            } else {
-              // $this->db('mlite_settings')->save([
-              //   'module' => 'debug',
-              //   'field' => 'check-rujukan RS',
-              //   'value' => 'RS gagal ' . $responsePCARE['metaData']['code'] . ' msg: ' . $responseRS['metaData']['message']
-              // ]);
-              $data['status'] = 'err';
-              $data['result'] = $responsePCARE['metaData']['message'];
-            }
+            $data['status'] = 'ok';
+            $data['pcare'] = $responsePCARE;
+            $data['rs'] = $responseRS;
           }
+
           echo json_encode($data);
         }
         break;
@@ -2966,6 +2994,17 @@ class Site extends SiteModule
     return true;
   }
 
+  public function checkNoSEP($nosep)
+  {
+    $result = $this->db('bridging_sep')->where('no_rujukan', $nosep)->oneArray();
+    if (!empty($result)) {
+      return false;
+    } else {
+      return true;
+    }
+  }
+
+
   //Begin code post data ke WS BPJS
   public function updateJadwalDokterBPJS($kodepoli, $kodesubspesialis, $kodedokter, $hari, $buka, $tutup)
   {
@@ -3408,7 +3447,8 @@ class Site extends SiteModule
 
   public function getTokenWSRS()
   {
-    $url = 'http://192.168.14.27/webapps/api-bpjsfktl/auth';
+    // $url = 'http://192.168.14.27/webapps/api-bpjsfktl/auth';
+    $url = 'https://rssoepraoen.com/webapps/api-bpjsfktl/auth';
     // $url = 'https://rssoepraoen.simkeskhanza.com/webapps/api-bpjsfktl/auth';
     $header = array(
       'Accept: application/json',
@@ -3440,13 +3480,16 @@ class Site extends SiteModule
     // $this->db('mlite_settings')->save([
     //   'module' => 'debug',
     //   'field' => 'sendDataWSRS token RS',
-    //   'value' => $token
+    //   'value' => $username . '  |  ' . $token
     // ]);
+
+    // $this->core->db()->pdo()->exec("INSERT INTO `mlite_settings` (module, field, value) 
+    //       VALUES ('debug', 'sendDataWSRS token RS','" . $username . "  |  " . $token . "')");
 
     //begin post data
     // API URL
     // $url = 'https://rssoepraoen.simkeskhanza.com/webapps/api-bpjsfktl/' . $path;
-    $url = 'http://192.168.14.27/webapps/api-bpjsfktl/' . $path;
+    $url = 'https://rssoepraoen.com/webapps/api-bpjsfktl/' . $path;
     // $payload = array(
     //   'test' => 'data'
     // );

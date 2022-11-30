@@ -6,6 +6,7 @@
                     <th style="white-space: nowrap;">No. RM</th>
                     <th style="white-space: nowrap;">Nama Pasien</th>
                     <th style="white-space: nowrap;">ID Kunjungan</th>
+                    <th style="white-space: nowrap;">No. BPJS</th>
                     <th style="white-space: nowrap;">Antrian</th>
                     <th style="white-space: nowrap;">Poliklinik</th>
                     <th style="white-space: nowrap;">Dokter</th>
@@ -44,6 +45,7 @@
                     </td>
                     <td style="white-space: nowrap;"><a href="{?=url([ADMIN, 'pasien', 'riwayatperawatan', $value.no_rkm_medis])?}" data-toggle="modal" data-target="#riwayatModal">{$value.nm_pasien}</a></td>
                     <td class="edit" data-no_rawat="{$value.no_rawat}">{$value.no_rawat}</td>
+                    <td class="edit" data-no_rawat="{$value.no_rawat}" {if: $value.finger=='true' } style="background-color: #bcfdb4 !important;" {else} style="background-color: #fdeb9b !important;" {/if}>{$value.no_peserta}</td>
                     <td style="white-space: nowrap;">
                         <button type="button" name="button" class="btn btn-xs btn-warning antrian" data-no_rawat="{$value.no_rawat}" {if: $this->core->getUserInfo('role') == 'medis' || $this->core->getUserInfo('role') == 'paramedis'}
               disabled

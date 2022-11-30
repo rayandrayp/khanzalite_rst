@@ -10,6 +10,7 @@
     <!-- <li><a href="{?=url([ADMIN,'manajemen','farmasi'])?}">Farmasi</a></li> -->
     <li><a href="{?=url([ADMIN,'manajemen','kasir'])?}">Kasir</a></li>
     <!-- <li><a href="{?=url([ADMIN,'manajemen','presensi'])?}">Presensi</a></li> -->
+    <li><a href="{?=url([ADMIN,'manajemen','mutu'])?}">Indikator Mutu</a></li>
 </ul>
 <br>
 <div class="row">
@@ -109,7 +110,7 @@
     <!-- Bagian Ranap -->
     <div class="col-md-6 col-sm-12">
         <div class="row">
-            <div class="col-lg-3 col-md-6 col-sm-6 col-xs-12">
+            <div class="col-lg-4 col-md-6 col-sm-6 col-xs-12">
                 <div class="panel panel-default">
                     <div class="panel-body bg-success">
                           <!-- <span class="fa-2x fa-stack fa-lg pull-left">
@@ -126,7 +127,7 @@
                     </div>
               </div>
             </div>
-            <div class="col-lg-3 col-md-6 col-sm-6 col-xs-12">
+            <div class="col-lg-2 col-md-6 col-sm-6 col-xs-12">
                 <div class="panel panel-default">
                     <div class="panel-body bg-info">
                           <!-- <span class="fa-2x fa-stack fa-lg pull-left">
@@ -143,7 +144,7 @@
                     </div>
               </div>
             </div>
-            <div class="col-lg-3 col-md-6 col-sm-6 col-xs-12">
+            <div class="col-lg-2 col-md-6 col-sm-6 col-xs-12">
                 <div class="panel panel-default">
                       <div class="panel-body bg-warning">
                             <!-- <span class="fa-2x fa-stack fa-lg pull-left">
@@ -160,7 +161,7 @@
                       </div>
                 </div>
             </div>
-            <div class="col-lg-3 col-md-6 col-sm-6 col-xs-12">
+            <div class="col-lg-2 col-md-6 col-sm-6 col-xs-12">
                 <div class="panel panel-default">
                       <div class="panel-body bg-success">
                             <!-- <span class="fa-2x fa-stack fa-lg pull-left">
@@ -169,6 +170,23 @@
                             <div class="stat-title text-grey">TOI {?=date('F',strtotime('-1 month'))?}</div>
                             <div class="stat-bold">
                                 {?= $stats.getTOI ?}
+                                <!-- <span class="stat-up-down">
+                                    <i class="fa fa-arrow-circle-{if: $stats.percentDays >= 0}up{else}down{/if}"></i>
+                                    ({?= $stats.percentDays ?}%)
+                                </span> -->
+                            </div>
+                      </div>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-6 col-sm-6 col-xs-12">
+                <div class="panel panel-default">
+                      <div class="panel-body bg-danger">
+                            <!-- <span class="fa-2x fa-stack fa-lg pull-left">
+                                <i class="fa fa-wheelchair fa-stack-1x"></i>
+                            </span> -->
+                            <div class="stat-title text-grey">BTO {?=date('F',strtotime('-1 month'))?}</div>
+                            <div class="stat-bold">
+                                {?= $stats.getBTO ?}
                                 <!-- <span class="stat-up-down">
                                     <i class="fa fa-arrow-circle-{if: $stats.percentDays >= 0}up{else}down{/if}"></i>
                                     ({?= $stats.percentDays ?}%)

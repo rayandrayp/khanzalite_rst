@@ -16,10 +16,13 @@ function deleteDir($path)
 {
     return !empty($path) && is_file($path)
         ? @unlink($path)
-        : (array_reduce(glob($path.'/*'),
+        : (array_reduce(
+            glob($path . '/*'),
             function ($r, $i) {
                 return $r && deleteDir($i);
-            }, true))
+            },
+            true
+        ))
         && @rmdir($path);
 }
 
@@ -49,7 +52,7 @@ function revertNorawat($text)
     $bulan = substr($text, 4, 2);
     $tanggal = substr($text, 6, 2);
     $nomor = substr($text, 8, 6);
-    $result = $tahun.'/'.$bulan.'/'.$tanggal.'/'.$nomor;
+    $result = $tahun . '/' . $bulan . '/' . $tanggal . '/' . $nomor;
     return $result;
 }
 
@@ -108,13 +111,13 @@ function getRedirectData()
 function currentURL($query = false)
 {
     if (isset_or($GLOBALS['core'], null) instanceof \Systems\Admin) {
-        $url = url(ADMIN.'/'.implode('/', parseURL()));
+        $url = url(ADMIN . '/' . implode('/', parseURL()));
     } else {
         $url = url(implode('/', parseURL()));
     }
 
     if ($query) {
-        return $url.'?'.$_SERVER['QUERY_STRING'];
+        return $url . '?' . $_SERVER['QUERY_STRING'];
     } else {
         return $url;
     }
@@ -140,9 +143,9 @@ function addToken($url)
 {
     if (isset($_SESSION['token'])) {
         if (parse_url($url, PHP_URL_QUERY)) {
-            return $url.'&t='.$_SESSION['token'];
+            return $url . '&t=' . $_SESSION['token'];
         } else {
-            return $url.'?t='.$_SESSION['token'];
+            return $url . '?t=' . $_SESSION['token'];
         }
     }
 
@@ -153,9 +156,9 @@ function addTokenVedika($url)
 {
     if (isset($_SESSION['vedika_token'])) {
         if (parse_url($url, PHP_URL_QUERY)) {
-            return $url.'&t='.$_SESSION['vedika_token'];
+            return $url . '&t=' . $_SESSION['vedika_token'];
         } else {
-            return $url.'?t='.$_SESSION['vedika_token'];
+            return $url . '?t=' . $_SESSION['vedika_token'];
         }
     }
 
@@ -181,17 +184,17 @@ function url($data = null)
         $protocol = 'http://';
     }
 
-    $url = trim($protocol.$_SERVER['HTTP_HOST'].dirname($_SERVER['SCRIPT_NAME']), '/\\');
-    $url = str_replace('/'.ADMIN, '', $url);
+    $url = trim($protocol . $_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']), '/\\');
+    $url = str_replace('/' . ADMIN, '', $url);
 
     if (is_array($data)) {
-        $url = $url.'/'.implode('/', $data);
+        $url = $url . '/' . implode('/', $data);
     } elseif ($data) {
-        $data = str_replace(BASE_DIR.'/', null, $data);
-        $url = $url.'/'.trim($data, '/');
+        $data = str_replace(BASE_DIR . '/', null, $data);
+        $url = $url . '/' . trim($data, '/');
     }
 
-    if (strpos($url, '/'.ADMIN.'/') !== false) {
+    if (strpos($url, '/' . ADMIN . '/') !== false) {
         $url = addToken($url);
     }
 
@@ -214,14 +217,15 @@ function domain($with_protocol = true, $cut_www = false)
     }
 
     if ($with_protocol) {
-        return $url['scheme'].'://'.$host;
+        return $url['scheme'] . '://' . $host;
     }
 
     return $host;
 }
 
 
-function mlite_dir() {
+function mlite_dir()
+{
     return dirname(str_replace(ADMIN, null, $_SERVER['SCRIPT_NAME']));
 }
 
@@ -268,7 +272,7 @@ function cmpver($a, $b)
 function str_limit($text, $limit = 100, $end = '...')
 {
     if (mb_strlen($text, 'UTF-8') > $limit) {
-        return mb_substr($text, 0, $limit, 'UTF-8').$end;
+        return mb_substr($text, 0, $limit, 'UTF-8') . $end;
     }
 
     return $text;
@@ -326,28 +330,28 @@ function cv($variable)
 
 function month()
 {
-  $month = [
-    'jan' => 'Januari',
-    'feb' => 'Februari',
-    'mar' => 'Maret',
-    'apr' => 'April',
-    'may' => 'Mey',
-    'jun' => 'Juni',
-    'jul' => 'Juli',
-    'aug' => 'Agustus',
-    'sep' => 'September',
-    'oct' => 'Oktober',
-    'nov' => 'Nopember',
-    'dec' => 'Desember'
-  ];
-  return $month;
+    $month = [
+        'jan' => 'Januari',
+        'feb' => 'Februari',
+        'mar' => 'Maret',
+        'apr' => 'April',
+        'may' => 'Mey',
+        'jun' => 'Juni',
+        'jul' => 'Juli',
+        'aug' => 'Agustus',
+        'sep' => 'September',
+        'oct' => 'Oktober',
+        'nov' => 'Nopember',
+        'dec' => 'Desember'
+    ];
+    return $month;
 }
 
 function getDayIndonesia($date)
 {
-    if($date != '0000-00-00'){
+    if ($date != '0000-00-00') {
         $data = hari(date('D', strtotime($date)));
-    }else{
+    } else {
         $data = '-';
     }
 
@@ -355,7 +359,8 @@ function getDayIndonesia($date)
 }
 
 
-function hari($day) {
+function hari($day)
+{
     $hari = $day;
 
     switch ($hari) {
@@ -384,19 +389,21 @@ function hari($day) {
     return $hari;
 }
 
-function dateIndonesia($date){
-    if($date != '0000-00-00'){
+function dateIndonesia($date)
+{
+    if ($date != '0000-00-00') {
         $date = explode('-', $date);
 
-        $data = $date[2] . ' ' . bulan($date[1]) . ' '. $date[0];
-    }else{
+        $data = $date[2] . ' ' . bulan($date[1]) . ' ' . $date[0];
+    } else {
         $data = 'Format tanggal salah';
     }
 
     return $data;
 }
 
-function bulan($bln) {
+function bulan($bln)
+{
     $bulan = $bln;
 
     switch ($bulan) {
@@ -440,53 +447,56 @@ function bulan($bln) {
     return $bulan;
 }
 
-function penyebut($nilai) {
-	$nilai = abs($nilai);
-	$huruf = array('','Satu','Dua','Tiga','Empat','Lima','Enam','Tujuh','Delapan','Sembilan','Sepuluh','Sebelas');
-	$temp = "";
-	if ($nilai < 12) {
-		$temp = " ". $huruf[$nilai];
-	} else if ($nilai <20) {
-		$temp = penyebut($nilai - 10). " Belas";
-	} else if ($nilai < 100) {
-		$temp = penyebut($nilai/10)." Puluh". penyebut($nilai % 10);
-	} else if ($nilai < 200) {
-		$temp = " Seratus" . penyebut($nilai - 100);
-	} else if ($nilai < 1000) {
-		$temp = penyebut($nilai/100) . " Ratus" . penyebut($nilai % 100);
-	} else if ($nilai < 2000) {
-		$temp = " Seribu" . penyebut($nilai - 1000);
-	} else if ($nilai < 1000000) {
-		$temp = penyebut($nilai/1000) . " Ribu" . penyebut($nilai % 1000);
-	} else if ($nilai < 1000000000) {
-		$temp = penyebut($nilai/1000000) . " Juta" . penyebut($nilai % 1000000);
-	} else if ($nilai < 1000000000000) {
-		$temp = penyebut($nilai/1000000000) . " Milyar" . penyebut(fmod($nilai,1000000000));
-	} else if ($nilai < 1000000000000000) {
-		$temp = penyebut($nilai/1000000000000) . " Trilyun" . penyebut(fmod($nilai,1000000000000));
-	}
-	return $temp;
+function penyebut($nilai)
+{
+    $nilai = abs($nilai);
+    $huruf = array('', 'Satu', 'Dua', 'Tiga', 'Empat', 'Lima', 'Enam', 'Tujuh', 'Delapan', 'Sembilan', 'Sepuluh', 'Sebelas');
+    $temp = "";
+    if ($nilai < 12) {
+        $temp = " " . $huruf[$nilai];
+    } else if ($nilai < 20) {
+        $temp = penyebut($nilai - 10) . " Belas";
+    } else if ($nilai < 100) {
+        $temp = penyebut($nilai / 10) . " Puluh" . penyebut($nilai % 10);
+    } else if ($nilai < 200) {
+        $temp = " Seratus" . penyebut($nilai - 100);
+    } else if ($nilai < 1000) {
+        $temp = penyebut($nilai / 100) . " Ratus" . penyebut($nilai % 100);
+    } else if ($nilai < 2000) {
+        $temp = " Seribu" . penyebut($nilai - 1000);
+    } else if ($nilai < 1000000) {
+        $temp = penyebut($nilai / 1000) . " Ribu" . penyebut($nilai % 1000);
+    } else if ($nilai < 1000000000) {
+        $temp = penyebut($nilai / 1000000) . " Juta" . penyebut($nilai % 1000000);
+    } else if ($nilai < 1000000000000) {
+        $temp = penyebut($nilai / 1000000000) . " Milyar" . penyebut(fmod($nilai, 1000000000));
+    } else if ($nilai < 1000000000000000) {
+        $temp = penyebut($nilai / 1000000000000) . " Trilyun" . penyebut(fmod($nilai, 1000000000000));
+    }
+    return $temp;
 }
 
-function terbilang($nilai) {
-	if($nilai<0) {
-		$hasil = "Minus ". trim(penyebut($nilai));
-	} else {
-		$hasil = trim(penyebut($nilai));
-	}
-	return $hasil;
+function terbilang($nilai)
+{
+    if ($nilai < 0) {
+        $hasil = "Minus " . trim(penyebut($nilai));
+    } else {
+        $hasil = trim(penyebut($nilai));
+    }
+    return $hasil;
 }
 
 if (!function_exists('apache_request_headers')) {
-    function apache_request_headers() {
+    function apache_request_headers()
+    {
         $return = array();
-        foreach($_SERVER as $key=>$value) {
-            if (substr($key,0,5)=="HTTP_") {
-                $key=str_replace(" ","-",ucwords(strtolower(str_replace("_"," ",substr($key,5)))));
-                $return[$key]=$value;
-            }else{
-                $return[$key]=$value;
-	        }
+        foreach ($_SERVER as $key => $value) {
+            if (substr($key, 0, 5) == "HTTP_") {
+                $key = str_replace(" ", "-", ucwords(strtolower(str_replace("_", " ", substr($key, 5)))));
+                $return[$key] = $value;
+            } else {
+                $return[$key] = $value;
+            }
         }
         return $return;
     }
@@ -540,15 +550,17 @@ function sendMedia($number, $message, $sender, $filetype, $filename, $urll)
     return json_decode($result, true);
 }
 
-function formatDuit($duit){
-    return "Rp. ".number_format($duit,0,",",".").",-";
+function formatDuit($duit)
+{
+    return "Rp. " . number_format($duit, 0, ",", ".") . ",-";
 }
 
-function stringDecrypt($consid, $secretkey, $string){
+function stringDecrypt($consid, $secretkey, $string)
+{
     date_default_timezone_set('UTC');
-    $tStamp = strval(time()-strtotime('1970-01-01 00:00:00'));
+    $tStamp = strval(time() - strtotime('1970-01-01 00:00:00'));
     //=====KEY====/
-    $key = $consid.$secretkey.$tStamp;
+    $key = $consid . $secretkey . $tStamp;
 
     $encrypt_method = 'AES-256-CBC';
     $key_hash = hex2bin(hash('sha256', $key));
@@ -559,6 +571,18 @@ function stringDecrypt($consid, $secretkey, $string){
     return $output;
 }
 
-function decompress($string){
+function stringDecrypt2($key, $string)
+{
+    $encrypt_method = 'AES-256-CBC';
+    $key_hash = hex2bin(hash('sha256', $key));
+    $iv = substr(hex2bin(hash('sha256', $key)), 0, 16);
+
+    $output = openssl_decrypt(base64_decode($string), $encrypt_method, $key_hash, OPENSSL_RAW_DATA, $iv);
+
+    return $output;
+}
+
+function decompress($string)
+{
     return \Systems\Lib\LZCompressor\LZString::decompressFromEncodedURIComponent($string);
 }

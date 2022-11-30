@@ -6,6 +6,7 @@ use Systems\AdminModule;
 use Plugins\Icd\DB_ICD;
 use Systems\Lib\Fpdf\PDF_MC_Table;
 
+require_once __DIR__ . '/../../vendor/autoload.php';
 class Admin extends AdminModule
 {
   private $_uploads = WEBAPPS_PATH . '/berkasrawat/pages/upload';
@@ -91,6 +92,14 @@ class Admin extends AdminModule
       $this->core->addJS(url('assets/jscripts/responsivevoice.js'));
     }
     $this->_addHeaderFiles();
+    $url = 'vclaim-rest/SEP/FingerPrint/List/Peserta/TglPelayanan/' .  date('Y-m-d');
+    $datajson = $this->getDataWSBPJS($url);
+    // var_dump($datajson);
+    $dataFinger = [];
+    if ($datajson['metaData']['code'] == '200') {
+      $dataFinger = json_decode($datajson['response'], true);
+    }
+
 
     $this->assign['poliklinik']     = $this->db('poliklinik')->where('status', '1')->where('kd_poli', '<>', $this->settings->get('settings.igd'))->toArray();
     $this->assign['dokter']         = $this->db('dokter')->where('status', '1')->toArray();
@@ -153,6 +162,12 @@ class Admin extends AdminModule
 
     $this->assign['list'] = [];
     foreach ($rows as $row) {
+      $row['finger'] = 'false';
+      if (count($dataFinger) > 0) {
+        foreach ($dataFinger['list'] as $finger) {
+          if ($finger['noKartu'] == $row['no_peserta'])   $row['finger'] = 'true';
+        }
+      }
       $this->assign['list'][] = $row;
     }
 
@@ -1554,5 +1569,75 @@ class Admin extends AdminModule
     curl_close($ch);
 
     return $data;
+  }
+
+
+  function getDataWSBPJS($url)
+  {
+    $consid = "31533";
+    $secretKey = "2lLD04E61A";
+    $user_key = "6129e4009acbd89f089be0aa5350f57d";
+
+    // Computes the timestamp
+    date_default_timezone_set('Asia/Jakarta');
+    $tStamp = strval(time() - strtotime('Y/m/d H:i:s'));
+    // Computes the signature by hashing the salt with the secret key as the key
+    $signature = hash_hmac('sha256', $consid . "&" . $tStamp, $secretKey, true);
+
+    // base64 encode
+    $encodedSignature = base64_encode($signature);
+    $today_date = date('Y-m-d');
+    $url = 'https://apijkn.bpjs-kesehatan.go.id/' . $url;
+    $header = array(
+      'Content-Type: ' . 'application/json',
+      'x-cons-id: ' . $consid,
+      'x-timestamp: ' . $tStamp,
+      'x-signature: ' . $encodedSignature,
+      'user_key: ' . $user_key
+    );
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+    curl_setopt($ch, CURLOPT_SSL_CIPHER_LIST, 'DEFAULT@SECLEVEL=1');
+
+    $res = curl_exec($ch);
+    //$result = file_get_contents($res);
+    $obj = json_decode($res, true);
+
+    curl_close($ch);
+    if ($obj['metaData']['code'] == '200') {
+      $decryptData = $this->Decrypt($consid . $secretKey . $tStamp, $obj['response']);
+      $decompressData = $this->decompress($decryptData);
+      $data['metaData'] = $obj['metaData'];
+      $data['response'] = $decompressData;
+    } else {
+      $data['metaData'] = $obj['metaData'];
+      $data['response'] = '';
+    }
+    return $data;
+  }
+
+  //begin function decrypt
+  function Decrypt($key, $string)
+  {
+
+    $encrypt_method = 'AES-256-CBC';
+
+    // hash
+    $key_hash = hex2bin(hash('sha256', $key));
+
+    // iv - encrypt method AES-256-CBC expects 16 bytes - else you will get a warning
+    $iv = substr(hex2bin(hash('sha256', $key)), 0, 16);
+
+    $output = openssl_decrypt(base64_decode($string), $encrypt_method, $key_hash, OPENSSL_RAW_DATA, $iv);
+
+    return $output;
+  }
+
+  // function lzstring decompress 
+  function decompress($string)
+  {
+    return \LZCompressor\LZString::decompressFromEncodedURIComponent($string);
   }
 }

@@ -10,6 +10,7 @@
     <!-- <li><a href="{?=url([ADMIN,'manajemen','farmasi'])?}">Farmasi</a></li> -->
     <li><a href="{?=url([ADMIN,'manajemen','kasir'])?}">Kasir</a></li>
     <!-- <li><a href="{?=url([ADMIN,'manajemen','presensi'])?}">Presensi</a></li> -->
+    <li><a href="{?=url([ADMIN,'manajemen','mutu'])?}">Indikator Mutu</a></li>
 </ul>
 <br>
 <div class="row">
@@ -96,7 +97,6 @@
     </div>
 </div>
 <div class="row">
-    <div class="col-lg-1"></div>
     <div class="col-lg-2 col-md-6 col-sm-6 col-xs-12">
         <div class="panel panel-default">
               <div class="panel-body bg-info">
@@ -174,6 +174,23 @@
                     <div class="stat-title text-grey">NDR {?=date('F',strtotime('-1 month'))?}</div>
                     <div class="stat-bold">
                         {?= $stats.getNDR ?} &permil;
+                        <!-- <span class="stat-up-down">
+                            <i class="fa fa-arrow-circle-{if: $stats.percentDays >= 0}up{else}down{/if}"></i>
+                            ({?= $stats.percentDays ?}%)
+                        </span> -->
+                    </div>
+              </div>
+        </div>
+    </div>
+    <div class="col-lg-2 col-md-6 col-sm-6 col-xs-12">
+        <div class="panel panel-default">
+              <div class="panel-body bg-success">
+                    <span class="fa-2x fa-stack fa-lg pull-left">
+                        <i class="fa fa-wheelchair fa-stack-1x"></i>
+                    </span>
+                    <div class="stat-title text-grey">BTO {?=date('F',strtotime('-1 month'))?}</div>
+                    <div class="stat-bold">
+                        {?= $stats.getBTO ?} &permil;
                         <!-- <span class="stat-up-down">
                             <i class="fa fa-arrow-circle-{if: $stats.percentDays >= 0}up{else}down{/if}"></i>
                             ({?= $stats.percentDays ?}%)

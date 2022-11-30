@@ -388,6 +388,7 @@ class Admin extends AdminModule
   {
     $riwayat['settings'] = $this->settings('settings');
     $riwayat['pasien'] = $this->db('pasien')->where('no_rkm_medis', $no_rkm_medis)->oneArray();
+
     $reg_periksa = $this->db('reg_periksa')
       ->join('poliklinik', 'poliklinik.kd_poli=reg_periksa.kd_poli')
       ->join('dokter', 'dokter.kd_dokter=reg_periksa.kd_dokter')
@@ -396,6 +397,7 @@ class Admin extends AdminModule
       ->toArray();
 
     $riwayat['reg_periksa'] = [];
+    // var_dump(json_encode($reg_periksa));
     foreach ($reg_periksa as $row) {
 
       $row['diagnosa_pasien'] = $this->db('diagnosa_pasien')
@@ -424,12 +426,12 @@ class Admin extends AdminModule
         ->where('no_rawat', $row['no_rawat'])
         ->toArray();
       $row['rawat_jl_drpr'] = [];
-      foreach ($rows['rawat_jl_drpr'] as $row) {
-        $dokter = $this->db('dokter')->where('kd_dokter', $row['kd_dokter'])->oneArray();
-        $petugas = $this->db('petugas')->where('nip', $row['nip'])->oneArray();
-        $row['nm_dokter'] = $dokter['nm_dokter'];
-        $row['nama'] = $petugas['nama'];
-        $row['rawat_jl_drpr'][] = $row;
+      foreach ($rows['rawat_jl_drpr'] as $row1) {
+        $dokter = $this->db('dokter')->where('kd_dokter', $row1['kd_dokter'])->oneArray();
+        $petugas = $this->db('petugas')->where('nip', $row1['nip'])->oneArray();
+        $row1['nm_dokter'] = $dokter['nm_dokter'];
+        $row1['nama'] = $petugas['nama'];
+        $row['rawat_jl_drpr'][] = $row1;
       }
       $row['pemeriksaan_ranap'] = [];
       $row['rawat_inap_dr'] = [];
@@ -454,12 +456,12 @@ class Admin extends AdminModule
           ->join('jns_perawatan_inap', 'jns_perawatan_inap.kd_jenis_prw=rawat_inap_drpr.kd_jenis_prw')
           ->where('no_rawat', $row['no_rawat'])
           ->toArray();
-        foreach ($rows['rawat_inap_drpr'] as $row) {
-          $dokter = $this->db('dokter')->where('kd_dokter', $row['kd_dokter'])->oneArray();
-          $petugas = $this->db('petugas')->where('nip', $row['nip'])->oneArray();
-          $row['nm_dokter'] = $dokter['nm_dokter'];
-          $row['nama'] = $petugas['nama'];
-          $row['rawat_inap_drpr'][] = $row;
+        foreach ($rows['rawat_inap_drpr'] as $row1) {
+          $dokter = $this->db('dokter')->where('kd_dokter', $row1['kd_dokter'])->oneArray();
+          $petugas = $this->db('petugas')->where('nip', $row1['nip'])->oneArray();
+          $row1['nm_dokter'] = $dokter['nm_dokter'];
+          $row1['nama'] = $petugas['nama'];
+          $row['rawat_inap_drpr'][] = $row1;
         }
       }
 
@@ -527,16 +529,26 @@ class Admin extends AdminModule
     if (!empty($personal_pasien['gambar'])) {
       $riwayat['fotoURL'] = WEBAPPS_URL . '/photopasien/' . $personal_pasien['gambar'];
     }
-    $reg_periksa = $this->db('reg_periksa')
-      ->join('poliklinik', 'poliklinik.kd_poli=reg_periksa.kd_poli')
-      ->join('dokter', 'dokter.kd_dokter=reg_periksa.kd_dokter')
-      ->join('penjab', 'penjab.kd_pj=reg_periksa.kd_pj')
-      ->where('no_rkm_medis', $no_rkm_medis)
-      ->desc('tgl_registrasi')
-      ->toArray();
+    $query = $this->db()->pdo()->prepare("SELECT r.no_rawat, r.tgl_registrasi, p.nm_poli, pe.png_jawab, r.status_lanjut, r.status_bayar, d.nm_dokter
+                                      FROM reg_periksa r
+                                      INNER JOIN poliklinik p ON p.kd_poli = r.kd_poli
+                                      INNER JOIN dokter d ON d.kd_dokter = r.kd_dokter
+                                      INNER JOIN penjab pe ON pe.kd_pj = r.kd_pj
+                                      WHERE r.no_rkm_medis = '$no_rkm_medis'");
+    $query->execute();
+    $reg_periksa = $query->fetchAll(\PDO::FETCH_ASSOC);
+    // $reg_periksa = $this->db('reg_periksa')
+    //   ->join('poliklinik', 'poliklinik.kd_poli=reg_periksa.kd_poli')
+    //   ->join('dokter', 'dokter.kd_dokter=reg_periksa.kd_dokter')
+    //   ->join('penjab', 'penjab.kd_pj=reg_periksa.kd_pj')
+    //   ->where('no_rkm_medis', $no_rkm_medis)
+    //   ->desc('tgl_registrasi')
+    //   ->toArray();
 
+    // var_dump(json_encode($reg_periksa));
     $riwayat['reg_periksa'] = [];
     foreach ($reg_periksa as $row) {
+
 
       $row['diagnosa_pasien'] = $this->db('diagnosa_pasien')
         ->join('penyakit', 'penyakit.kd_penyakit=diagnosa_pasien.kd_penyakit')
@@ -564,12 +576,17 @@ class Admin extends AdminModule
         ->where('no_rawat', $row['no_rawat'])
         ->toArray();
       $row['rawat_jl_drpr'] = [];
-      foreach ($rows['rawat_jl_drpr'] as $row) {
-        $dokter = $this->db('dokter')->where('kd_dokter', $row['kd_dokter'])->oneArray();
-        $petugas = $this->db('petugas')->where('nip', $row['nip'])->oneArray();
-        $row['nm_dokter'] = $dokter['nm_dokter'];
-        $row['nama'] = $petugas['nama'];
-        $row['rawat_jl_drpr'][] = $row;
+      foreach ($rows['rawat_jl_drpr'] as $row1) {
+        $dokter = $this->db('dokter')->where('kd_dokter', $row1['kd_dokter'])->oneArray();
+        $petugas = $this->db('petugas')->where('nip', $row1['nip'])->oneArray();
+        $row1['nm_dokter'] = $dokter['nm_dokter'];
+        // if (($petugas['nama']) != null) {
+        $row1['nama'] = $petugas['nama'];
+        // } else {
+        //   $row1['nama'] = '-';
+        // }
+        $row1['nama'] = $petugas['nama'];
+        $row['rawat_jl_drpr'][] = $row1;
       }
       $check_table = $this->db()->pdo()->query("SHOW TABLES LIKE 'pemeriksaan_ranap'");
       $check_table->execute();
@@ -590,12 +607,12 @@ class Admin extends AdminModule
           ->join('jns_perawatan_inap', 'jns_perawatan_inap.kd_jenis_prw=rawat_inap_drpr.kd_jenis_prw')
           ->where('no_rawat', $row['no_rawat'])
           ->toArray();
-        foreach ($rows['rawat_inap_drpr'] as $row) {
-          $dokter = $this->db('dokter')->where('kd_dokter', $row['kd_dokter'])->oneArray();
-          $petugas = $this->db('petugas')->where('nip', $row['nip'])->oneArray();
-          $row['nm_dokter'] = $dokter['nm_dokter'];
-          $row['nama'] = $petugas['nama'];
-          $row['rawat_inap_drpr'][] = $row;
+        foreach ($rows['rawat_inap_drpr'] as $row1) {
+          $dokter = $this->db('dokter')->where('kd_dokter', $row1['kd_dokter'])->oneArray();
+          $petugas = $this->db('petugas')->where('nip', $row1['nip'])->oneArray();
+          $row1['nm_dokter'] = $dokter['nm_dokter'];
+          $row1['nama'] = $petugas['nama'];
+          $row['rawat_inap_drpr'][] = $row1;
         }
       }
 
@@ -638,7 +655,14 @@ class Admin extends AdminModule
       $row['catatan_perawatan'] = $this->db('catatan_perawatan')->where('no_rawat', $row['no_rawat'])->oneArray();
       $row['berkas_digital'] = $this->db('berkas_digital_perawatan')->where('no_rawat', $row['no_rawat'])->toArray();
 
+      // $row['tanggal_registrasi'] = $row['tgl_registrasi'];
+      // $row['nama_poli'] = $row['nm_poli'];
+      // $row['penanggung_jawab'] = $row['png_jawab'];
+      // $row['statuslanjut'] = $row['status_lanjut'];
+      // $row['statusbayar'] = $row['status_bayar'];
       $riwayat['reg_periksa'][] = $row;
+      // var_dump(json_encode($riwayat));
+      // var_dump($riwayat['reg_periksa']);
     }
     $this->tpl->set('riwayat', $this->tpl->noParse_array(htmlspecialchars_array($riwayat)));
     echo $this->draw('riwayat.perawatan.dokter.html');
