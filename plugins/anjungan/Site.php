@@ -142,7 +142,7 @@ class Site extends SiteModule
 
     $poliklinik = str_replace(",", "','", $this->settings->get('anjungan.display_poli'));
     // $strQuery = "SELECT a.kd_dokter, a.kd_poli, b.nm_poli, c.nm_dokter, a.jam_mulai, a.jam_selesai FROM jadwal a, poliklinik b, dokter c WHERE a.kd_poli = b.kd_poli AND a.kd_dokter = c.kd_dokter AND a.hari_kerja = '$hari'  AND a.kd_poli IN ('$poliklinik')";
-    $strQuery = "SELECT DISTINCT a.kd_dokter, a.kd_poli, b.nm_poli, c.nm_dokter FROM jadwal a, poliklinik b, dokter c WHERE a.kd_poli = b.kd_poli AND a.kd_dokter = c.kd_dokter AND a.hari_kerja = '$hari'  AND a.kd_poli IN ('$poliklinik') GROUP BY kd_dokter";
+    $strQuery = "SELECT DISTINCT a.kd_dokter, a.kd_poli, b.nm_poli, c.nm_dokter FROM jadwal a, poliklinik b, dokter c WHERE a.kd_poli = b.kd_poli AND a.kd_dokter = c.kd_dokter AND a.hari_kerja = '$hari'  AND a.kd_poli IN ('$poliklinik') GROUP BY kd_dokter, kd_poli";
     $query = $this->db()->pdo()->prepare($strQuery);
     $query->execute();
     $rows = $query->fetchAll(\PDO::FETCH_ASSOC);
@@ -325,7 +325,7 @@ class Site extends SiteModule
     $poliklinik = $slug[3];
     $query = $this->db()->pdo()->prepare("SELECT a.kd_dokter, a.kd_poli, b.nm_poli, c.nm_dokter, a.jam_mulai, a.jam_selesai FROM jadwal a, poliklinik b, dokter c WHERE a.kd_poli = b.kd_poli AND a.kd_dokter = c.kd_dokter AND a.hari_kerja = '$hari' AND a.kd_poli = '$poliklinik'");
     if (!isset($slug[4]) && $slug[3] == 'all') {
-      $query = $this->db()->pdo()->prepare("SELECT a.kd_dokter, a.kd_poli, b.nm_poli, c.nm_dokter, a.jam_mulai, a.jam_selesai FROM jadwal a, poliklinik b, dokter c WHERE a.kd_poli = b.kd_poli AND a.kd_dokter = c.kd_dokter AND a.hari_kerja = '$hari'");
+      $query = $this->db()->pdo()->prepare("SELECT a.kd_dokter, a.kd_poli, b.nm_poli, c.nm_dokter, a.jam_mulai, a.jam_selesai FROM jadwal a, poliklinik b, dokter c WHERE a.kd_poli = b.kd_poli AND a.kd_dokter = c.kd_dokter AND a.hari_kerja = '$hari'  ORDER BY nm_poli");
     }
     if (isset($slug[4]) && $slug[4] != '') {
       $dokter = $slug[4];

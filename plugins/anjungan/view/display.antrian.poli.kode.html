@@ -44,7 +44,7 @@
   <div class="col-md-8">
     <div class="card bg-dark text-white">
       <div class="embed-responsive embed-responsive-4by3">
-        <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/{$vidio}?rel=0&modestbranding=1&autohide=1&mute=0&showinfo=0&controls=1&loop=1&autoplay=1&playlist={$vidio}" allowfullscreen></iframe>
+        <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/{$vidio}?rel=0&modestbranding=1&autohide=1&mute=1&showinfo=0&controls=1&loop=1&autoplay=1&playlist={$vidio}" allowfullscreen></iframe>
       </div>
     </div>
   </div>
@@ -54,7 +54,7 @@
 <div class="row" style="bottom:0;position:absolute;width:100%;background-color:#fff;color:#ff0000;margin-top:20px;margin-bottom:40px;margin-left:0;margin-right:0;">
   <h3><marquee>
     {if: empty($running_text)}
-    {loop: $jadwal}<i class="fa fa-user-md"></i> {$value.nm_dokter} [{$value.nm_poli}] - {$value.jam_mulai} s/d  {$value.jam_selesai} WITA {/loop}
+    {loop: $jadwal}<i class="fa fa-user-md"></i> {$value.nm_dokter} [{$value.nm_poli}] - {$value.jam_mulai} s/d  {$value.jam_selesai} WIB {/loop}
     {else}
     {$running_text}
     {/if}
@@ -80,7 +80,7 @@ function loadlink(){
 loadlink(); // This will run on page load
 setInterval(function(){
     loadlink() // this will run after every 5 seconds
-}, 120000);
+}, 420000);
 </script>
 </body>
 </html>
