@@ -1595,10 +1595,17 @@ class Site extends SiteModule
 
       case "simpanobat":
         $kdbooking = $_GET['kdbooking'];
+        $start_time = date('H:i:s');
         $this->core->db()->pdo()->exec("INSERT INTO `mlite_antrian_loket` (type, noantrian, postdate, start_time, end_time, loket) 
-        VALUES ('Obat#$kdbooking', '" . $_GET['noantrian'] . "','" . date('Y-m-d') . "','" . date('H:i:s') . "','00:00:00','Obat')
-        ");
-
+                          VALUES ('Obat#$kdbooking', '" . $_GET['noantrian'] . "','" . date('Y-m-d') . "','" . $start_time . "','00:00:00','Obat')
+                          ");
+        
+        $result = $this->db('referensi_mobilejkn_bpjs')->select('no_rawat')->where('nobooking', $kdbooking)->oneArray();
+        if ($result) {
+          if (!empty($this->db('temporary2')->where('temp2', $result['no_rawat'])->oneArray())) {
+            $this->db('temporary2')->where('temp1', 'waktupasien')->where('temp2', $result['no_rawat'])->update('temp5', $start_time);
+          }
+        }
         // $this->db('mlite_antrian_loket')
         //   ->save([
         //     'kd' => NULL,
@@ -2198,7 +2205,9 @@ class Site extends SiteModule
             // var_dump($dataResponse['histori']);
             foreach ($dataResponse['histori'] as $a) {
               // echo $a['noSep'] . ' ' . $this->checkNoSEP($a['noSep']);
-              if ($this->checkNoSEP($a['noSep']) && $a['jnsPelayanan'] == '1') {
+
+              //check noSEP ada di BridgingSEP dan jenis Pelayanan = 1 (rawat inap)
+              if ($this->checkNoSEP($a['noSep']) && $a['jnsPelayanan'] == '1') { 
                 // echo '{"noRujukan":"' . $a['noRujukan'] . '" , "noSep":"'  . $a['noSep'] . '", "tglSep":"'  . $a['tglSep'] . '", "poli":"'  . $a['poli'] . '"},';
                 $poli = "";
                 if ($a['poli'] == "") {
@@ -2206,7 +2215,7 @@ class Site extends SiteModule
                 } else {
                   $poli = $a['poli'];
                 }
-                $arr_str = $arr_str . '{"noRujukan":"' . $a['noRujukan'] . '" , "noSep":"'  . $a['noSep'] . '", "tglSep":"'  . $a['tglSep'] . '", "poli":"'  . $poli . '"},';
+                $arr_str = $arr_str . '{"noRujukan":"' . $a['noRujukan'] . '" , "noSep":"'  . $a['noSep'] . '", "tglSep":"'  . $a['tglSep'] . '", "poli":"'  . $poli . '", "ppkPelayanan":"'  . $a['ppkPelayanan'] . '"},';
               }
               // echo $arr_str;
             }

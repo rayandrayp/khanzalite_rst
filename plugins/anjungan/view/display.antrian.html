@@ -1135,15 +1135,16 @@
                                             } else {
                                                 codebutton = '<td><button data-index-rujukan="' + (index - 1) + '" class="btn btn-primary"  type="button">Pilih</button></td>';
                                             }
-                                            trHTML += '<tr>' +
-                                                '<th scope="row">' + index + '</th>' +
-                                                '<td>' + item.noKunjungan + '</td>' +
-                                                '<td>' + '-' + '</td>' +
-                                                '<td>' + item.tglKunjungan + '</td>' +
-                                                '<td>' + item.poliRujukan.nama + '</td>' +
-                                                codebutton +
-                                                '</tr>';
-                                            dataRujukanUtama += '{"noRujukan":"' + item.noKunjungan + '" , "nik":"' + item.peserta.nik + '"},';
+                                                trHTML += '<tr>' +
+                                                    '<th scope="row">' + index + '</th>' +
+                                                    '<td>' + item.noKunjungan + '</td>' +
+                                                    '<td>' + '-' + '</td>' +
+                                                    '<td>' + item.tglKunjungan + '</td>' +
+                                                    '<td>' + item.poliRujukan.nama + '</td>' +
+                                                    codebutton +
+                                                    '</tr>';
+                                                dataRujukanUtama += '{"noRujukan":"' + item.noKunjungan + '" , "nik":"' + item.peserta.nik + '"},';
+                                            
                                         }
                                     });
                                     // dataRujukanUtama = dataRujukanUtama.substring(0, dataRujukanUtama.length - 1);
@@ -1197,6 +1198,7 @@
                         }
                     });
 
+                    // remarked karena tidak ingin menampilkan rujukan post op
                     //get histori rujukan
                     $.ajax({
                         type: 'POST',
@@ -1230,17 +1232,19 @@
                                             } else {
                                                 codebutton = '<td><button data-index-rujukan="' + (index - 1) + '" class="btn btn-primary"  type="button">Pilih</button></td>';
                                             }
-                                            trHTML += '<tr>' +
-                                                '<th scope="row">' + index + '</th>' +
-                                                '<td>' + item1.noRujukan + '</td>' +
-                                                '<td>' + item1.noSep + '</td>' +
-                                                '<td>' + item1.tglSep + '</td>' +
-                                                '<td>' + item1.poli + '</td>' +
-                                                codebutton +
-                                                '</tr>';
-                                            dataRujukanHistori += '{"noRujukan":"' + item1.noRujukan + '" , "nik":"' + nik + '"},';
+                                            if(item1.ppkPelayanan == 'RS SOEPRAOEN') {
+                                                trHTML += '<tr>' +
+                                                    '<th scope="row">' + index + '</th>' +
+                                                    '<td>' + item1.noRujukan + '</td>' +
+                                                    '<td>' + item1.noSep + '</td>' +
+                                                    '<td>' + item1.tglSep + '</td>' +
+                                                    '<td>' + item1.poli + '</td>' +
+                                                    codebutton +
+                                                    '</tr>';
+                                                dataRujukanHistori += '{"noRujukan":"' + item1.noRujukan + '" , "nik":"' + nik + '"},';
+                                            }
                                         }
-                                        });
+                                    });
 
                                         
                                     }

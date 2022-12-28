@@ -1,5 +1,4 @@
 <?php
-
 namespace Systems;
 
 class Admin extends Main
@@ -22,13 +21,14 @@ class Admin extends Main
         $username = $this->getUserInfo('fullname', null, true);
         $access = $this->getUserInfo('access');
 
-        $this->assign['tanggal']       = getDayIndonesia(date('Y-m-d')) . ', ' . dateIndonesia(date('Y-m-d'));
+        $this->assign['tanggal']       = getDayIndonesia(date('Y-m-d')).', '.dateIndonesia(date('Y-m-d'));
         $this->assign['username']      = !empty($username) ? $username : $this->getUserInfo('username');
         $this->assign['notify']        = $this->getNotify();
-        $this->assign['powered']       = 'Powered by <a href="https://basoro.org/">KhanzaLITE</a>';
+        $this->assign['powered']       = 'Powered by <a href="https://mlite.id/">mLITE</a>';
         $this->assign['path']          = url();
         $this->assign['nama_instansi'] = $this->settings->get('settings.nama_instansi');
         $this->assign['logo'] = $this->settings->get('settings.logo');
+        $this->assign['wallpaper'] = $this->settings->get('settings.wallpaper');
         $this->assign['theme_admin'] = $this->settings->get('settings.theme_admin');
         $this->assign['version']       = $this->settings->get('settings.version');
         $this->assign['update_access'] = ($access == 'all') || in_array('settings', explode(',', $access)) ? true : false;
@@ -53,7 +53,7 @@ class Admin extends Main
         $this->assign['presensi'] = $this->db('mlite_modules')->where('dir', 'presensi')->oneArray();
 
         $this->tpl->set('mlite', $this->assign);
-        echo $this->tpl->draw(THEMES . '/admin/' . $file, true);
+        echo $this->tpl->draw(THEMES.'/admin/'.$file, true);
     }
 
     public function loadModule($name, $method, $params = [])
@@ -62,8 +62,8 @@ class Admin extends Main
 
         if ($row && ($details = $this->getModuleInfo($name))) {
             if (($this->getUserInfo('access') == 'all') || in_array($name, explode(',', $this->getUserInfo('access')))) {
-                $anyMethod = 'any' . ucfirst($method);
-                $method = strtolower($_SERVER['REQUEST_METHOD']) . ucfirst($method);
+                $anyMethod = 'any'.ucfirst($method);
+                $method = strtolower($_SERVER['REQUEST_METHOD']).ucfirst($method);
 
                 if (method_exists($this->module->{$name}, $method)) {
                     $details['content'] = call_user_func_array([$this->module->{$name}, $method], array_values($params));
@@ -71,7 +71,7 @@ class Admin extends Main
                     $details['content'] = call_user_func_array([$this->module->{$name}, $anyMethod], array_values($params));
                 } else {
                     http_response_code(404);
-                    $this->setNotify('failure', "[@{$method}] Alamat yang anda diminta tidak ada.!");
+                    $this->setNotify('failure', "[@{$method}] Alamat yang anda diminta tidak ada.");
                     $details['content'] = null;
                 }
 
@@ -149,7 +149,7 @@ class Admin extends Main
 
     public function getModuleInfo($dir)
     {
-        $file = MODULES . '/' . $dir . '/Info.php';
+        $file = MODULES.'/'.$dir.'/Info.php';
         $core = $this;
 
         if (file_exists($file)) {
@@ -204,7 +204,7 @@ class Admin extends Main
             // Reset fail attempts for this IP
             $this->db('mlite_login_attempts')->where('ip', $_SERVER['REMOTE_ADDR'])->save(['attempts' => 0]);
 
-            $_SESSION['mlite_user'] = $row['id'];
+            $_SESSION['mlite_user']= $row['id'];
             $_SESSION['token']      = bin2hex(openssl_random_pseudo_bytes(6));
             $_SESSION['userAgent']  = $_SERVER['HTTP_USER_AGENT'];
             $_SESSION['IPaddress']  = $_SERVER['REMOTE_ADDR'];
@@ -212,14 +212,14 @@ class Admin extends Main
             if ($remember_me) {
                 $token = str_gen(64, "1234567890qwertyuiop[]asdfghjkl;zxcvbnm,./");
 
-                $this->db('mlite_remember_me')->save(['user_id' => $row['id'], 'token' => $token, 'expiry' => time() + 60 * 60 * 24 * 30]);
+                $this->db('mlite_remember_me')->save(['user_id' => $row['id'], 'token' => $token, 'expiry' => time()+60*60*24*30]);
 
-                setcookie('mlite_remember', $row['id'] . ':' . $token, time() + 60 * 60 * 24 * 365, '/');
+                setcookie('mlite_remember', $row['id'].':'.$token, time()+60*60*24*365, '/');
             }
             return true;
         } else {
             // Increase attempt
-            $this->db('mlite_login_attempts')->where('ip', $_SERVER['REMOTE_ADDR'])->save(['attempts' => $attempt['attempts'] + 1]);
+            $this->db('mlite_login_attempts')->where('ip', $_SERVER['REMOTE_ADDR'])->save(['attempts' => $attempt['attempts']+1]);
             $attempt['attempts'] += 1;
 
             // ... and block if reached maximum attempts
@@ -227,7 +227,7 @@ class Admin extends Main
                 $this->db('mlite_login_attempts')->where('ip', $_SERVER['REMOTE_ADDR'])->save(['expires' => strtotime("+10 minutes")]);
                 $attempt['expires'] = strtotime("+10 minutes");
 
-                $this->setNotify('failure', sprintf('Batas maksimum login tercapai. Tunggu %s menit untuk coba lagi.', ceil(($attempt['expires'] - time()) / 60)));
+                $this->setNotify('failure', sprintf('Batas maksimum login tercapai. Tunggu %s menit untuk coba lagi.', ceil(($attempt['expires']-time())/60)));
             } else {
                 $this->setNotify('failure', 'Username atau password salah!');
             }

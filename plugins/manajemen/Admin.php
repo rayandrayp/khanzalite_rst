@@ -365,7 +365,7 @@ class Admin extends AdminModule
         $stats['bpjs'] = $this->db('reg_periksa')->select(['count' => 'COUNT(DISTINCT no_rawat)'])->where('kd_pj', 'BPJ')->orWhere('kd_pj', 'A65')->like('tgl_registrasi', date('Y') . '%')->oneArray();
         $stats['lainnya'] = $this->db('reg_periksa')->select(['count' => 'COUNT(DISTINCT no_rawat)'])->where('kd_pj', '!=', 'A09')->where('kd_pj', '!=', 'BPJ')->like('tgl_registrasi', date('Y') . '%')->oneArray();
 
-        var_dump($stats);
+        // var_dump($stats);
         return $this->draw('kasir.html', [
             'settings' => $settings,
             'stats' => $stats,
