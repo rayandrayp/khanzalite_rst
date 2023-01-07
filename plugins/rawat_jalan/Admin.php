@@ -56,7 +56,16 @@ class Admin extends AdminModule
     $master_berkas_digital = $this->db('master_berkas_digital')->toArray();
     $responsivevoice =  $this->settings->get('settings.responsivevoice');
     $this->_Display($tgl_kunjungan, $tgl_kunjungan_akhir, $status_periksa, $status_bayar);
-    return $this->draw('manage.html', ['rawat_jalan' => $this->assign, 'cek_vclaim' => $cek_vclaim, 'master_berkas_digital' => $master_berkas_digital, 'responsivevoice' => $responsivevoice, 'admin_mode' => $this->settings->get('settings.admin_mode')]);
+    return $this->draw(
+      'manage.html', 
+        [
+          'rawat_jalan' => $this->assign, 
+          'cek_vclaim' => $cek_vclaim, 
+          'master_berkas_digital' => $master_berkas_digital, 
+          'responsivevoice' => $responsivevoice, 
+          'admin_mode' => $this->settings->get('settings.admin_mode')
+        ]
+      );
   }
 
   public function anyDisplay()

@@ -1092,6 +1092,8 @@
                 var nomor = "";
                 dataRujukanUtama = '';
                 dataRujukanHistori = '';
+                const d = new Date();
+                d.setDate(d.getDate() - 90);
                 //console.log(value);
                 if (value == 'bpjs') { //jika pasien BPJS
                     nomor = $('#no_bpjs').val();
@@ -1113,7 +1115,7 @@
                             if (data.status == 'ok') {
                                 e.preventDefault();
                                 var trHTML = '';
-                                // console.log(data.rs['response'])
+                                console.log("rujukan "+data);
                                 if(data.rs['response'] == ''){
                                     rujukanKosong = true;
                                 } else {
@@ -1124,7 +1126,7 @@
                                     $.each(jsonRujukanRS, function(i, item) {
                                         // console.log(item.tglKunjungan.substring(0, 4) + " | " + new Date().getFullYear());
                                         nik = item.peserta.nik;
-                                        if (item.tglKunjungan.substring(0, 4) == new Date().getFullYear()) {
+                                        if (item.tglKunjungan.substring(0, 4) == d.getFullYear() || item.tglKunjungan.substring(0, 4) == new Date().getFullYear()) {
                                             index = i + 1;
                                             console.log(index);
                                             var codebutton = "";
@@ -1164,7 +1166,7 @@
                                     $.each(jsonRujukanPCARE, function(i, item) {
                                         // console.log(item.tglKunjungan.substring(0, 4) + " | " + new Date().getFullYear());
                                         nik = item.peserta.nik;
-                                        if (item.tglKunjungan.substring(0, 4) == new Date().getFullYear()) {
+                                        if (item.tglKunjungan.substring(0, 4) == d.getFullYear() || item.tglKunjungan.substring(0, 4) == new Date().getFullYear()) {
                                             index = i + 1;
                                             console.log(index);
                                             var codebutton = "";
@@ -1187,7 +1189,7 @@
                                         }
                                     });
                                     dataRujukanUtama = dataRujukanUtama.substring(0, dataRujukanUtama.length - 1);
-                                    console.log("dataRujukanUtama "+dataRujukanUtama);
+                                    console.log("dataRujukanUtama2 "+dataRujukanUtama);
                                     $('#tabelRujukan').append(trHTML);
                                     $('#tabelRujukanDiv').removeClass('d-none');
                                 }
@@ -1208,14 +1210,14 @@
                             no_bpjs: nomor
                         },
                         success: function(data) {
-                            // console.log(data);
+                            console.log(data);
                             if (data.status == 'ok') {
                                 rujukanKosong = false;
                                 e.preventDefault();
                                 var responseJson = JSON.parse(data.result);
                                 // jsonhistori = responseJson.histori;
                                 // console.log(responseJson.rujukan);
-                                console.log(responseJson);
+                                console.log("history "+responseJson);
                                 // console.log(responseJson['rujukan']);
                                 var trHTML = '';
                                 // $.each(responseJson, function(i, item) {
@@ -1223,7 +1225,7 @@
                                     // console.log(item.tglSep.substring(0, 4) + " | " + new Date().getFullYear());
                                     if(responseJson){
                                         $.each(responseJson, function(i, item1) {
-                                            if (item1.tglSep.substring(0, 4) == new Date().getFullYear()) {
+                                            if (item1.tglSep.substring(0, 4) == d.getFullYear() || item.tglKunjungan.substring(0, 4) == new Date().getFullYear()) {
                                             index = index + 1;
                                             let date_2 = (new Date()).toISOString().split('T')[0];
                                             let TotalDays = datediff(parseDate(item1.tglSep), parseDate(date_2));

@@ -1,3 +1,11 @@
+anjungan
+dashboard
+manajemen
+pasien
+rawat_jalan
+
+
+
 Khanza Lite Change log
 
 01/18/2022
