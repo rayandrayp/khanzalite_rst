@@ -1225,7 +1225,7 @@
                                     // console.log(item.tglSep.substring(0, 4) + " | " + new Date().getFullYear());
                                     if(responseJson){
                                         $.each(responseJson, function(i, item1) {
-                                            if (item1.tglSep.substring(0, 4) == d.getFullYear() || item.tglKunjungan.substring(0, 4) == new Date().getFullYear()) {
+                                            if (item1.tglSep.substring(0, 4) == d.getFullYear() || item1.tglSep.substring(0, 4) == new Date().getFullYear()) {
                                             index = index + 1;
                                             let date_2 = (new Date()).toISOString().split('T')[0];
                                             let TotalDays = datediff(parseDate(item1.tglSep), parseDate(date_2));
@@ -1285,6 +1285,7 @@
                                 $('#tgl_registrasi_daftar').val(new Date().toISOString().slice(0, 10));
                                 $('#tgl_registrasi_daftar').prop('disabled', 'disabled');
                                 $('#kd_pj').val('A09');
+                                $('#kd_pj').prop('disabled', 'disabled');
                                 getPoli();
                                 // $('#kd_pj').prop('disabled', 'disabled');
                             } else {
