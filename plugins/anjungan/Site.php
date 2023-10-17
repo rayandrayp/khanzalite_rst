@@ -47,12 +47,15 @@ class Site extends SiteModule
     $this->route('anjungan/presensi', 'getPresensi');
     $this->route('anjungan/presensi/upload', 'getUpload');
     $this->route('anjungan/bed', 'getDisplayBed');
+    $this->route('anjungan/antrianpasien', 'getDisplayAntrianPasien');
     $this->route('anjungan/sep', 'getSepMandiri');
     $this->route('anjungan/sep/cek', 'getSepMandiriCek');
     $this->route('anjungan/sep/(:int)/(:int)', 'getSepMandiriNokaNorm');
-    $this->route('anjungan/sep/bikin/(:str)/(:int)', 'getSepMandiriBikin');
+    $this->route('anjungan/sep/bikin/(:str)/(:int)/(:str)', 'getSepMandiriBikin');
     $this->route('anjungan/sep/savesep', 'postSaveSep');
     $this->route('anjungan/sep/cetaksep/(:str)', 'getCetakSEP');
+    $this->route('anjungan/ok-tt', 'getDisplayAnjunganOKTT');
+    $this->route('anjungan/display/ok-tt', 'getDisplayAnjunganOKTTDisplay');
   }
 
   public function getIndex()
@@ -403,6 +406,124 @@ class Site extends SiteModule
     }
 
     return $result;
+  }
+
+  public function getDisplayAnjunganOKTT()
+  {
+    $title = 'Display Antrian Poliklinik';
+    $logo  = $this->settings->get('settings.logo');
+    $slug = parseURL();
+    $vidio = $this->settings->get('anjungan.vidio');
+    $_GET['vid'] = '';
+    if (isset($_GET['vid']) && $_GET['vid'] != '') {
+      $vidio = $_GET['vid'];
+    }
+
+    $date = date('Y-m-d');
+    $tentukan_hari = date('D', strtotime(date('Y-m-d')));
+    $day = array(
+      'Sun' => 'AKHAD',
+      'Mon' => 'SENIN',
+      'Tue' => 'SELASA',
+      'Wed' => 'RABU',
+      'Thu' => 'KAMIS',
+      'Fri' => 'JUMAT',
+      'Sat' => 'SABTU'
+    );
+    $hari = $day[$tentukan_hari];
+
+    $running_text = $this->settings->get('anjungan.text_poli');
+    $jadwal = $this->db('jadwal')->join('dokter', 'dokter.kd_dokter = jadwal.kd_dokter')->join('poliklinik', 'poliklinik.kd_poli = jadwal.kd_poli')->where('hari_kerja', $hari)->toArray();
+    $_username = $this->core->getUserInfo('fullname', null, true);
+    $tanggal       = getDayIndonesia(date('Y-m-d')) . ', ' . dateIndonesia(date('Y-m-d'));
+    $username      = !empty($_username) ? $_username : $this->core->getUserInfo('username');
+
+    $content = $this->draw('display.anjungan.ok.tt.html', [
+      'title' => $title,
+      'logo' => $logo,
+      'powered' => 'Powered by <a href="https://basoro.org/">KhanzaLITE</a>',
+      'username' => $username,
+      'tanggal' => $tanggal,
+      'vidio' => $vidio,
+      'running_text' => $running_text,
+      'jadwal' => $jadwal,
+      'slug' => $slug
+    ]);
+
+    $assign = [
+      'title' => $this->settings->get('settings.nama_instansi'),
+      'desc' => $this->settings->get('settings.alamat'),
+      'content' => $content
+    ];
+
+    $this->setTemplate("canvas.html");
+
+    $this->tpl->set('page', ['title' => $assign['title'], 'desc' => $assign['desc'], 'content' => $assign['content']]);
+  }
+
+  public function getDisplayAnjunganOKTTDisplay()
+  {
+    $title = 'Display Antrian Poliklinik';
+    $logo  = $this->settings->get('settings.logo');
+    $result_tt = $this->_resultTT();
+    $result_ok = $this->_resultJadwalOperasi();
+    $slug = parseURL();
+
+    $_username = $this->core->getUserInfo('fullname', null, true);
+    $tanggal       = getDayIndonesia(date('Y-m-d')) . ', ' . dateIndonesia(date('Y-m-d'));
+    $username      = !empty($_username) ? $_username : $this->core->getUserInfo('username');
+
+    $content = $this->draw('display.anjungan.ok.tt.display.html', [
+      'title' => $title,
+      'logo' => $logo,
+      'powered' => 'Powered by <a href="https://basoro.org/">KhanzaLITE</a>',
+      'username' => $username,
+      'tanggal' => $tanggal,
+      'vidio' => $this->settings->get('anjungan.vidio'),
+      'running_text' => $this->settings->get('anjungan.text_poli'),
+      'slug' => $slug,
+      'result_tt' => $result_tt,
+      'result_ok' => $result_ok
+    ]);
+
+    $assign = [
+      'title' => $this->settings->get('settings.nama_instansi'),
+      'desc' => $this->settings->get('settings.alamat'),
+      'content' => $content
+    ];
+
+    $this->setTemplate("canvas.html");
+
+    $this->tpl->set('page', ['title' => $assign['title'], 'desc' => $assign['desc'], 'content' => $assign['content']]);
+  }
+
+  public function _resultTT()
+  {
+    $query = $this->db()->pdo()->prepare("SELECT b.nm_bangsal, 
+                                          SUM(CASE WHEN  k.`status` <> '' THEN 1 ELSE 0 END) bed_total,
+                                          SUM(CASE WHEN  k.`status` = 'ISI' THEN 1 ELSE 0 END) bed_terisi,
+                                          SUM(CASE WHEN  k.`status` = 'KOSONG' THEN 1 ELSE 0 END) bed_kosong
+                                          FROM bangsal b 
+                                          INNER JOIN kamar k ON k.kd_bangsal = b.kd_bangsal
+                                          WHERE b.`status`='1'  AND k.statusdata = '1'
+                                          GROUP BY b.kd_bangsal;");
+    
+    $query->execute();
+    $rows = $query->fetchAll(\PDO::FETCH_ASSOC);
+    return $rows;
+  }
+
+  public function _resultJadwalOPerasi()
+  {
+    $query = $this->db()->pdo()->prepare("SELECT pasien.nm_pasien,dokter.nm_dokter,concat(reg_periksa.umurdaftar,' ',reg_periksa.sttsumur) as umur,pasien.jk, ruang_ok.nm_ruang_ok
+      from booking_operasi inner join reg_periksa inner join pasien inner join paket_operasi inner join dokter INNER JOIN ruang_ok
+      on booking_operasi.no_rawat=reg_periksa.no_rawat and reg_periksa.no_rkm_medis=pasien.no_rkm_medis and booking_operasi.kd_dokter=dokter.kd_dokter and booking_operasi.kode_paket=paket_operasi.kode_paket 
+      AND booking_operasi.kd_ruang_ok = ruang_ok.kd_ruang_ok
+      where tanggal='".date('Y-m-d')."' order by booking_operasi.tanggal,booking_operasi.jam_mulai");
+    
+    $query->execute();
+    $rows = $query->fetchAll(\PDO::FETCH_ASSOC);
+    return $rows;
   }
 
   public function getDisplayAntrianLoket()
@@ -1549,7 +1670,7 @@ class Site extends SiteModule
         $query->execute();
         $result = $query->fetchAll(\PDO::FETCH_ASSOC);
         // $result = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'LIKE', 'Obat%')->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
-
+        $next_antrian =0;
         if ($result) {
           $noantrian = $result[0]['noantrian'];
         } else {
@@ -1576,6 +1697,7 @@ class Site extends SiteModule
               $("#formobat").submit(function(e) {
                 e.preventDefault();
                 e.stopImmediatePropagation();
+                console.log("<?php echo url() . '/anjungan/ajax?show=simpanobat&noantrian=' . $next_antrian . '&kdbooking='; ?>" + kdbooking)
                 $.ajax({
                   url: "<?php echo url() . '/anjungan/ajax?show=simpanobat&noantrian=' . $next_antrian . '&kdbooking='; ?>" + kdbooking,
                   type: "POST",
@@ -1602,9 +1724,19 @@ class Site extends SiteModule
         
         $result = $this->db('referensi_mobilejkn_bpjs')->select('no_rawat')->where('nobooking', $kdbooking)->oneArray();
         if ($result) {
-          if (!empty($this->db('temporary2')->where('temp2', $result['no_rawat'])->oneArray())) {
+          
+          // if (!empty($this->db('temporary2')->where('temp2', $result['no_rawat'])->oneArray())) {
+          //   $this->db('temporary2')->where('temp1', 'waktupasien')->where('temp2', $result['no_rawat'])->update('temp5', $start_time);
+          // } else {
+            // $this->db('temporary2')->where('temp1', 'waktupasien')->where('temp2', $result['no_rawat'])->update('temp4', date('H:i:s', strtotime('-'.rand(10,60).' minutes')));
             $this->db('temporary2')->where('temp1', 'waktupasien')->where('temp2', $result['no_rawat'])->update('temp5', $start_time);
-          }
+          // }
+          // if (!empty($this->db('record_waktulayan_bpjs')->where('no_rawat', $result['no_rawat'])->oneArray())) {
+          //   $this->db('record_waktulayan_bpjs')->where('no_rawat', $result['no_rawat'])->update('taskid6', $start_time);
+          // }else{
+          //   $this->db('record_waktulayan_bpjs')->where('no_rawat', $result['no_rawat'])->update('taskid5', date('H:i:s', strtotime('-'.rand(10,30).' minutes')));
+          //   $this->db('record_waktulayan_bpjs')->where('no_rawat', $result['no_rawat'])->update('taskid6', $start_time);
+          // }
         }
         // $this->db('mlite_antrian_loket')
         //   ->save([
@@ -1617,6 +1749,16 @@ class Site extends SiteModule
         //     'loket' => 'Obat'
         //   ]);
         //redirect(url('anjungan/pasien'));
+        $dataTambahAntreanFarmasi = $this->tambaAntreanFarmasiBPJS($kdbooking,'Non racikan', $_GET['noantrian']);
+        $response = $this->sendDataWSBPJS('antrean/farmasi/add', $dataTambahAntreanFarmasi);
+        if ($response['metadata']['code'] != '200') {
+          $this->db('mlite_settings')->save([
+            'module' => 'debug',
+            'field' => 'farmasi tambah antrean',
+            'value' => $kdbooking . '|' . $response['metadata']['code'] . '|' . $response['metadata']['message']
+          ]);
+        }
+        // $dataUpdateWaktuAntrean = $this->updateWaktuAntreanBPJS($kdbooking, 6, 'Non racikan');
         $dataUpdateWaktuAntrean = $this->updateWaktuAntreanBPJS($kdbooking, 6);
         $response = $this->sendDataWSBPJS('antrean/updatewaktu', $dataUpdateWaktuAntrean);
         if ($response['metadata']['code'] != '200') {
@@ -1631,6 +1773,7 @@ class Site extends SiteModule
       case "tampilracikan":
         $result = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'LIKE', 'Racikan%')->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
 
+        $next_antrian =0;
         if ($result) {
           $noantrian = $result['noantrian'];
         } else {
@@ -1713,6 +1856,17 @@ class Site extends SiteModule
         //     'end_time' => '00:00:00',
         //     'loket' => 'Racikan'
         //   ]);
+        $dataTambahAntreanFarmasi = $this->tambaAntreanFarmasiBPJS($kdbooking,'Racikan', $_GET['noantrian']);
+        $response = $this->sendDataWSBPJS('antrean/farmasi/add', $dataTambahAntreanFarmasi);
+        if ($response['metadata']['code'] != '200') {
+          $this->db('mlite_settings')->save([
+            'module' => 'debug',
+            'field' => 'farmasi tambah antrean',
+            'value' => $kdbooking . '|' . $response['metadata']['code'] . '|' . $response['metadata']['message']
+          ]);
+        }
+
+        // $dataUpdateWaktuAntrean = $this->updateWaktuAntreanBPJS($kdbooking, 6,'Racikan');
         $dataUpdateWaktuAntrean = $this->updateWaktuAntreanBPJS($kdbooking, 6);
         $response = $this->sendDataWSBPJS('antrean/updatewaktu', $dataUpdateWaktuAntrean);
         if ($response['metadata']['code'] != '200') {
@@ -1984,6 +2138,7 @@ class Site extends SiteModule
           echo json_encode($data);
         }
         break;
+        
       case "post-registrasi":
         $data = array();
         if (!empty($_POST['no_rkm_medis_daftar'])) {
@@ -2070,11 +2225,11 @@ class Site extends SiteModule
               $kuotanonjkn = $responseAmbilAntrean['response']['kuotanonjkn'];
               $keterangan = $responseAmbilAntrean['response']['keterangan'];
 
-              if ($_POST['jenis'] != 'BPJS') { //jika non BPJS
-                $jenispasien = 'NON JKN';
-                $nomorkartu = '';
-                $nomorreferensi = '';
-              }
+              // if ($_POST['jenis'] != 'BPJS') { //jika non BPJS
+              //   $jenispasien = 'NON JKN';
+              //   $nomorkartu = '';
+              //   $nomorreferensi = '';
+              // }
 
               $dataTambahAntrean = $this->tambahAntreanBPJS(
                 $kodebooking,
@@ -2188,6 +2343,205 @@ class Site extends SiteModule
         }
         break;
 
+        case "check-kepesertaan":
+          if (!empty($_POST['no_bpjs'])) {
+            $url = '';
+            if ($_POST['jenis'] != 'bpjs') { //jika non BPJS
+              $url = 'nik';
+            }else{
+              $url = 'nokartu';
+            }
+            $data = array();
+            $no_bpjs = $_POST['no_bpjs'];
+  
+            $responseKepesertaan = $this->checkStatusPeserta($url, $no_bpjs);
+  
+            if ($responseKepesertaan['metaData']['code'] == '200') {
+              $arr_str = '';
+              $dataResponse = json_decode($responseKepesertaan['response'], true);
+              // var_dump($dataResponse);
+              
+              $arr_str = substr($arr_str, 0, strlen($arr_str) - 1);
+              $data['result'] = $dataResponse['peserta'];
+              $data['status'] = 'ok';
+            } else {
+              $data['status'] = 'err';
+              $data['result'] = $responseKepesertaan['metaData']['message'];
+              // }
+            }
+            echo json_encode($data);
+          }
+          break;
+
+      case "check-rujukan-all":
+        if (!empty($_POST['no_bpjs'])) {
+          $data = array();
+          $arr_str = '';
+          $no_bpjs = $_POST['no_bpjs'];
+
+          // ------------------------- check rujukan PCARE ------------------------- 
+          $url = 'https://apijkn.bpjs-kesehatan.go.id/vclaim-rest/Rujukan/List/Peserta/' . $no_bpjs;
+          $responsePCARE = $this->getRujukanWSBPJS($url);
+          
+          if ($responsePCARE['metaData']['code'] == '200') {
+            $dataResponse = json_decode($responsePCARE['response'], true);
+            foreach ($dataResponse['rujukan'] as $a) {
+              //check nomor rujukan ada di BridgingSEP 
+              if ($this->checkNoSEP($a['noKunjungan'])) { //jika tidak ada nomor rujukan di bidgingSEP
+                $poli = "";
+                if ($a['poliRujukan']['nama'] == "") {
+                  $poli = "-";
+                } else {
+                  $poli = $a['poliRujukan']['nama'];
+                }
+                if(substr($a['tglKunjungan'],0,4) == date('Y',strtotime("-90 days")) || substr($a['tglKunjungan'], 0,4) == date('Y')){
+                  $now = time(); 
+                  $tglKunjungan = strtotime($a['tglKunjungan']);
+                  $datediff = round(($now - $tglKunjungan)/ (60 * 60 * 24));
+                  if($datediff < 90){
+                    $arr_str = $arr_str . '{"noRujukan":"' . $a['noKunjungan'] . '" , "noSep":"-", "tglSep":"'  . $a['tglKunjungan'] . '", "poli":"'  . $poli . '", "jenis":"rujukan"},';
+                  }
+                }
+              }else{//jika ada, harus menggunakan nomor kontrol
+                $responseSurKon = $this->getSuratKontrol(date('m'), $no_bpjs);
+                if ($responseSurKon['metaData']['code'] == '200') {
+                  $arr_str = '';
+                  $dataResponse = json_decode($responseSurKon['response'], true);
+                  
+                  foreach ($dataResponse['list'] as $a) {
+                    if($a['terbitSEP'] == 'Belum'){
+                      $arr_str = $arr_str . '{"noRujukan":"' . $a['noSuratKontrol'] . '" , "noSep":"'  . $a['noSepAsalKontrol'] . '", "tglSep":"'  . $a['tglTerbitKontrol'] . '", "poli":"'  . $a['poliAsal'] . '", "jenis":"kontrol"},';
+                    }
+                  }
+                }
+
+                $responseSurKon = $this->getSuratKontrol(date('m', strtotime('+1 month')), $no_bpjs);
+                if ($responseSurKon['metaData']['code'] == '200') {
+                  $arr_str = '';
+                  $dataResponse = json_decode($responseSurKon['response'], true);
+                  
+                  foreach ($dataResponse['list'] as $a) {
+                    if($a['terbitSEP'] == 'Belum'){
+                      $arr_str = $arr_str . '{"noRujukan":"' . $a['noSuratKontrol'] . '" , "noSep":"'  . $a['noSepAsalKontrol'] . '", "tglSep":"'  . $a['tglTerbitKontrol'] . '", "poli":"'  . $a['poliAsal'] . '", "jenis":"kontrol"},';
+                    }
+                  }
+                }
+              }
+              // echo $arr_str;
+            }
+          }
+
+          // ------------------------- check rujukan RS -------------------------
+          $url = 'https://apijkn.bpjs-kesehatan.go.id/vclaim-rest/Rujukan/RS/List/Peserta/' . $no_bpjs;
+          $responseRS = $this->getRujukanWSBPJS($url);
+          if ($responseRS['metaData']['code'] == '200') {
+            $dataResponse = json_decode($responseRS['response'], true);
+            
+            foreach ($dataResponse['rujukan'] as $a) {
+              //check nomor rujukan ada di BridgingSEP 
+              if ($this->checkNoSEP($a['noKunjungan'])) { //jika tidak ada nomor rujukan di bidgingSEP
+                $poli = "";
+                if ($a['poliRujukan']['nama'] == "") {
+                  $poli = "-";
+                } else {
+                  $poli = $a['poliRujukan']['nama'];
+                }
+                if(substr($a['tglKunjungan'], 0,4) == date('Y',strtotime("-90 days")) || substr($a['tglKunjungan'], 0,4) == date('Y')){
+                  $now = time(); 
+                  $tglKunjungan = strtotime($a['tglKunjungan']);
+                  $datediff = round(($now - $tglKunjungan)/ (60 * 60 * 24));
+                  if($datediff < 90){
+                    $arr_str = $arr_str . '{"noRujukan":"' . $a['noKunjungan'] . '" , "noSep":"-", "tglSep":"'  . $a['tglKunjungan'] . '", "poli":"'  . $poli . '", "jenis":"rujukan"},';
+                  }
+                }
+              }else{//jika ada, harus menggunakan nomor kontrol
+                $responseSurKon = $this->getSuratKontrol(date('m'), $no_bpjs);
+                if ($responseSurKon['metaData']['code'] == '200') {
+                  $arr_str = '';
+                  $dataResponse = json_decode($responseSurKon['response'], true);
+                  
+                  foreach ($dataResponse['list'] as $a) {
+                    if($a['terbitSEP'] == 'Belum'){
+                      $arr_str = $arr_str . '{"noRujukan":"' . $a['noSuratKontrol'] . '" , "noSep":"'  . $a['noSepAsalKontrol'] . '", "tglSep":"'  . $a['tglTerbitKontrol'] . '", "poli":"'  . $a['poliAsal'] . '", "jenis":"kontrol"},';
+                    }
+                  }
+                }
+
+                $responseSurKon = $this->getSuratKontrol(date('m', strtotime('+1 month')), $no_bpjs);
+                if ($responseSurKon['metaData']['code'] == '200') {
+                  $arr_str = '';
+                  $dataResponse = json_decode($responseSurKon['response'], true);
+                  
+                  foreach ($dataResponse['list'] as $a) {
+                    if($a['terbitSEP'] == 'Belum'){
+                      $arr_str = $arr_str . '{"noRujukan":"' . $a['noSuratKontrol'] . '" , "noSep":"'  . $a['noSepAsalKontrol'] . '", "tglSep":"'  . $a['tglTerbitKontrol'] . '", "poli":"'  . $a['poliAsal'] . '", "jenis":"kontrol"},';
+                    }
+                  }
+                } 
+              }
+            }
+          }
+
+          // ------------------------- check HISTORY POST MRS -------------------------
+          $tglAkhir = date('Y-m-d');
+          $tglMulai = date('Y-m-d', strtotime('-90 days'));
+          $url = 'https://apijkn.bpjs-kesehatan.go.id/vclaim-rest/monitoring/HistoriPelayanan/NoKartu/' . $no_bpjs . '/tglMulai/' . $tglMulai . '/tglAkhir/' . $tglAkhir;
+          $responseHistory = $this->getRujukanWSBPJS($url);
+          
+          if ($responseHistory['metaData']['code'] == '200') {
+            $dataResponse = json_decode($responseHistory['response'], true);
+            
+            foreach ($dataResponse['histori'] as $a) {
+              
+              //check noSEP ada di BridgingSEP dan jenis Pelayanan = 1 (rawat inap)
+              if ($this->checkNoSEP($a['noSep']) && $a['jnsPelayanan'] == '1') { 
+                $poli = "";
+                if ($a['poli'] == "") {
+                  $poli = "-";
+                } else {
+                  $poli = $a['poli'];
+                }
+                // echo substr($a['tglSep'], 4) .' '.date('Y',strtotime("-90 days")) .' | ';
+                // echo substr($a['tglSep'], 4) .' '.date('Y');
+                if(substr($a['tglSep'], 0,4) == date('Y',strtotime("-90 days")) || substr($a['tglSep'], 0,4) == date('Y')){
+                  $now = time(); // or your date as well
+                  $tgl_sep = strtotime($a['tglSep']);
+                  $datediff = round(($now - $tgl_sep)/ (60 * 60 * 24));
+                  // echo $datediff;
+                  if($datediff < 90){
+                    // echo $a['ppkPelayanan'];
+                    if($a['ppkPelayanan'] == 'RS SOEPRAOEN'){
+                      $arr_str = $arr_str . '{"noRujukan":"' . $a['noSep'] . '" , "noSep":"'  . $a['noSep'] . '", "tglSep":"'  . $a['tglSep'] . '", "poli":"'  . $poli . '", "jenis":"post mrs"},';
+                    }
+                  }
+                }
+              }
+              // echo $arr_str;
+            }
+          }
+
+          // ----------------------------- Rujukan Internal ---------------------------
+          $strQuery = "SELECT * FROM surat_kontrol_internal WHERE no_sep in (SELECT no_sep FROM bridging_sep WHERE no_kartu = '$no_bpjs') order by tgl_rencana desc limit 1";
+          $query = $this->db()->pdo()->prepare($strQuery);
+          $query->execute();
+          // $rows = $query->fetchAll(\PDO::FETCH_ASSOC);
+          $data = $query->fetchAll(\PDO::FETCH_OBJ);
+          if ($data) {
+            $arr_str = $arr_str . '{"noRujukan":"' .$data[0]->no_surat. '" , "noSep":"-", "tglSep":"'  . $data[0]->tgl_surat . '", "poli":"'  .$data[0]->kd_poli_bpjs. '", "jenis":"kontrol internal"},';         
+          }
+
+          if($arr_str == ''){
+            $data['status'] = 'err';
+          }else{
+            $arr_str = substr($arr_str, 0, strlen($arr_str) - 1);
+            $data['result'] = '[' . $arr_str . ']';
+            $data['status'] = 'ok';
+          }
+          echo json_encode($data);
+
+        }
+        break;
+
       case "check-rujukan":
         if (!empty($_POST['no_bpjs'])) {
           $data = array();
@@ -2215,7 +2569,7 @@ class Site extends SiteModule
                 } else {
                   $poli = $a['poli'];
                 }
-                $arr_str = $arr_str . '{"noRujukan":"' . $a['noRujukan'] . '" , "noSep":"'  . $a['noSep'] . '", "tglSep":"'  . $a['tglSep'] . '", "poli":"'  . $poli . '", "ppkPelayanan":"'  . $a['ppkPelayanan'] . '"},';
+                $arr_str = $arr_str . '{"noRujukan":"' . $a['noSep'] . '" , "noSep":"'  . $a['noSep'] . '", "tglSep":"'  . $a['tglSep'] . '", "poli":"'  . $poli . '", "ppkPelayanan":"'  . $a['ppkPelayanan'] . '"},';
               }
               // echo $arr_str;
             }
@@ -2279,6 +2633,74 @@ class Site extends SiteModule
           echo json_encode($data);
         }
         break;
+      
+        case "check-rujukankhusus":
+          if (!empty($_POST['no_bpjs'])) {
+            $data = array();
+            $no_bpjs = $_POST['no_bpjs'];
+            $bulan4 = date('m');
+            $bulan3 = date('m', strtotime('-30 days'));
+            $bulan2 = date('m', strtotime('-60 days'));
+            $bulan1 = date('m', strtotime('-90 days'));
+            $tahun4 = date('Y');
+            $tahun3 = date('Y', strtotime('-30 days'));
+            $tahun2 = date('Y', strtotime('-60 days'));
+            $tahun1 = date('Y', strtotime('-90 days'));
+            $url_bulan1 = 'https://apijkn.bpjs-kesehatan.go.id/vclaim-rest/Rujukan/Khusus/List/Bulan/' . $bulan1 . '/Tahun/' . $tahun1;
+            $url_bulan2 = 'https://apijkn.bpjs-kesehatan.go.id/vclaim-rest/Rujukan/Khusus/List/Bulan/' . $bulan2 . '/Tahun/' . $tahun2;
+            $url_bulan3 = 'https://apijkn.bpjs-kesehatan.go.id/vclaim-rest/Rujukan/Khusus/List/Bulan/' . $bulan3 . '/Tahun/' . $tahun3;
+            $url_bulan4 = 'https://apijkn.bpjs-kesehatan.go.id/vclaim-rest/Rujukan/Khusus/List/Bulan/' . $bulan4 . '/Tahun/' . $tahun4;
+            $response_bulan1 = $this->getRujukanWSBPJS($url_bulan1);
+            $response_bulan2 = $this->getRujukanWSBPJS($url_bulan2);
+            $response_bulan3 = $this->getRujukanWSBPJS($url_bulan3);
+            $response_bulan4 = $this->getRujukanWSBPJS($url_bulan4);
+
+            
+            $arr_str = '';
+            
+            if ($response_bulan1['metaData']['code'] == '200') {
+              $dataResponse = json_decode($response_bulan1['response'], true);
+              foreach ($dataResponse['rujukan'] as $a) {
+                if ($a['nokapst'] == $no_bpjs) { 
+                  $arr_str += $arr_str . '{"noRujukan":"' . $a['norujukan'] . '" , "noSep":"-", "tglrujukan_berakhir":"'  . $a['tglrujukan_berakhir'] . '", "poli":"-", "ppkPelayanan":"-"},';
+                }
+              }
+            }
+            if ($response_bulan2['metaData']['code'] == '200') {
+              $dataResponse = json_decode($response_bulan2['response'], true);
+              foreach ($dataResponse['rujukan'] as $a) {
+                if ($a['nokapst'] == $no_bpjs) { 
+                  $arr_str += $arr_str . '{"noRujukan":"' . $a['norujukan'] . '" , "noSep":"-", "tglrujukan_berakhir":"'  . $a['tglrujukan_berakhir'] . '", "poli":"-", "ppkPelayanan":"-"},';
+                }
+              }
+            }
+            if ($response_bulan3['metaData']['code'] == '200') {
+              $dataResponse = json_decode($response_bulan3['response'], true);
+              foreach ($dataResponse['rujukan'] as $a) {
+                if ($a['nokapst'] == $no_bpjs) { 
+                  $arr_str += $arr_str . '{"noRujukan":"' . $a['norujukan'] . '" , "noSep":"-", "tglrujukan_berakhir":"'  . $a['tglrujukan_berakhir'] . '", "poli":"-", "ppkPelayanan":"-"},';
+                }
+              }
+            }
+            if ($response_bulan4['metaData']['code'] == '200') {
+              $dataResponse = json_decode($response_bulan4['response'], true);
+              foreach ($dataResponse['rujukan'] as $a) {
+                if ($a['nokapst'] == $no_bpjs) { 
+                  $arr_str += $arr_str . '{"noRujukan":"' . $a['norujukan'] . '" , "noSep":"-", "tglrujukan_berakhir":"'  . $a['tglrujukan_berakhir'] . '", "poli":"-", "ppkPelayanan":"-"},';
+                }
+              }
+            }
+            if(strlen($arr_str)>0) {
+              $arr_str = substr($arr_str, 0, strlen($arr_str) - 1);
+              $data['result'] = '[' . $arr_str . ']';
+              $data['status'] = 'ok';
+            } else {
+              $data['status'] = 'err';
+            }
+  
+            echo json_encode($data);
+          }
+          break;
 
       case "check-nik":
         if (!empty($_POST['no_ktp'])) {
@@ -2499,7 +2921,7 @@ class Site extends SiteModule
         $terlambat2     = $set_keterlambatan['terlambat2'];
 
         $valid = $this->db('rekap_presensi')->where('id', $idpeg['id'])->where('shift', $jam_jaga['shift'])->like('jam_datang', '%' . date('Y-m-d') . '%')->oneArray();
-
+        var_dump($valid);
         if ($valid) {
           $this->notify('failure', 'Anda sudah presensi untuk tanggal ' . date('Y-m-d'));
           //}elseif((!empty($idpeg['id']))&&(!empty($jam_jaga['shift']))&&($jadwal_pegawai)&&(!$valid)) {
@@ -2660,6 +3082,58 @@ class Site extends SiteModule
     return $result;
   }
 
+  public function getDisplayAntrianPasien()
+  {
+    $title = 'Display Antrian Pasien';
+    $logo  = $this->settings->get('settings.logo');
+    $display = $this->_resultAntrianPasien();
+
+    $_username = $this->core->getUserInfo('fullname', null, true);
+    $tanggal       = getDayIndonesia(date('Y-m-d')) . ', ' . dateIndonesia(date('Y-m-d'));
+    $username      = !empty($_username) ? $_username : $this->core->getUserInfo('username');
+
+    $content = $this->draw('display.antrian.pasien.html', [
+      'title' => $title,
+      'logo' => $logo,
+      'powered' => 'Powered by <a href="https://basoro.org/">KhanzaLITE</a>',
+      'username' => $username,
+      'tanggal' => $tanggal,
+      'running_text' => $this->settings->get('anjungan.text_poli'),
+      'display' => $display
+    ]);
+
+    $assign = [
+      'title' => $this->settings->get('settings.nama_instansi'),
+      'desc' => $this->settings->get('settings.alamat'),
+      'content' => $content
+    ];
+
+    $this->setTemplate("canvas.html");
+
+    $this->tpl->set('page', ['title' => $assign['title'], 'desc' => $assign['desc'], 'content' => $assign['content']]);
+  }
+  
+  public function _resultAntrianPasien()
+  {
+    // $query = $this->db()->pdo()->prepare("SELECT p.nm_pasien, rmb.nobooking, r.kd_poli, ifnull(t2.taskid4,'-') AS poli_start, ifnull(t2.taskid5,'-') AS poli_finish, ifnull(m.start_time,'-') AS obat_start, ifnull(m.end_time,'-') AS obat_finish
+    //                                       FROM reg_periksa r 
+    //                                       INNER JOIN pasien p ON p.no_rkm_medis = r.no_rkm_medis
+    //                                       INNER JOIN referensi_mobilejkn_bpjs rmb ON rmb.no_rawat = r.no_rawat
+    //                                       LEFT JOIN mlite_antrian_loket m ON RIGHT(m.`type`, 14) = rmb.nobooking
+    //                                       LEFT JOIN record_waktulayan_bpjs t2 ON t2.no_rawat = r.no_rawat
+    //                                       WHERE r.tgl_registrasi = '".date('Y-m-d')."' ");
+    $query = $this->db()->pdo()->prepare("SELECT p.nm_pasien, rmb.nobooking, r.kd_poli, ifnull(t2.temp3,'-') AS poli_start, ifnull(t2.temp4,'-') AS poli_finish, ifnull(m.start_time,'-') AS obat_start, ifnull(m.end_time,'-') AS obat_finish
+                                          FROM reg_periksa r 
+                                          INNER JOIN pasien p ON p.no_rkm_medis = r.no_rkm_medis
+                                          INNER JOIN referensi_mobilejkn_bpjs rmb ON rmb.no_rawat = r.no_rawat
+                                          LEFT JOIN mlite_antrian_loket m ON RIGHT(m.`type`, 14) = rmb.nobooking
+                                          LEFT JOIN temporary2 t2 ON t2.temp2 = r.no_rawat
+                                          WHERE r.tgl_registrasi = '".date('Y-m-d')."' ");
+    $query->execute();
+    $rows = $query->fetchAll(\PDO::FETCH_ASSOC);
+    return $rows;
+  }
+
   public function getSepMandiri()
   {
     $title = 'Display SEP Mandiri';
@@ -2702,68 +3176,318 @@ class Site extends SiteModule
 
   public function getSepMandiriNokaNorm()
   {
-    $slug = parseURL();
-    $sep_response = '';
-    if (count($slug) == 4 && $slug[0] == 'anjungan' && $slug[1] == 'sep') {
+    // $slug = parseURL();
+    // $sep_response = '';
+    // if (count($slug) == 4 && $slug[0] == 'anjungan' && $slug[1] == 'sep') {
 
-      $url = "Rujukan/List/Peserta/" . $slug[2];
+    //   $url = "Rujukan/List/Peserta/" . $slug[2];
 
-      $url = $this->api_url . '' . $url;
-      $output = BpjsService::get($url, NULL, $this->consid, $this->secretkey, $this->user_key);
-      $json = json_decode($output, true);
-      //var_dump($json);
-      $code = $json['metaData']['code'];
-      $message = $json['metaData']['message'];
-      $stringDecrypt = stringDecrypt($this->settings->get('settings.BpjsConsID'), $this->settings->get('settings.BpjsSecretKey'), $json['response']);
-      $decompress = '""';
+    //   $url = $this->api_url . '' . $url;
+    //   $output = BpjsService::get($url, NULL, $this->consid, $this->secretkey, $this->user_key);
+    //   $json = json_decode($output, true);
+    //   //var_dump($json);
+    //   $code = $json['metaData']['code'];
+    //   $message = $json['metaData']['message'];
+    //   $stringDecrypt = stringDecrypt($this->settings->get('settings.BpjsConsID'), $this->settings->get('settings.BpjsSecretKey'), $json['response']);
+    //   $decompress = '""';
 
-      if (!empty($json)) :
-        if ($code != "200") {
-          $sep_response = $message;
-        } else {
-          if (!empty($stringDecrypt)) {
-            $decompress = decompress($stringDecrypt);
-            $sep_response = json_decode($decompress, true);
-          } else {
-            $sep_response = "Sambungan ke server BPJS sedang ada gangguan. Silahkan ulangi lagi.";
+    //   if (!empty($json)) :
+    //     if ($code != "200") {
+    //       $sep_response = $message;
+    //     } else {
+    //       if (!empty($stringDecrypt)) {
+    //         $decompress = decompress($stringDecrypt);
+    //         $sep_response = json_decode($decompress, true);
+    //       } else {
+    //         $sep_response = "Sambungan ke server BPJS sedang ada gangguan. Silahkan ulangi lagi.";
+    //       }
+    //     }
+    //   else :
+    //     $sep_response = "Sambungan ke server BPJS sedang ada gangguan. Silahkan ulangi lagi.";
+    //   endif;
+      date_default_timezone_set('UTC');
+      $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+      $key = $this->consid.$this->secretkey.$tStamp;
+
+      date_default_timezone_set($this->settings->get('settings.timezone'));
+      $slug = parseURL();
+      $sep_response = '';
+      if (count($slug) == 4 && $slug[0] == 'anjungan' && $slug[1] == 'sep') {
+
+          $url = "Rujukan/List/Peserta/".$slug[2];
+
+          $url = $this->api_url.''.$url;
+          $output = BpjsService::get($url, NULL, $this->consid, $this->secretkey, $this->user_key, $tStamp);
+          $json = json_decode($output, true);
+          //var_dump($json);
+          if($json['metaData']['code'] == 201){
+            $url = "Rujukan/RS/List/Peserta/" . $slug[2];
+
+            $url = $this->api_url . '' . $url;
+            $output = BpjsService::get($url, NULL, $this->consid, $this->secretkey, $this->user_key, $tStamp);
+            $json = json_decode($output, true);
           }
-        }
-      else :
-        $sep_response = "Sambungan ke server BPJS sedang ada gangguan. Silahkan ulangi lagi.";
-      endif;
-    }
+          $code = $json['metaData']['code'];
+          $message = $json['metaData']['message'];
+          $stringDecrypt = stringDecrypt($key, $json['response']);
+          $decompress = '""';
 
-    $title = 'Display SEP Mandiri';
-    $logo  = $this->settings->get('settings.logo');
+          if(!empty($json)):
+            if ($code != "200") {
+              $sep_response = $message;
+            } else {
+              if(!empty($stringDecrypt)) {
+                $decompress = decompress($stringDecrypt);
+                $sep_response = json_decode($decompress, true);
+              } else {
+                $sep_response = "Sambungan ke server BPJS sedang ada gangguan. Silahkan ulangi lagi dengan menekan tombol REFRESH";
+              }
+            }
+          else:
+            $sep_response = "Sambungan ke server BPJS sedang ada gangguan. Silahkan ulangi lagi dengan menekan tombol REFRESH";
+          endif;
+      }
 
-    $_username = $this->core->getUserInfo('fullname', null, true);
-    $tanggal       = getDayIndonesia(date('Y-m-d')) . ', ' . dateIndonesia(date('Y-m-d'));
-    $username      = !empty($_username) ? $_username : $this->core->getUserInfo('username');
+      $title = 'Display SEP Mandiri';
+      $logo  = $this->settings->get('settings.logo');
 
-    $content = $this->draw('sep.mandiri.noka.norm.html', [
-      'title' => $title,
-      'logo' => $logo,
-      'powered' => 'Powered by <a href="https://basoro.org/">KhanzaLITE</a>',
-      'username' => $username,
-      'tanggal' => $tanggal,
-      'running_text' => $this->settings->get('anjungan.text_anjungan'),
-      'no_rkm_medis' => $slug[3],
-      'sep_response' => $sep_response
-    ]);
+      $_username = $this->core->getUserInfo('fullname', null, true);
+      $__username = $this->core->getUserInfo('username');
+      if($this->core->getUserInfo('username') !=='') {
+        $__username = 'Tamu';
+      }
+      $tanggal       = getDayIndonesia(date('Y-m-d')).', '.dateIndonesia(date('Y-m-d'));
+      $username      = !empty($_username) ? $_username : $__username;
 
-    $assign = [
-      'title' => $this->settings->get('settings.nama_instansi'),
-      'desc' => $this->settings->get('settings.alamat'),
-      'content' => $content
-    ];
+      $content = $this->draw('sep.mandiri.noka.norm.html', [
+        'title' => $title,
+        'logo' => $logo,
+        'powered' => 'Powered by <a href="https://mlite.id/">mLITE</a>',
+        'username' => $username,
+        'tanggal' => $tanggal,
+        'running_text' => $this->settings->get('anjungan.text_anjungan'),
+        'no_rkm_medis' => $slug[3],
+        'sep_response' => $sep_response
+      ]);
 
-    $this->setTemplate("canvas.html");
+      $assign = [
+          'title' => $this->settings->get('settings.nama_instansi'),
+          'desc' => $this->settings->get('settings.alamat'),
+          'content' => $content
+      ];
 
-    $this->tpl->set('page', ['title' => $assign['title'], 'desc' => $assign['desc'], 'content' => $assign['content']]);
+      $this->setTemplate("canvas.html");
+
+      $this->tpl->set('page', ['title' => $assign['title'], 'desc' => $assign['desc'], 'content' => $assign['content']]);
+    
   }
 
   public function getSepMandiriBikin()
   {
+  //   $slug = parseURL();
+
+  //   $title = 'Display SEP Mandiri';
+  //   $logo  = $this->settings->get('settings.logo');
+  //   $kode_ppk  = $this->settings->get('settings.ppk_bpjs');
+  //   $nama_ppk  = $this->settings->get('settings.nama_instansi');
+
+  //   $_username = $this->core->getUserInfo('fullname', null, true);
+  //   $tanggal       = getDayIndonesia(date('Y-m-d')) . ', ' . dateIndonesia(date('Y-m-d'));
+  //   $username      = !empty($_username) ? $_username : $this->core->getUserInfo('username');
+
+  //   $date = date('Y-m-d');
+
+  //   //if ($searchBy == 'RS') {
+  //   //    $url = 'Rujukan/RS/'.$slug[3];
+  //   //} else {
+  //   $url = 'Rujukan/' . $slug[3];
+  //   //}
+  //   $url = $this->api_url . '' . $url;
+  //   $output = BpjsService::get($url, NULL, $this->consid, $this->secretkey, $this->user_key);
+  //   $json = json_decode($output, true);
+  //   //var_dump($json);
+  //   $code = $json['metaData']['code'];
+  //   $message = $json['metaData']['message'];
+  //   $stringDecrypt = stringDecrypt($this->settings->get('settings.BpjsConsID'), $this->settings->get('settings.BpjsSecretKey'), $json['response']);
+  //   $decompress = '""';
+  //   //$rujukan = [];
+  //   if ($code == "200") {
+  //     $decompress = decompress($stringDecrypt);
+  //     $rujukan = json_decode($decompress, true);
+  //   }
+
+  //   $reg_periksa = $this->db('reg_periksa')
+  //     ->join('pasien', 'pasien.no_rkm_medis=reg_periksa.no_rkm_medis')
+  //     ->join('poliklinik', 'poliklinik.kd_poli=reg_periksa.kd_poli')
+  //     ->where('reg_periksa.tgl_registrasi', $date)
+  //     ->where('reg_periksa.no_rkm_medis', $slug[4])
+  //     ->oneArray();
+
+  //   $skdp_bpjs = $this->db('skdp_bpjs')->where('no_rkm_medis', $slug[4])->where('tanggal_datang', $date)->oneArray();
+
+  //   $content = $this->draw('sep.mandiri.bikin.html', [
+  //     'title' => $title,
+  //     'logo' => $logo,
+  //     'powered' => 'Powered by <a href="https://basoro.org/">KhanzaLITE</a>',
+  //     'username' => $username,
+  //     'tanggal' => $tanggal,
+  //     'running_text' => $this->settings->get('anjungan.text_anjungan'),
+  //     'kode_ppk' => $kode_ppk,
+  //     'nama_ppk' => $nama_ppk,
+  //     'reg_periksa' => $reg_periksa,
+  //     'skdp_bpjs' => $skdp_bpjs,
+  //     'rujukan' => $rujukan
+  //   ]);
+
+  //   $assign = [
+  //     'title' => $this->settings->get('settings.nama_instansi'),
+  //     'desc' => $this->settings->get('settings.alamat'),
+  //     'content' => $content
+  //   ];
+
+  //   $this->setTemplate("canvas.html");
+
+  //   $this->tpl->set('page', ['title' => $assign['title'], 'desc' => $assign['desc'], 'content' => $assign['content']]);
+  // }
+
+  // public function postSaveSEP()
+  // {
+  //   $_POST['kdppkpelayanan'] = $this->settings->get('settings.ppk_bpjs');
+  //   $_POST['nmppkpelayanan'] = $this->settings->get('settings.nama_instansi');
+  //   $_POST['sep_user']  = 'SEP Mandiri';
+
+  //   $data = [
+  //     'request' => [
+  //       't_sep' => [
+  //         'noKartu' => $_POST['no_kartu'],
+  //         'tglSep' => $_POST['tglsep'],
+  //         'ppkPelayanan' => $_POST['kdppkpelayanan'],
+  //         'jnsPelayanan' => $_POST['jnspelayanan'],
+  //         'klsRawat' => $_POST['klsrawat'],
+  //         'noMR' => $_POST['nomr'],
+  //         'rujukan' => [
+  //           'asalRujukan' => $_POST['asal_rujukan'],
+  //           'tglRujukan' => $_POST['tglrujukan'],
+  //           'noRujukan' => $_POST['norujukan'],
+  //           'ppkRujukan' => $_POST['kdppkrujukan']
+  //         ],
+  //         'catatan' => $_POST['catatan'],
+  //         'diagAwal' => $_POST['diagawal'],
+  //         'poli' => [
+  //           'tujuan' => $_POST['kdpolitujuan'],
+  //           'eksekutif' => $_POST['eksekutif']
+  //         ],
+  //         'cob' => [
+  //           'cob' => $_POST['cob']
+  //         ],
+  //         'katarak' => [
+  //           'katarak' => $_POST['katarak']
+  //         ],
+  //         'jaminan' => [
+  //           'lakaLantas' => $_POST['lakalantas'],
+  //           'penjamin' => [
+  //             'penjamin' => $_POST['penjamin'],
+  //             'tglKejadian' => $_POST['tglkkl'],
+  //             'keterangan' => $_POST['keterangankkl'],
+  //             'suplesi' => [
+  //               'suplesi' => $_POST['suplesi'],
+  //               'noSepSuplesi' => $_POST['no_sep_suplesi'],
+  //               'lokasiLaka' => [
+  //                 'kdPropinsi' => $_POST['kdprop'],
+  //                 'kdKabupaten' => $_POST['kdkab'],
+  //                 'kdKecamatan' => $_POST['kdkec']
+  //               ]
+  //             ]
+  //           ]
+  //         ],
+  //         'skdp' => [
+  //           'noSurat' => $_POST['noskdp'],
+  //           'kodeDPJP' => $_POST['kddpjp']
+  //         ],
+  //         'noTelp' => $_POST['notelep'],
+  //         'user' => $_POST['sep_user']
+  //       ]
+  //     ]
+  //   ];
+
+  //   $data = json_encode($data);
+
+  //   $url = $this->api_url . 'SEP/1.1/insert';
+  //   $output = BpjsService::post($url, $data, $this->consid, $this->secretkey, $this->user_key);
+  //   $data = json_decode($output, true);
+
+  //   if ($data == NULL) {
+
+  //     echo 'Koneksi ke server BPJS terputus. Silahkan ulangi beberapa saat lagi!';
+  //   } else if ($data['metaData']['code'] == 200) {
+
+  //     $_POST['sep_no_sep'] = $data['response']['sep']['noSep'];
+
+  //     $simpan_sep = $this->db('bridging_sep')->save([
+  //       'no_sep' => $_POST['sep_no_sep'],
+  //       'no_rawat' => $_POST['no_rawat'],
+  //       'tglsep' => $_POST['tglsep'],
+  //       'tglrujukan' => $_POST['tglrujukan'],
+  //       'no_rujukan' => $_POST['norujukan'],
+  //       'kdppkrujukan' => $_POST['kdppkrujukan'],
+  //       'nmppkrujukan' => $_POST['nmppkrujukan'],
+  //       'kdppkpelayanan' => $_POST['kdppkpelayanan'],
+  //       'nmppkpelayanan' => $_POST['nmppkpelayanan'],
+  //       'jnspelayanan' => $_POST['jnspelayanan'],
+  //       'catatan' => $_POST['catatan'],
+  //       'diagawal' => $_POST['diagawal'],
+  //       'nmdiagnosaawal' => $_POST['nmdiagnosaawal'],
+  //       'kdpolitujuan' => $_POST['kdpolitujuan'],
+  //       'nmpolitujuan' => $_POST['nmpolitujuan'],
+  //       'klsrawat' => $_POST['klsrawat'],
+  //       'lakalantas' => $_POST['lakalantas'],
+  //       'user' => $_POST['sep_user'],
+  //       'nomr' => $_POST['nomr'],
+  //       'nama_pasien' => $_POST['nama_pasien'],
+  //       'tanggal_lahir' => $_POST['tanggal_lahir'],
+  //       'peserta' => $_POST['peserta'],
+  //       'jkel' => $_POST['jenis_kelamin'],
+  //       'no_kartu' => $_POST['no_kartu'],
+  //       'tglpulang' => $_POST['tglpulang'],
+  //       'asal_rujukan' => $_POST['asal_rujukan'],
+  //       'eksekutif' => $_POST['eksekutif'],
+  //       'cob' => $_POST['cob'],
+  //       'penjamin' => $_POST['penjamin'],
+  //       'notelep' => $_POST['notelep'],
+  //       'katarak' => $_POST['katarak'],
+  //       'tglkkl' => $_POST['tglkkl'],
+  //       'keterangankkl' => $_POST['keterangankkl'],
+  //       'suplesi' => $_POST['suplesi'],
+  //       'no_sep_suplesi' => $_POST['no_sep_suplesi'],
+  //       'kdprop' => $_POST['kdprop'],
+  //       'nmprop' => $_POST['nmprop'],
+  //       'kdkab' => $_POST['kdkab'],
+  //       'nmkab' => $_POST['nmkab'],
+  //       'kdkec' => $_POST['kdkec'],
+  //       'nmkec' => $_POST['nmkec'],
+  //       'noskdp' => $_POST['noskdp'],
+  //       'kddpjp' => $_POST['kddpjp'],
+  //       'nmdpdjp' => $_POST['nmdpdjp']
+  //     ]);
+  //     $simpan_prb = $this->db('bpjs_prb')->save([
+  //       'no_sep' => $_POST['sep_no_sep'],
+  //       'prb' => $_POST['prolanis_prb']
+  //     ]);
+
+  //     if ($simpan_sep) {
+  //       echo $_POST['sep_no_sep'];
+  //     }
+  //   } else {
+
+  //     echo $data['metaData']['message'];
+  //   }
+
+  //   exit();
+    date_default_timezone_set('UTC');
+    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $key = $this->consid.$this->secretkey.$tStamp;
+
+    date_default_timezone_set($this->settings->get('settings.timezone'));
     $slug = parseURL();
 
     $title = 'Display SEP Mandiri';
@@ -2772,197 +3496,154 @@ class Site extends SiteModule
     $nama_ppk  = $this->settings->get('settings.nama_instansi');
 
     $_username = $this->core->getUserInfo('fullname', null, true);
-    $tanggal       = getDayIndonesia(date('Y-m-d')) . ', ' . dateIndonesia(date('Y-m-d'));
-    $username      = !empty($_username) ? $_username : $this->core->getUserInfo('username');
+    $__username = $this->core->getUserInfo('username');
+    if($this->core->getUserInfo('username') !=='') {
+      $__username = 'Tamu';
+    }
+    $tanggal       = getDayIndonesia(date('Y-m-d')).', '.dateIndonesia(date('Y-m-d'));
+    $username      = !empty($_username) ? $_username : $__username;
 
     $date = date('Y-m-d');
 
-    //if ($searchBy == 'RS') {
-    //    $url = 'Rujukan/RS/'.$slug[3];
-    //} else {
-    $url = 'Rujukan/' . $slug[3];
-    //}
-    $url = $this->api_url . '' . $url;
-    $output = BpjsService::get($url, NULL, $this->consid, $this->secretkey, $this->user_key);
+    $url = 'Rujukan/'.$slug[3];
+    $url = $this->api_url.''.$url;
+    $output = BpjsService::get($url, NULL, $this->consid, $this->secretkey, $this->user_key, $tStamp);
     $json = json_decode($output, true);
+
+    if($json['metaData']['code'] == 201){
+      $url = 'Rujukan/RS/' . $slug[3];
+
+      $url = $this->api_url . '' . $url;
+      $output = BpjsService::get($url, NULL, $this->consid, $this->secretkey, $this->user_key, $tStamp);
+      $json = json_decode($output, true);
+    }
+
     //var_dump($json);
     $code = $json['metaData']['code'];
     $message = $json['metaData']['message'];
-    $stringDecrypt = stringDecrypt($this->settings->get('settings.BpjsConsID'), $this->settings->get('settings.BpjsSecretKey'), $json['response']);
+    $stringDecrypt = stringDecrypt($key, $json['response']);
     $decompress = '""';
     //$rujukan = [];
     if ($code == "200") {
-      $decompress = decompress($stringDecrypt);
-      $rujukan = json_decode($decompress, true);
+        $decompress = decompress($stringDecrypt);
+        $rujukan = json_decode($decompress, true);
     }
 
-    $reg_periksa = $this->db('reg_periksa')
+    if(!$this->core->mysql('reg_periksa')->where('no_rkm_medis', $slug[4])->where('tgl_registrasi', $date)->oneArray()) {
+      $tentukan_hari=date('D',strtotime(date('Y-m-d')));
+      $day = array(
+        'Sun' => 'AKHAD',
+        'Mon' => 'SENIN',
+        'Tue' => 'SELASA',
+        'Wed' => 'RABU',
+        'Thu' => 'KAMIS',
+        'Fri' => 'JUMAT',
+        'Sat' => 'SABTU'
+      );
+      $hari=$day[$tentukan_hari];
+
+      $maping_poli_bpjs = $this->core->mysql('maping_poli_bpjs')->where('kd_poli_bpjs', $slug[5])->oneArray();
+      $jadwal = $this->core->mysql('jadwal')->where('hari_kerja', $hari)->where('kd_poli', $maping_poli_bpjs['kd_poli_rs'])->oneArray();
+      $poliklinik = $this->core->mysql('poliklinik')->where('kd_poli', $jadwal['kd_poli'])->oneArray();
+
+      $pasien = $this->core->mysql('pasien')->where('no_rkm_medis', $slug['4'])->oneArray();
+
+      $birthDate = new \DateTime($pasien['tgl_lahir']);
+      $today = new \DateTime("today");
+      $umur_daftar = "0";
+      $status_umur = 'Hr';
+      if ($birthDate < $today) {
+        $y = $today->diff($birthDate)->y;
+        $m = $today->diff($birthDate)->m;
+        $d = $today->diff($birthDate)->d;
+        $umur_daftar = $d;
+        $status_umur = "Hr";
+        if($y !='0'){
+          $umur_daftar = $y;
+          $status_umur = "Th";
+        }
+        if($y =='0' && $m !='0'){
+          $umur_daftar = $m;
+          $status_umur = "Bl";
+        }
+      }
+
+      $insert = $this->core->mysql('reg_periksa')
+        ->save([
+          'no_reg' => $this->core->setNoReg($jadwal['kd_dokter'], $jadwal['kd_poli']),
+          'no_rawat' => $this->core->setNoRawat(date('Y-m-d')),
+          'tgl_registrasi' => date('Y-m-d'),
+          'jam_reg' => date('H:i:s'),
+          'kd_dokter' => $jadwal['kd_dokter'],
+          'no_rkm_medis' => $slug['4'],
+          'kd_poli' => $jadwal['kd_poli'],
+          'p_jawab' => $this->core->getPasienInfo('namakeluarga', $slug['4']),
+          'almt_pj' => $this->core->getPasienInfo('alamatpj', $slug['4']),
+          'hubunganpj' => $this->core->getPasienInfo('keluarga', $slug['4']),
+          'biaya_reg' => $poliklinik['registrasi'],
+          'stts' => 'Belum',
+          'stts_daftar' => 'Baru',
+          'status_lanjut' => 'Ralan',
+          'kd_pj' => 'BPJ',
+          'umurdaftar' => $umur_daftar,
+          'sttsumur' => $status_umur,
+          'status_bayar' => 'Belum Bayar',
+          'status_poli' => 'Baru'
+        ]);
+
+    }
+
+    $reg_periksa = $this->core->mysql('reg_periksa')
       ->join('pasien', 'pasien.no_rkm_medis=reg_periksa.no_rkm_medis')
       ->join('poliklinik', 'poliklinik.kd_poli=reg_periksa.kd_poli')
       ->where('reg_periksa.tgl_registrasi', $date)
       ->where('reg_periksa.no_rkm_medis', $slug[4])
       ->oneArray();
 
-    $skdp_bpjs = $this->db('skdp_bpjs')->where('no_rkm_medis', $slug[4])->where('tanggal_datang', $date)->oneArray();
+    $no_surat_kontrol_bpjs = "";
+    $dpjp = $this->core->mysql('maping_dokter_dpjpvclaim')->where('kd_dokter', $reg_periksa['kd_dokter'])->oneArray();
+    //$skdp_bpjs = $this->core->mysql('skdp_bpjs')->where('no_rkm_medis', $slug[4])->where('tanggal_datang', $date)->oneArray();
+    $surat_kontrol_bpjs = $this->core->mysql('bridging_surat_kontrol_bpjs')
+      ->select('no_surat')
+      ->join('bridging_sep', 'bridging_sep.no_sep=bridging_surat_kontrol_bpjs.no_sep')
+      ->where('bridging_sep.nomr', $slug[4])
+      ->where('tgl_rencana', $date)
+      ->oneArray();
+
+    if(!$surat_kontrol_bpjs){
+      $cari_rujukan = $this->core->mysql('bridging_sep')->where('no_rujukan',$slug[3])->where('kdpolitujuan',$rujukan['rujukan']['poliRujukan']['kode'])->asc('tglsep')->oneArray();
+      if($cari_rujukan){
+        $skdp_bpjs = $this->createKontrol($slug[3],$rujukan['rujukan']['poliRujukan']['kode'],$dpjp['kd_dokter_bpjs']);
+        $no_surat_kontrol_bpjs = $skdp_bpjs;
+      }
+    }else{
+      $no_surat_kontrol_bpjs = $surat_kontrol_bpjs['no_surat'];
+    }
 
     $content = $this->draw('sep.mandiri.bikin.html', [
       'title' => $title,
       'logo' => $logo,
-      'powered' => 'Powered by <a href="https://basoro.org/">KhanzaLITE</a>',
+      'powered' => 'Powered by <a href="https://mlite.id/">mLITE</a>',
       'username' => $username,
       'tanggal' => $tanggal,
       'running_text' => $this->settings->get('anjungan.text_anjungan'),
       'kode_ppk' => $kode_ppk,
       'nama_ppk' => $nama_ppk,
       'reg_periksa' => $reg_periksa,
-      'skdp_bpjs' => $skdp_bpjs,
-      'rujukan' => $rujukan
+      'skdp_bpjs' => $no_surat_kontrol_bpjs,
+      'rujukan' => $rujukan,
+      'dpjp' => $dpjp
     ]);
 
     $assign = [
-      'title' => $this->settings->get('settings.nama_instansi'),
-      'desc' => $this->settings->get('settings.alamat'),
-      'content' => $content
+        'title' => $this->settings->get('settings.nama_instansi'),
+        'desc' => $this->settings->get('settings.alamat'),
+        'content' => $content
     ];
 
     $this->setTemplate("canvas.html");
 
     $this->tpl->set('page', ['title' => $assign['title'], 'desc' => $assign['desc'], 'content' => $assign['content']]);
-  }
-
-  public function postSaveSEP()
-  {
-    $_POST['kdppkpelayanan'] = $this->settings->get('settings.ppk_bpjs');
-    $_POST['nmppkpelayanan'] = $this->settings->get('settings.nama_instansi');
-    $_POST['sep_user']  = 'SEP Mandiri';
-
-    $data = [
-      'request' => [
-        't_sep' => [
-          'noKartu' => $_POST['no_kartu'],
-          'tglSep' => $_POST['tglsep'],
-          'ppkPelayanan' => $_POST['kdppkpelayanan'],
-          'jnsPelayanan' => $_POST['jnspelayanan'],
-          'klsRawat' => $_POST['klsrawat'],
-          'noMR' => $_POST['nomr'],
-          'rujukan' => [
-            'asalRujukan' => $_POST['asal_rujukan'],
-            'tglRujukan' => $_POST['tglrujukan'],
-            'noRujukan' => $_POST['norujukan'],
-            'ppkRujukan' => $_POST['kdppkrujukan']
-          ],
-          'catatan' => $_POST['catatan'],
-          'diagAwal' => $_POST['diagawal'],
-          'poli' => [
-            'tujuan' => $_POST['kdpolitujuan'],
-            'eksekutif' => $_POST['eksekutif']
-          ],
-          'cob' => [
-            'cob' => $_POST['cob']
-          ],
-          'katarak' => [
-            'katarak' => $_POST['katarak']
-          ],
-          'jaminan' => [
-            'lakaLantas' => $_POST['lakalantas'],
-            'penjamin' => [
-              'penjamin' => $_POST['penjamin'],
-              'tglKejadian' => $_POST['tglkkl'],
-              'keterangan' => $_POST['keterangankkl'],
-              'suplesi' => [
-                'suplesi' => $_POST['suplesi'],
-                'noSepSuplesi' => $_POST['no_sep_suplesi'],
-                'lokasiLaka' => [
-                  'kdPropinsi' => $_POST['kdprop'],
-                  'kdKabupaten' => $_POST['kdkab'],
-                  'kdKecamatan' => $_POST['kdkec']
-                ]
-              ]
-            ]
-          ],
-          'skdp' => [
-            'noSurat' => $_POST['noskdp'],
-            'kodeDPJP' => $_POST['kddpjp']
-          ],
-          'noTelp' => $_POST['notelep'],
-          'user' => $_POST['sep_user']
-        ]
-      ]
-    ];
-
-    $data = json_encode($data);
-
-    $url = $this->api_url . 'SEP/1.1/insert';
-    $output = BpjsService::post($url, $data, $this->consid, $this->secretkey, $this->user_key);
-    $data = json_decode($output, true);
-
-    if ($data == NULL) {
-
-      echo 'Koneksi ke server BPJS terputus. Silahkan ulangi beberapa saat lagi!';
-    } else if ($data['metaData']['code'] == 200) {
-
-      $_POST['sep_no_sep'] = $data['response']['sep']['noSep'];
-
-      $simpan_sep = $this->db('bridging_sep')->save([
-        'no_sep' => $_POST['sep_no_sep'],
-        'no_rawat' => $_POST['no_rawat'],
-        'tglsep' => $_POST['tglsep'],
-        'tglrujukan' => $_POST['tglrujukan'],
-        'no_rujukan' => $_POST['norujukan'],
-        'kdppkrujukan' => $_POST['kdppkrujukan'],
-        'nmppkrujukan' => $_POST['nmppkrujukan'],
-        'kdppkpelayanan' => $_POST['kdppkpelayanan'],
-        'nmppkpelayanan' => $_POST['nmppkpelayanan'],
-        'jnspelayanan' => $_POST['jnspelayanan'],
-        'catatan' => $_POST['catatan'],
-        'diagawal' => $_POST['diagawal'],
-        'nmdiagnosaawal' => $_POST['nmdiagnosaawal'],
-        'kdpolitujuan' => $_POST['kdpolitujuan'],
-        'nmpolitujuan' => $_POST['nmpolitujuan'],
-        'klsrawat' => $_POST['klsrawat'],
-        'lakalantas' => $_POST['lakalantas'],
-        'user' => $_POST['sep_user'],
-        'nomr' => $_POST['nomr'],
-        'nama_pasien' => $_POST['nama_pasien'],
-        'tanggal_lahir' => $_POST['tanggal_lahir'],
-        'peserta' => $_POST['peserta'],
-        'jkel' => $_POST['jenis_kelamin'],
-        'no_kartu' => $_POST['no_kartu'],
-        'tglpulang' => $_POST['tglpulang'],
-        'asal_rujukan' => $_POST['asal_rujukan'],
-        'eksekutif' => $_POST['eksekutif'],
-        'cob' => $_POST['cob'],
-        'penjamin' => $_POST['penjamin'],
-        'notelep' => $_POST['notelep'],
-        'katarak' => $_POST['katarak'],
-        'tglkkl' => $_POST['tglkkl'],
-        'keterangankkl' => $_POST['keterangankkl'],
-        'suplesi' => $_POST['suplesi'],
-        'no_sep_suplesi' => $_POST['no_sep_suplesi'],
-        'kdprop' => $_POST['kdprop'],
-        'nmprop' => $_POST['nmprop'],
-        'kdkab' => $_POST['kdkab'],
-        'nmkab' => $_POST['nmkab'],
-        'kdkec' => $_POST['kdkec'],
-        'nmkec' => $_POST['nmkec'],
-        'noskdp' => $_POST['noskdp'],
-        'kddpjp' => $_POST['kddpjp'],
-        'nmdpdjp' => $_POST['nmdpdjp']
-      ]);
-      $simpan_prb = $this->db('bpjs_prb')->save([
-        'no_sep' => $_POST['sep_no_sep'],
-        'prb' => $_POST['prolanis_prb']
-      ]);
-
-      if ($simpan_sep) {
-        echo $_POST['sep_no_sep'];
-      }
-    } else {
-
-      echo $data['metaData']['message'];
-    }
-
-    exit();
   }
 
   public function getCetakSEP()
@@ -3120,7 +3801,7 @@ class Site extends SiteModule
     return $request;
   }
 
-  public function updateWaktuAntreanBPJS($kodebooking, $taskid)
+  public function updateWaktuAntreanBPJS($kodebooking, $taskid, $jenisObat = null)
   {
     $waktu = strtotime(date("Y-m-d H:i:s")) * 1000;
     //   "taskid": {
@@ -3133,17 +3814,43 @@ class Site extends SiteModule
     //     7 (akhir waktu obat selesai dibuat),
     //     99 (tidak hadir/batal)
     // },
-    $request = array(
-      "kodebooking" => $kodebooking,
-      "taskid" => $taskid,
-      "waktu" => $waktu
-    );
+    if(!empty($jenisObat)){
+      $request = array(
+        "kodebooking" => $kodebooking,
+        "taskid" => $taskid,
+        "waktu" => $waktu,
+        "jenisresep" => $jenisObat
+      );
+    }else{
+      $request = array(
+        "kodebooking" => $kodebooking,
+        "taskid" => $taskid,
+        "waktu" => $waktu
+      );
+    }
     // $request = '{
     //                 "kodebooking": "' . $kodebooking . '",
     //                 "taskid": ' . $taskid . ',
     //                 "waktu": ' . $waktu . '
     //             }';
 
+    return $request;
+  }
+
+  public function tambaAntreanFarmasiBPJS($kodebooking, $jenisObat, $nomorantrean)
+  {
+  //   {
+  //     "kodebooking": "16032021A001",
+  //     "jenisresep": "racikan" ---> (racikan / non racikan),
+  //     "nomorantrean": 1,
+  //     "keterangan": ""
+  // }
+    $request = array(
+      "kodebooking" => $kodebooking,
+      "jenisresep" => $jenisObat,
+      "nomorantrean" => $nomorantrean,
+      "keterangan" => ""
+    );
     return $request;
   }
 
@@ -3389,6 +4096,126 @@ class Site extends SiteModule
     // ]);
     return $data;
   }
+
+  public function getSuratKontrol($bulan, $no_peserta)
+  {
+    $consid = "31533";
+    $secretKey = "2lLD04E61A";
+    $user_key = "6129e4009acbd89f089be0aa5350f57d";
+
+    // Computes the timestamp
+    date_default_timezone_set('Asia/Jakarta');
+    $tStamp = strval(time() - strtotime('Y/m/d H:i:s'));
+    // Computes the signature by hashing the salt with the secret key as the key
+    $signature = hash_hmac('sha256', $consid . "&" . $tStamp, $secretKey, true);
+
+    // base64 encode
+    $encodedSignature = base64_encode($signature);
+
+    $url = 'https://apijkn.bpjs-kesehatan.go.id/vclaim-rest/RencanaKontrol/ListRencanaKontrol/Bulan/'.$bulan.'/Tahun/'.date('Y').'/Nokartu/' . $no_peserta . '/filter/2';
+    // echo $url;
+    $header = array(
+      'Accept: application/json',
+      'X-Cons-ID: ' . $consid,
+      'X-Timestamp: ' . $tStamp,
+      'X-Signature: ' . $encodedSignature,
+      'user_key: ' . $user_key
+    );
+    // $this->db('mlite_settings')->save([
+    //   'module' => 'debug',
+    //   'field' => 'getRujukanWSBPJS_url',
+    //   'value' => $url
+    // ]);
+    // $this->db('mlite_settings')->save([
+    //   'module' => 'debug',
+    //   'field' => 'getRujukanWSBPJS_header',
+    //   'value' => 'X-Cons-ID ' . $consid . ' ;X-Timestamp ' . $tStamp . ' ;X-Signature ' . $encodedSignature . ' ;user_key ' . $user_key
+    // ]);
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+    curl_setopt($ch, CURLOPT_SSL_CIPHER_LIST, 'DEFAULT@SECLEVEL=1');
+
+    $res = curl_exec($ch);
+    //$result = file_get_contents($res);
+    $obj = json_decode($res, true);
+    $decryptData = $this->stringDecrypt($consid . $secretKey . $tStamp, $obj['response']);
+    $decompressData = $this->decompress($decryptData);
+    $data['metaData'] = $obj['metaData'];
+    $data['response'] = $decompressData;
+
+    curl_close($ch);
+
+    // $this->db('mlite_settings')->save([
+    //   'module' => 'debug',
+    //   'field' => 'check-getRujukanWSBPJS data',
+    //   'value' => $res
+    // ]);
+    return $data;
+  }
+
+  public function checkStatusPeserta($url, $no_peserta)
+  {
+    $consid = "31533";
+    $secretKey = "2lLD04E61A";
+    $user_key = "6129e4009acbd89f089be0aa5350f57d";
+
+    // Computes the timestamp
+    date_default_timezone_set('Asia/Jakarta');
+    $tStamp = strval(time() - strtotime('Y/m/d H:i:s'));
+    // Computes the signature by hashing the salt with the secret key as the key
+    $signature = hash_hmac('sha256', $consid . "&" . $tStamp, $secretKey, true);
+
+    // base64 encode
+    $encodedSignature = base64_encode($signature);
+
+    $url = 'https://apijkn.bpjs-kesehatan.go.id/vclaim-rest/Peserta/'.$url.'/' . $no_peserta . '/tglSEP/'.date('Y-m-d');
+    // echo $url;
+    $header = array(
+      'Accept: application/json',
+      'X-Cons-ID: ' . $consid,
+      'X-Timestamp: ' . $tStamp,
+      'X-Signature: ' . $encodedSignature,
+      'user_key: ' . $user_key
+    );
+    // $this->db('mlite_settings')->save([
+    //   'module' => 'debug',
+    //   'field' => 'getRujukanWSBPJS_url',
+    //   'value' => $url
+    // ]);
+    // $this->db('mlite_settings')->save([
+    //   'module' => 'debug',
+    //   'field' => 'getRujukanWSBPJS_header',
+    //   'value' => 'X-Cons-ID ' . $consid . ' ;X-Timestamp ' . $tStamp . ' ;X-Signature ' . $encodedSignature . ' ;user_key ' . $user_key
+    // ]);
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+    curl_setopt($ch, CURLOPT_SSL_CIPHER_LIST, 'DEFAULT@SECLEVEL=1');
+
+    $res = curl_exec($ch);
+    //$result = file_get_contents($res);
+    $obj = json_decode($res, true);
+    $decryptData = $this->stringDecrypt($consid . $secretKey . $tStamp, $obj['response']);
+    $decompressData = $this->decompress($decryptData);
+    $data['metaData'] = $obj['metaData'];
+    $data['response'] = $decompressData;
+
+    curl_close($ch);
+
+    // $this->db('mlite_settings')->save([
+    //   'module' => 'debug',
+    //   'field' => 'check-getRujukanWSBPJS data',
+    //   'value' => $res
+    // ]);
+    return $data;
+  }
+
+
   //end of WS BPJS
 
   //start WS RS
@@ -3497,13 +4324,18 @@ class Site extends SiteModule
 
     //begin post data
     // API URL
-    // $url = 'https://rssoepraoen.simkeskhanza.com/webapps/api-bpjsfktl/' . $path;
+    // $url = 'http://192.168.14.27/webapps/api-bpjsfktl/' . $path;
     $url = 'https://rssoepraoen.com/webapps/api-bpjsfktl/' . $path;
+    // $url = 'https://rssoepraoen.simkeskhanza.com/webapps/api-bpjsfktl/' . $path;
     // $payload = array(
     //   'test' => 'data'
     // );
 
+
     $jsonData = json_encode($data);
+
+    // $this->core->db()->pdo()->exec("INSERT INTO `mlite_settings` (module, field, value) 
+    // VALUES ('debug', 'sendDataWSRS','" . $jsonData . "  |  ')");
 
     $header = array(
       'Accept: application/json',

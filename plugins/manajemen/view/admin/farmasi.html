@@ -1,13 +1,229 @@
 <ul class="nav nav-tabs">
-    <li><a href="{?=url([ADMIN,'manajemen','dashboard'])?}">Dashboard</a></li>
-    <li><a href="{?=url([ADMIN,'manajemen','pendaftaran'])?}">Pendaftaran</a></li>
-    <li><a href="{?=url([ADMIN,'manajemen','rawatjalan'])?}">Rawat Jalan</a></li>
-    <li><a href="{?=url([ADMIN,'manajemen','rawatinap'])?}">Rawat Inap</a></li>
-    <li><a href="{?=url([ADMIN,'manajemen','dokter'])?}">Dokter</a></li>
-    <li><a href="{?=url([ADMIN,'manajemen','laboratorium'])?}">Laboratorium</a></li>
-    <li><a href="{?=url([ADMIN,'manajemen','radiologi'])?}">Radiologi</a></li>
-    <li><a href="{?=url([ADMIN,'manajemen','apotek'])?}">Apotek</a></li>
-    <li class="active"><a href="{?=url([ADMIN,'manajemen','farmasi'])?}">Farmasi</a></li>
-    <li><a href="{?=url([ADMIN,'manajemen','kasir'])?}">Kasir</a></li>
-    <!-- <li><a href="{?=url([ADMIN,'manajemen','presensi'])?}">Presensi</a></li> -->
+  <li><a href="{?=url([ADMIN,'manajemen','dashboard'])?}">Dashboard</a></li>
+  <!-- <li><a href="{?=url([ADMIN,'manajemen','pendaftaran'])?}">Pendaftaran</a></li> -->
+  <li><a href="{?=url([ADMIN,'manajemen','rawatjalan'])?}">Rawat Jalan</a></li>
+  <li><a href="{?=url([ADMIN,'manajemen','rawatinap'])?}">Rawat Inap</a></li>
+  <li><a href="{?=url([ADMIN,'manajemen','dokter'])?}">Dokter</a></li>
+  <!-- <li><a href="{?=url([ADMIN,'manajemen','laboratorium'])?}">Laboratorium</a></li> -->
+  <!-- <li><a href="{?=url([ADMIN,'manajemen','radiologi'])?}">Radiologi</a></li> -->
+  <li><a href="{?=url([ADMIN,'manajemen','apotek'])?}">Apotek</a></li>
+  <li class="active">
+    <a href="{?=url([ADMIN,'manajemen','farmasi'])?}">Farmasi</a>
+  </li>
+  <li><a href="{?=url([ADMIN,'manajemen','kasir'])?}">Kasir</a></li>
+  <!-- <li><a href="{?=url([ADMIN,'manajemen','presensi'])?}">Presensi</a></li> -->
+  <li><a href="{?=url([ADMIN,'manajemen','mutu'])?}">Indikator Mutu</a></li>
 </ul>
+<br />
+
+<!-- pengajuan dan pemesanan -->
+<article class="row">
+  <div class="col-md-12" id="farmasi_pengajuan">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <form action="" method="">
+          <div class="btn-group pull-right" style="margin-top:-8px;">
+            <span class="btn btn-sm dropdown-toggle" data-toggle="dropdown">
+              <i class="fa fa-calendar"></i><span class="hidden-xs"> Periode</span>
+            </span>
+            <ul class="dropdown-menu dropdown-menu-right">
+              <li style="padding-left:5px;padding-right:5px;">
+                <input type="text" id="tgl_awal" class="form-control tanggal" name="tgl_awal" value="{?=date('Y-m-d')?}" required>
+              </li>
+              <li style="padding-left:5px;padding-right:5px;margin-top:5px;">
+                <input type="text" id="tgl_akhir" class="form-control tanggal" name="tgl_akhir" value="{?=date('Y-m-d')?}" required>
+              </li>
+              <li style="padding-left:5px;padding-right:5px;margin-top:5px;">
+                <input type="submit" class="btn btn-primary btn-block" value="Submit">
+                <input type="hidden" name="t" value="{?=$_SESSION['token']?}">
+              </li>
+            </ul>
+          </div>
+        </form>
+        <h3 class="panel-title">Data Pengajuan Barang Medis</h3>
+      </div>
+      <div class="panel-body">
+        <div class="table-responsive no-margin">
+          <table class="table table-striped no-margin dataTables2" width="100%">
+            <thead>
+              <tr>
+                <th>Tanggal</th>
+                <th>Keterangan</th>
+                <th>Total</th>
+                <th>status</th>
+                <th>Nama Barang & Jumlah</th>
+                <th>No. Pengajuan</th>
+                <th>Petugas</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {if: !empty($databarang.list_pengajuan)} 
+                {loop: $databarang.list_pengajuan}
+                    <tr>
+                        <td {if: $value.status=='Disetujui' } style="vertical-align:top;background-color: #bcfdb4 !important;"{elseif: $value.status=='Ditolak' } style="vertical-align:top;background-color: #fda1a1 !important;"  {else} style="vertical-align:top;background-color: #fdeb9b !important;" {/if}>{$value.tanggal}</td>
+                        <td style="vertical-align:top">{$value.keterangan}</td>
+                        <td style="vertical-align:top">Rp.{$value.total}</td>
+                        <td style="vertical-align:top">{$value.status}</td>
+                        <td style="vertical-align:top">
+                          {loop: $value.pengajuan as $data}
+                          <ul>
+                            <li>
+                              {$data.nama_brng} ({$data.satuan}) : {$data.jumlah} X Rp.{$data.h_pengajuan} = Rp.{$data.total}
+                            </li>
+                          </ul>
+                          {/loop}
+                        </td>
+                        <td style="vertical-align:top">{$value.no_pengajuan}</td>
+                        <td style="vertical-align:top">{$value.nama}</td>
+                        <td style="vertical-align:top">
+                          {if: $value.status=='Proses Pengajuan'} 
+                            <button type="button" name="button" class="btn btn-xs btn-primary acc_pengajuan" data-nopengajuan="{?=$value.no_pengajuan?}" ><i class="fa fa-check"></i><span class="hidden-xs hidden-sm">ACC</span></button>
+                            <button type="button" name="button" class="btn btn-xs btn-danger tolak_pengajuan" data-nopengajuan="{?=$value.no_pengajuan?}" ><i class="fa fa-times"></i><span class="hidden-xs hidden-sm">Tolak</span></button>
+                          {elseif: $value.status=='Ditolak'} 
+                            Telah ditolak oleh {$value.nip} pada {$value.tgl_validasi} {$value.jam_validasi} dengan alasan : {$value.msg}
+                          {else}
+                            Telah disetujui oleh {$value.nip} pada {$value.tgl_validasi} {$value.jam_validasi}
+                          {/if}
+                        </td>
+                    </tr>
+                {/loop} 
+              {else}
+                <tr>
+                    <td colspan="7" class="text-center">
+                    Databarang tidak tersedia
+                    </td>
+                </tr>
+              {/if}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</article>
+
+<article class="row">
+  <div class="col-md-12">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">{$databarang.title}</h3>
+      </div>
+      <div class="panel-body">
+        <div class="table-responsive no-margin">
+          <table id="stok_obat" class="table table-striped no-margin dataTables1" width="100%">
+            <thead>
+              <tr>
+                <th>Nama Barang</th>
+                <th>Stok Semua</th>
+                <th >Depo 1</th>
+                <th>Depo 2</th>
+                <th>Depo 3</th>
+                <th>Depo 4</th>
+                <th>Depo 5</th>
+                <th>Depo 6</th>
+                <th>Gudang Obat</th>
+                <th>Tempat Lain</th>
+              </tr>
+            </thead>
+            <tbody>
+              {if: !empty($databarang.list)} 
+                {loop: $databarang.list}
+                    <tr>
+                        <td style="vertical-align:top">{$value.nama_brng}</td>
+                        <td style="vertical-align:top">{$value.stok}</td>
+                        <td style="vertical-align:top">{$value.dp1}</td>
+                        <td style="vertical-align:top">{$value.dp2}</td>
+                        <td style="vertical-align:top">{$value.dp3}</td>
+                        <td style="vertical-align:top">{$value.dp4}</td>
+                        <td style="vertical-align:top">{$value.dp5}</td>
+                        <td style="vertical-align:top">{$value.dp6}</td>
+                        <td style="vertical-align:top">{$value.go}</td>
+                        <td style="vertical-align:top">{$value.lain}</td>
+                    </tr>
+                {/loop} 
+              {else}
+                <tr>
+                    <td colspan="7" class="text-center">
+                    Databarang tidak tersedia
+                    </td>
+                </tr>
+              {/if}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</article>
+<link href="https://cdn.datatables.net/responsive/2.2.3/css/responsive.dataTables.min.css" rel="stylesheet" />
+<link href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" rel="stylesheet" />
+
+<script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.2.3/js/dataTables.responsive.min.js"></script>
+<script type="text/javascript">
+  // ketika tombol hapus ditekan
+  //$("#display").on("click",".set_dpjp", function(event){
+
+  $(document).ready(function () {
+    $(".dataTables1").DataTable({
+      order: [[0, "asc"]],
+      pageLength: 5,
+      pagingType: "full",
+      responsive: {
+        details: {
+          type: 'column'
+        }
+      },
+      language: {
+        paginate: {
+          first: "&laquo;",
+          last: "&raquo;",
+          previous: "‹",
+          next: "›",
+        },
+        search: "",
+        searchPlaceholder: "Search...",
+      },
+      lengthChange: false,
+      scrollX: true,
+      dom: "<<'data-table-title1'><'datatable-search'f>><'row'<'col-sm-12'tr>><<'pmd-datatable-pagination' l i p>>",
+    });
+    $(".dataTables2").DataTable({
+      order: [[0, "asc"]],
+      pageLength: 5,
+      pagingType: "full",
+      responsive: {
+        details: {
+          type: 'column'
+        }
+      },
+      language: {
+        paginate: {
+          first: "&laquo;",
+          last: "&raquo;",
+          previous: "‹",
+          next: "›",
+        },
+        search: "",
+        searchPlaceholder: "Search...",
+      },
+      lengthChange: false,
+      scrollX: true,
+      dom: "<<'data-table-title2'><'datatable-search'f>><'row'<'col-sm-12'tr>><<'pmd-datatable-pagination' l i p>>",
+    });
+    var t = $(".dataTables1").DataTable().rows().count();
+    $(".data-table-title1").html(
+      '<h3 style="display:inline;float:left;margin-top:0;" class="hidden-xs">Total: ' +
+        t +
+        "</h3>"
+    );
+    var t2 = $(".dataTables2").DataTable().rows().count();
+    $(".data-table-title2").html(
+      '<h3 style="display:inline;float:left;margin-top:0;" class="hidden-xs">Total: ' +
+        t2 +
+        "</h3>"
+    );
+  });
+
+</script>

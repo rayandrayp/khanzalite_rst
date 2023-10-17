@@ -109,6 +109,32 @@ class Admin extends AdminModule
       $dataFinger = json_decode($datajson['response'], true);
     }
 
+    $stmt_timestamp = $this->db()->pdo()->prepare("SELECT temp2, temp3, temp4 FROM temporary2 WHERE temp2 IN (SELECT no_rawat FROM reg_periksa WHERE tgl_registrasi  BETWEEN '$tgl_kunjungan' AND '$tgl_kunjungan_akhir' )");
+    $stmt_timestamp->execute();
+    $rowTimestamp = $stmt_timestamp->fetchAll();
+    $arr_timestamp = [];    
+    
+    foreach($rowTimestamp as $row_ts){
+      $arr_timestamp[$row_ts['temp2']] = [
+                                          "mulai" => $row_ts['temp3'],
+                                          "selesai" => $row_ts['temp4']
+                                        ];
+    }
+    
+    $stmt_sep = $this->db()->pdo()->prepare("SELECT no_sep, no_rawat, catatan,katarak,peserta,klsrawat FROM bridging_sep WHERE tglsep  BETWEEN '$tgl_kunjungan' AND '$tgl_kunjungan_akhir' ");
+    $stmt_sep->execute();
+    $rowSEP = $stmt_sep->fetchAll();
+    $arr_sep = [];    
+    
+    foreach($rowSEP as $row_sep){
+      $arr_sep[$row_sep['no_rawat']] = [
+                                          "no_sep" => $row_sep['no_sep'],
+                                          "catatan" => $row_sep['catatan'],
+                                          "katarak" => $row_sep['katarak'],
+                                          "peserta" => $row_sep['peserta'],
+                                          "klsrawat" => $row_sep['klsrawat']
+                                        ];
+    }
 
     $this->assign['poliklinik']     = $this->db('poliklinik')->where('status', '1')->where('kd_poli', '<>', $this->settings->get('settings.igd'))->toArray();
     $this->assign['dokter']         = $this->db('dokter')->where('status', '1')->toArray();
@@ -120,23 +146,29 @@ class Admin extends AdminModule
 
     $poliklinik = str_replace(",", "','", $this->core->getUserInfo('cap', null, true));
     $igd = $this->settings('settings', 'igd');
-    $sql = "SELECT a.no_rkm_medis, a.no_peserta, a.no_ktp, a.no_rawat,
-            a.nm_pasien, a.tgl_registrasi, a.no_reg, a.nm_poli, a.nm_dokter,
-            a.stts, a.jam_reg, IFNULL(t.temp3, '-') AS mulai, IFNULL(t.temp4, '-') AS selesai
-            FROM (
-                SELECT reg_periksa.*,
-                    pasien.no_ktp,
-                    pasien.nm_pasien,
-                    pasien.no_peserta,
-                    dokter.nm_dokter,
-                    poliklinik.nm_poli,
-                    penjab.png_jawab
-                FROM reg_periksa, pasien, dokter, poliklinik, penjab
-                WHERE reg_periksa.no_rkm_medis = pasien.no_rkm_medis
-                AND reg_periksa.tgl_registrasi BETWEEN '$tgl_kunjungan' AND '$tgl_kunjungan_akhir'
-                AND reg_periksa.kd_dokter = dokter.kd_dokter
-                AND reg_periksa.kd_poli = poliklinik.kd_poli
-                AND reg_periksa.kd_pj = penjab.kd_pj ";
+    $sql = "SELECT r.no_rkm_medis, p.no_peserta, p.no_ktp, r.no_rawat, p.nm_pasien, r.tgl_registrasi, r.no_reg, po.nm_poli, d.nm_dokter, r.stts, r.jam_reg
+            FROM reg_periksa r
+            INNER JOIN pasien p ON p.no_rkm_medis = r.no_rkm_medis
+            INNER JOIN poliklinik po ON po.kd_poli = r.kd_poli
+            INNER JOIN dokter d ON d.kd_dokter = r.kd_dokter
+            WHERE r.tgl_registrasi BETWEEN '$tgl_kunjungan' AND '$tgl_kunjungan_akhir' ";
+    // $sql = "SELECT a.no_rkm_medis, a.no_peserta, a.no_ktp, a.no_rawat,
+    //         a.nm_pasien, a.tgl_registrasi, a.no_reg, a.nm_poli, a.nm_dokter,
+    //         a.stts, a.jam_reg, IFNULL(t.temp3, '-') AS mulai, IFNULL(t.temp4, '-') AS selesai
+    //         FROM (
+    //             SELECT reg_periksa.*,
+    //                 pasien.no_ktp,
+    //                 pasien.nm_pasien,
+    //                 pasien.no_peserta,
+    //                 dokter.nm_dokter,
+    //                 poliklinik.nm_poli,
+    //                 penjab.png_jawab
+    //             FROM reg_periksa, pasien, dokter, poliklinik, penjab
+    //             WHERE reg_periksa.no_rkm_medis = pasien.no_rkm_medis
+    //             AND reg_periksa.tgl_registrasi BETWEEN '$tgl_kunjungan' AND '$tgl_kunjungan_akhir'
+    //             AND reg_periksa.kd_dokter = dokter.kd_dokter
+    //             AND reg_periksa.kd_poli = poliklinik.kd_poli
+    //             AND reg_periksa.kd_pj = penjab.kd_pj ";
     // $sql = "SELECT reg_periksa.*,
     //         pasien.*,
     //         dokter.*,
@@ -151,19 +183,19 @@ class Admin extends AdminModule
     //       AND reg_periksa.kd_pj = penjab.kd_pj";
 
     if ($this->core->getUserInfo('role') != 'admin') {
-      $sql .= " AND reg_periksa.kd_poli IN ('$poliklinik')";
+      $sql .= " AND r.kd_poli IN ('$poliklinik')";
     }
     if ($status_periksa == 'belum') {
-      $sql .= " AND reg_periksa.stts = 'Belum'";
+      $sql .= " AND r.stts = 'Belum'";
     }
     if ($status_periksa == 'selesai') {
-      $sql .= " AND reg_periksa.stts = 'Sudah'";
+      $sql .= " AND r.stts = 'Sudah'";
     }
     if ($status_periksa == 'lunas') {
-      $sql .= " AND reg_periksa.status_bayar = 'Sudah Bayar'";
+      $sql .= " AND r.status_bayar = 'Sudah Bayar'";
     }
 
-    $sql .= " ) AS a LEFT JOIN temporary2 t ON a.no_rawat = t.temp2";
+    // $sql .= " ) AS a LEFT JOIN temporary2 t ON a.no_rawat = t.temp2";
 
     $stmt = $this->db()->pdo()->prepare($sql);
     $stmt->execute();
@@ -171,12 +203,36 @@ class Admin extends AdminModule
 
     $this->assign['list'] = [];
     foreach ($rows as $row) {
+
       $row['finger'] = 'false';
       if (count($dataFinger) > 0) {
         foreach ($dataFinger['list'] as $finger) {
           if ($finger['noKartu'] == $row['no_peserta'])   $row['finger'] = 'true';
         }
       }
+
+      if(isset( $arr_timestamp[$row['no_rawat']]['mulai'])){
+        $row['mulai'] =$arr_timestamp[$row['no_rawat']]['mulai'];
+        $row['selesai'] = $arr_timestamp[$row['no_rawat']]['selesai'];
+      }else{
+        $row['mulai'] ='-';
+        $row['selesai'] = '-';
+      }
+      if(isset($arr_sep[$row['no_rawat']])){
+        $row['no_sep'] =  $arr_sep[$row['no_rawat']]['no_sep'];
+        $row['catatan'] =  $arr_sep[$row['no_rawat']]['catatan'];
+        $row['katarak'] =  ($arr_sep[$row['no_rawat']]['katarak'] == '1.Ya') ? 'Katarak' : 'Tidak Katarak';
+        $row['peserta'] =  $arr_sep[$row['no_rawat']]['peserta'];
+        $row['klsrawat'] =  $arr_sep[$row['no_rawat']]['klsrawat'];
+      }else{
+        $row['no_sep'] =  '-';
+        $row['catatan'] =  '-';
+        $row['katarak'] =  '-';
+        $row['peserta'] =  '-';
+        $row['klsrawat'] =  '-';
+      }
+      
+      
       $this->assign['list'][] = $row;
     }
 
@@ -804,12 +860,13 @@ class Admin extends AdminModule
         ]);
       }
       //cek jika sudah ada record
-      if (empty($this->db('temporary2')->where('temp2', $_POST['no_rawat'])->oneArray())) {
+      if (empty($this->db('record_waktulayan_bpjs')->where('no_rawat', $_POST['no_rawat'])->oneArray())) {
         // echo $_POST['no_rawat'] . ' tidak ada ' . $time;
         $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->save($_POST);
 
         //add waktu pasien saat mulai layan
-        $this->core->db()->pdo()->exec("INSERT INTO `temporary2` (temp1, temp2, temp3, temp4) VALUES ('waktupasien', '" . $_POST['no_rawat'] . "','$time','-')");
+        $this->core->db()->pdo()->exec("INSERT INTO `record_waktulayan_bpjs` (no_rawat, tgl_perawatan, taskid4) VALUES ('" . $_POST['no_rawat'] . "','".date('Y-m-d')."','$time')");
+        // $this->core->db()->pdo()->exec("INSERT INTO `temporary` (no_rawat, tgl_perawatan, taskid4) VALUES ('" . $_POST['no_rawat'] . "','".date('Y-m-d')."','$time')");
         // $this->db('temporary2')->save([
         //   'temp1' => 'waktupasien',
         //   'temp2' => $_POST['no_rawat'],
@@ -830,31 +887,50 @@ class Admin extends AdminModule
           ]);
         }
       }
+
+      
+      //trigger send whatsapp
+      $pasien = $this->db('pasien')->where('no_rkm_medis', $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->oneArray()['no_rkm_medis'])->oneArray();
+      // get pasien no_telp
+      $no_telp = $pasien['no_tlp'];
+      // $data['whatsapp'] = $no_telp;
+      // get pasien nama
+      $nama = $pasien['nm_pasien'];
+      $data['whatsapp'] = $this->postWhatsapp($no_telp, $nama);
+
     } else if ($_POST['stts'] == 'Sudah') { //pasien sudah selesai dilayani
 
       //cek jika sudah ada record
-      if (empty($this->db('temporary2')->where('temp2', $_POST['no_rawat'])->oneArray())) {
+      if (empty($this->db('record_waktulayan_bpjs')->where('no_rawat', $_POST['no_rawat'])->oneArray())) {
         $data['status'] = 'error';
         $data['message'] = 'Status pasien tidak runut, silahkan update "Berkas Diterima" terlebih dahulu.';
         echo json_encode($data);
       } else {
         $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->save($_POST);
         //update waktu pasien saat selesai layan
-        $this->db('temporary2')->where('temp1', 'waktupasien')->where('temp2', $_POST['no_rawat'])->update('temp4', $time);
+        $this->db('record_waktulayan_bpjs')->where('no_rawat', $_POST['no_rawat'])->update('taskid5', $time);
         if ($kodebooking != '') {
+          
           //send data Update waktu antrean = 5
-          $dataUpdateWaktuAntrean = $this->updateWaktuAntreanBPJS($kodebooking, 5);
+          $dataUpdateWaktuAntrean = $this->updateWaktuAntreanBPJS($kodebooking, 5, $_POST['jenisObat']);
           $response = $this->sendDataWSBPJS('antrean/updatewaktu', $dataUpdateWaktuAntrean);
-          if ($response['metadata']['code'] != '200') {
-            $this->db('mlite_settings')->save([
-              'module' => 'debug',
-              'field' => 'post status rawat Sudah dilayani',
-              'value' => $kodebooking . '|' . $response['metadata']['code'] . '|' . $response['metadata']['message']
-            ]);
-          }
+
+          //tambah antrean farmasi
+          $dataTambahAntreanFarmasi = $this->tambahAntreanFarmasiBPJS($kodebooking,$_POST['no_rawat'],$_POST['jenisObat']);
+          $response = $this->sendDataWSBPJS('antrean/farmasi/add', $dataTambahAntreanFarmasi);
+
+          // if ($response['metadata']['code'] != '200') {
+          //   $this->db('mlite_settings')->save([
+          //     'module' => 'debug',
+          //     'field' => 'post status rawat Sudah dilayani',
+          //     'value' => $kodebooking . '|' . $response['metadata']['code'] . '|' . $response['metadata']['message']
+          //   ]);
+          // }
         }
         $data['status'] = 'success';
         $data['message'] = 'Status pasien berhasil diubah.';
+
+
         echo json_encode($data);
       }
     } else if ($_POST['stts'] == 'Batal') { //pasien batal dilayani
@@ -1420,7 +1496,7 @@ class Admin extends AdminModule
   }
 
   //Start WS BPJS
-  public function updateWaktuAntreanBPJS($kodebooking, $taskid)
+  public function updateWaktuAntreanBPJS($kodebooking, $taskid, $jenisObat = null)
   {
     $waktu = strtotime(date("Y-m-d H:i:s")) * 1000;
     //   "taskid": {
@@ -1433,11 +1509,21 @@ class Admin extends AdminModule
     //     7 (akhir waktu obat selesai dibuat),
     //     99 (tidak hadir/batal)
     // },
-    $request = array(
-      "kodebooking" => $kodebooking,
-      "taskid" => $taskid,
-      "waktu" => $waktu
-    );
+    if(!empty($jenisObat)){
+      $request = array(
+        "kodebooking" => $kodebooking,
+        "taskid" => $taskid,
+        "waktu" => $waktu,
+        "jenisresep" => $jenisObat
+      );
+    }else{
+      $request = array(
+        "kodebooking" => $kodebooking,
+        "taskid" => $taskid,
+        "waktu" => $waktu
+      );
+    }
+      
     // $request = '{
     //                 "kodebooking": "' . $kodebooking . '",
     //                 "taskid": ' . $taskid . ',
@@ -1447,6 +1533,18 @@ class Admin extends AdminModule
     return $request;
   }
 
+  public function tambahAntreanFarmasiBPJS($kodebooking, $no_rawat, $jenisObat)
+  {
+    $nomorantrean = $this->db('resep_obat')->select(['no_urut' => 'CONVERT(RIGHT(no_resep,4),signed)'])->where('no_rawat', $no_rawat)->limit(1)->oneArray();
+    $request = array(
+      "kodebooking" => $kodebooking,
+      "jenisresep" => $jenisObat,
+      "nomorantrean" => $nomorantrean['no_urut'],
+      "keterangan" => "-"
+    );
+    return $request;
+  }
+  
   public function batalAntreanBPJS($kodebooking, $keterangan)
   {
     $request = array(
@@ -1519,7 +1617,7 @@ class Admin extends AdminModule
   public function getTokenWSRS()
   {
     // $url = 'http://localhost/webapps/api-bpjsfktl/auth';
-    $url = 'https://rssoepraoen.simkeskhanza.com/webapps/api-bpjsfktl/auth';
+    $url = 'https://rssoepraoen.com/webapps/api-bpjsfktl/auth';
     $header = array(
       'Accept: application/json',
       'x-username: bridging_rstds',
@@ -1553,7 +1651,7 @@ class Admin extends AdminModule
 
     //begin post data
     // API URL
-    $url = 'https://rssoepraoen.simkeskhanza.com/webapps/api-bpjsfktl/' . $path;
+    $url = 'https://rssoepraoen.com/webapps/api-bpjsfktl/' . $path;
     // $url = 'http://localhost/webapps/api-bpjsfktl/' . $path;
     // $payload = array(
     //   'test' => 'data'
@@ -1624,6 +1722,63 @@ class Admin extends AdminModule
       $data['metaData'] = $obj['metaData'];
       $data['response'] = '';
     }
+    return $data;
+  }
+
+  function postWhatsapp($nomor_hp,$nama){
+    //The url you wish to send the POST request to
+    $url = "http://192.168.10.229:9000/humas/messages/send";
+    // return $url;
+
+    if($nomor_hp == '' || $nomor_hp == null || $nomor_hp == '-'){
+      return false;
+    }
+
+    // check if $nomor_hp start with 0, if yes, replace with 62
+    if (substr($nomor_hp, 0, 1) == '0') {
+      $nomor_hp = '62'.substr($nomor_hp, 1);
+    }
+    
+
+    //The data you want to send via POST
+    $requested_data = [
+        'jid'     => $nomor_hp."@s.whatsapp.net",
+        'type'    => 'number',
+        'message' => [
+          'text' => 
+          'SELAMAT DATANG DI RST dr.SOEPRAOEN
+Yth.'.$nama.'
+Terima kasih atas kepercayaan Anda kepada Rumah Sakit Tk.II dr.Soepraoen untuk memberikan pelayanan kesehatan bagi Anda dan keluarga.
+Jika Bapak/Ibu membutuhkan bantuan , Silahkan menghubungi Customer Care RST dr.Soepraoen di:
+          Telp : 0341-325111/325112
+          WhatsApp  : 0811-3229-9222
+Demi peningkatan mutu pelayanan, kami mohon kesediaan Anda untuk memberikan penilaian dan masukan melalui link di bawah ini.
+          
+https://forms.gle/NkRGZ8Me4EMQ2Nb79
+          
+Terima kasih'
+        ],
+    ];
+
+    $jsonData = json_encode($requested_data);
+
+    $header = array(
+      'Accept: application/json',
+      // form type
+      'Content-Type: application/json',
+    );
+
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonData);
+
+    $res = curl_exec($ch);
+    
+    $data['response'] = json_decode($res, true);
+    $data['requested_data'] = $jsonData;
+    curl_close($ch);
+
     return $data;
   }
 

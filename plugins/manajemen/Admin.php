@@ -30,7 +30,7 @@ class Admin extends AdminModule
         $visiteCurrMonth = $dataKunjungan['bulanini'];
         $visiteLastMonth = $dataKunjungan['bulanlalu'];
         $visiteCurrDays = $dataKunjungan['hariini'];
-        $visiteLastDays = $dataKunjungan['harilalu'];
+        $visiteLastDays = $dataKunjungan['kemarin'];
         $stats['getYearVisitiesRalan'] = number_format($visiteCurrYear, 0, '', '.');
         $stats['getMonthVisitiesRalan'] = number_format($visiteCurrMonth, 0, '', '.');
         $stats['getDayVisitiesRalan'] = number_format($visiteCurrDays, 0, '', '.');
@@ -62,11 +62,13 @@ class Admin extends AdminModule
         $stats['getDayVisitiesRanap'] = number_format($this->countTodayRanap(), 0, '', '.');
         //perhitungan bor los toi
         $lamaInapBulan = $this->getLamaInap(date('Y-m', strtotime('-1 month')));
+        $getHariPerawatan = $this->getHariPerawatan(date('m', strtotime('-1 month')), date('Y'));
         $jumlahPasien = $this->getJumlahPasienInap(date('Y-m', strtotime('-1 month')));
         $jumlahBed = $this->getJumlahBed();
         $jmlhari = date('t', strtotime('-1 month'));
 
-        $borBulan = ($lamaInapBulan / ($jumlahBed * $jmlhari)) * 100;
+        $borBulan = ($getHariPerawatan / ($jumlahBed * $jmlhari)) * 100;
+        // $borBulan = $this->getBORMonth();
         $alos = $lamaInapBulan / $jumlahPasien;
         $toi = (($jumlahBed * $jmlhari) - $lamaInapBulan) / $jumlahPasien;
         $bto = $jumlahPasien / $jumlahBed;
@@ -114,10 +116,12 @@ class Admin extends AdminModule
             'Sat' => 'SABTU'
         );
         $hari = $day[date('D', strtotime(date('Y-m-d')))];
-        // var_dump($stats);
+        $debug = $this->getHariPerawatan(4,2023);
+        var_dump($debug);
         return $this->draw('dashboard.html', [
             'settings' => $settings,
             'stats' => $stats,
+            'debug' => $debug,
             'pasien' => $this->db('pasien')->join('penjab', 'penjab.kd_pj = pasien.kd_pj')->desc('tgl_daftar')->limit('5')->toArray(),
             'dokter' => $this->db('dokter')->join('spesialis', 'spesialis.kd_sps = dokter.kd_sps')->join('jadwal', 'jadwal.kd_dokter = dokter.kd_dokter')->where('jadwal.hari_kerja', $hari)->where('dokter.status', '1')->group('dokter.kd_dokter')->rand()->limit('6')->toArray()
         ]);
@@ -201,15 +205,16 @@ class Admin extends AdminModule
         }
 
         //perhitungan bor los toi
-        $lamaInapHari = $this->getLamaInap(date('Y-m-d'));
+        $getHariPerawatan = $this->getHariPerawatan(date('m', strtotime('-1 month')), date('Y'));
+        // $lamaInapHari = $this->getLamaInap(date('Y-m-d'));
         $lamaInapBulan = $this->getLamaInap(date('Y-m', strtotime('-1 month')));
         $jumlahPasien = $this->getJumlahPasienInap(date('Y-m', strtotime('-1 month')));
         $jumlahBed = $this->getJumlahBed();
         $jmlhari = date('t', strtotime('-1 month'));
         $dataDeathRate = $this->getDataDeathRate();
 
-        $borHari = ($lamaInapHari / ($jumlahBed * 1)) * 100;
-        $borBulan = ($lamaInapBulan / ($jumlahBed * $jmlhari)) * 100;
+        // $borHari = ($lamaInapHari / ($jumlahBed * 1)) * 100;
+        $borBulan = ($getHariPerawatan / ($jumlahBed * $jmlhari)) * 100;
         $bto = ($dataDeathRate['rawatout'] + $dataDeathRate['meninggal']) / $jumlahBed;
         $alos = $lamaInapBulan / $jumlahPasien;
         $toi = (($jumlahBed * $jmlhari) - $lamaInapBulan) / $jumlahPasien;
@@ -234,9 +239,8 @@ class Admin extends AdminModule
         $this->core->addJS(url(BASE_DIR . '/assets/jscripts/Chart.bundle.min.js'));
 
         $settings = htmlspecialchars_array($this->settings('manajemen'));
-        $stats['poliChart'] = $this->countPxDrRj();
-        $stats['ranapChart'] = $this->countPxDrRi();
-
+        $stats['poliChart'] = $this->countPasienDrRJ();
+        $stats['ranapChart'] = $this->countPasienDrRI();
         return $this->draw('dokter.html', [
             'settings' => $settings,
             'stats' => $stats,
@@ -325,9 +329,101 @@ class Admin extends AdminModule
 
     public function getFarmasi()
     {
+
+        $this->_addHeaderFiles();
         $this->core->addCSS(url(MODULES . '/manajemen/css/admin/style.css'));
         $this->core->addJS(url(BASE_DIR . '/assets/jscripts/Chart.bundle.min.js'));
-        return $this->draw('farmasi.html');
+        $settings = htmlspecialchars_array($this->settings('manajemen'));
+        // return $this->draw('farmasi.html');
+
+        $databarang['title'] = 'Data Stok Obat & BHP';
+        // $databarang['bangsal']  = $this->core->mysql('bangsal')->toArray();
+        $databarang['list'] = $this->_databarangList();
+        $databarang['list_pengajuan'] = $this->_pengajuanList();
+        return $this->draw('farmasi.html', [
+            'settings' => $settings,
+            'databarang' => $databarang,
+            'tab' => 1
+        ]);
+    }
+
+    private function _databarangList()
+    {
+        $result = [];
+
+
+        $query = $this->db()->pdo()->prepare("SELECT db.nama_brng, FLOOR((dp1+dp2+dp3+dp4+dp5+dp6+go+lain)) AS stok, FLOOR(dp1) as dp1, FLOOR(dp2) as dp2, FLOOR(dp3) as dp3, FLOOR(dp4) as dp4, FLOOR(dp5) as dp5, FLOOR(dp6) as dp6, FLOOR(go) as go, FLOOR(lain) as lain
+        FROM databarang db 
+        INNER JOIN (
+        SELECT  g.kode_brng
+               ,SUM(CASE WHEN g.kd_bangsal = 'DP1' THEN g.stok ELSE 0 END) AS dp1
+               ,SUM(CASE WHEN g.kd_bangsal = 'DP2' THEN g.stok ELSE 0 END) AS dp2
+               ,SUM(CASE WHEN g.kd_bangsal = 'DP3' THEN g.stok ELSE 0 END) AS dp3
+               ,SUM(CASE WHEN g.kd_bangsal = 'DP4' THEN g.stok ELSE 0 END) AS dp4
+               ,SUM(CASE WHEN g.kd_bangsal = 'DP5' THEN g.stok ELSE 0 END) AS dp5
+               ,SUM(CASE WHEN g.kd_bangsal = 'DP6' THEN g.stok ELSE 0 END) AS dp6
+               ,SUM(CASE WHEN g.kd_bangsal = 'GO' THEN g.stok ELSE 0 END)  AS go
+               ,SUM(CASE WHEN g.kd_bangsal NOT IN ('DP1','DP2','DP3','DP4','DP5','DP6','GO')  THEN g.stok ELSE 0 END)  AS lain
+        FROM gudangbarang g where g.stok > 0
+        GROUP BY g.kode_brng) A ON A.kode_brng = db.kode_brng
+        WHERE db.`status`='1' order by db.nama_brng asc");
+        $query->execute();
+        $data = $query->fetchAll(\PDO::FETCH_ASSOC);
+        return $data;
+
+        // foreach ($this->core->mysql('databarang')->where('status', $status)->toArray() as $row) {
+        //     $row['gudangbarang'] = $this->core->mysql('gudangbarang')->join('bangsal', 'bangsal.kd_bangsal=gudangbarang.kd_bangsal')->where('kode_brng', $row['kode_brng'])->toArray();
+        //     $result[] = $row;
+        // // }
+        // return $result;
+    }
+
+    public function _pengajuanList()
+    {
+        $tgl_awal = date('Y-m-d');
+        $tgl_akhir = date('Y-m-d');
+
+        if (isset($_GET['tgl_awal'])) {
+            $tgl_awal = $_GET['tgl_awal'];
+        }
+        if (isset($_GET['tgl_akhir'])) {
+            $tgl_akhir = $_GET['tgl_akhir'];
+        }
+
+        $result = [];
+
+        // foreach ($this->core->mysql('databarang')->where('status', $status)->toArray() as $row) {
+        //     $row['delURL']  = url([ADMIN, 'farmasi', 'delete', $row['kode_brng']]);
+        //     $row['restoreURL']  = url([ADMIN, 'farmasi', 'restore', $row['kode_brng']]);
+        //     $row['gudangbarang'] = $this->core->mysql('gudangbarang')->join('bangsal', 'bangsal.kd_bangsal=gudangbarang.kd_bangsal')->where('kode_brng', $row['kode_brng'])->toArray();
+        //     $result[] = $row;
+        // }
+        // return $result;
+
+        $query = $this->db()->pdo()->prepare("SELECT pbm.no_pengajuan, p.nama, pbm.tanggal,'' AS nama_brng, 'Total Pengajuan' AS h_pengajuan, FORMAT(SUM(dpbm.total), 'c', 'id-ID') AS total, 
+                    pbm.keterangan, pbm.`status`, ifnull(v.nip,'-') AS nip, ifnull(v.tgl_validasi,'-') AS tgl_validasi, ifnull(v.jam_validasi,'-') AS jam_validasi, ifnull(v.msg,'-') AS msg
+                    FROM pengajuan_barang_medis pbm
+                    INNER JOIN pegawai p ON p.nik = pbm.nip
+                    INNER JOIN detail_pengajuan_barang_medis dpbm ON dpbm.no_pengajuan = pbm.no_pengajuan
+                    LEFT JOIN validasi_pengajuan_barang_medis v ON v.no_pengajuan = pbm.no_pengajuan
+                    WHERE pbm.tanggal BETWEEN '$tgl_awal' AND '$tgl_akhir' 
+                    GROUP BY pbm.no_pengajuan ORDER BY pbm.tanggal DESC");
+        $query->execute();
+        $rows = $query->fetchAll(\PDO::FETCH_ASSOC);
+        // return $data;
+        foreach ($rows as $row) {
+            $sql2 = "SELECT d.nama_brng, s.satuan, dpbm.jumlah, FORMAT(dpbm.h_pengajuan, 'c', 'id-ID') as h_pengajuan, FORMAT(dpbm.total , 'c', 'id-ID') as total   
+            FROM detail_pengajuan_barang_medis dpbm
+            INNER JOIN databarang d ON d.kode_brng = dpbm.kode_brng
+            INNER JOIN kodesatuan s ON s.kode_sat = dpbm.kode_sat
+            WHERE dpbm.no_pengajuan = '" . $row['no_pengajuan'] . "'";
+            $stmt2 = $this->core->mysql()->pdo()->prepare($sql2);
+            $stmt2->execute();
+            $rows2 = $stmt2->fetchAll(\PDO::FETCH_ASSOC);
+            $row['pengajuan'] = $rows2;
+            $result[] = $row;
+        }
+        return $result;
     }
 
     public function getKasir()
@@ -338,13 +434,18 @@ class Admin extends AdminModule
 
         $revenueBulanIni = $this->getRevenueRIRJ(date('Y-m'));
         $revenueBulanLalu = $this->getRevenueRIRJ(date('Y-m', strtotime('-1 month')));
+        $piutangBulanIni = $this->getPiutangRIRJ(date('Y-m'));
+        $piutangBulanLalu = $this->getPiutangRIRJ(date('Y-m', strtotime('-1 month')));
+
         $revenueAllBulanIni = $revenueBulanIni['Ralan'] + $revenueBulanIni['Ranap'];
         $revenueAllBulanLalu = $revenueBulanLalu['Ralan'] + $revenueBulanLalu['Ranap'];
+
         $stats['getTotalRevenueMonth'] = number_format($revenueAllBulanIni, 0, '', '.');
         $stats['percentRevenueMonth'] = 0;
         if ($stats['getTotalRevenueMonth'] != 0) {
             $stats['percentRevenueMonth'] = number_format((($revenueAllBulanIni - $revenueAllBulanLalu) / $revenueAllBulanIni) * 100, 0, '', '.');
         }
+
         $stats['getRevenueRJMonth'] = number_format($revenueBulanIni['Ralan'], 0, '', '.');
         $stats['percentRevenueRJMonth'] = 0;
         if ($stats['getRevenueRJMonth'] != 0) {
@@ -355,8 +456,23 @@ class Admin extends AdminModule
         if ($stats['getRevenueRIMonth'] != 0) {
             $stats['percentRevenueRIMonth'] = number_format((($revenueBulanIni['Ranap'] - $revenueBulanLalu['Ranap'])  / $revenueBulanIni['Ranap']) * 100, 0, '', '.');
         }
+
+        $stats['getPiutangRJMonth'] = number_format($piutangBulanIni['Ralan'], 0, '', '.');
+        $stats['percentPiutangRJMonth'] = 0;
+        if ($stats['getPiutangRJMonth'] != 0) {
+            $stats['percentPiutangRJMonth'] = number_format((($piutangBulanIni['Ralan'] - $piutangBulanLalu['Ralan']) / $piutangBulanIni['Ralan']) * 100, 0, '', '.');
+        }
+        $stats['getPiutangRIMonth'] = number_format($piutangBulanIni['Ranap'], 0, '', '.');
+        $stats['percentPiutangRIMonth'] = 0;
+        if ($stats['getPiutangRIMonth'] != 0) {
+            $stats['percentPiutangRIMonth'] = number_format((($piutangBulanIni['Ranap'] - $piutangBulanLalu['Ranap'])  / $piutangBulanIni['Ranap']) * 100, 0, '', '.');
+        }
+
         $stats['getRevenueOthers'] = 0;
         $stats['percentRevenueOthers'] = 0;
+
+        $stats['kasirChartRevenue'] = $this->kasirChartRevenue();
+        $stats['kasirChartPiutang'] = $this->kasirChartPiutang();
 
 
         $stats['getCaraBayar'] = $this->getCaraBayar();
@@ -1211,6 +1327,65 @@ class Admin extends AdminModule
         return $return;
     }
 
+    public function countPasienDrRJ()
+    {
+        $todayDate = date('Y-m-d');
+        $thismonth = date('Y-m');
+        $query = $this->db()->pdo()->prepare("SELECT d.nm_dokter,
+                SUM(CASE WHEN  r.tgl_registrasi = '$todayDate' THEN 1 ELSE 0 END) today,
+                SUM(CASE WHEN  r.tgl_registrasi LIKE '$thismonth%'  THEN 1 ELSE 0 END) thismonth
+                FROM dokter d INNER JOIN reg_periksa r ON r.kd_dokter = d.kd_dokter 
+                WHERE r.tgl_registrasi LIKE '$thismonth%' AND d.nm_dokter <> '-' AND r.status_lanjut = 'Ralan' GROUP BY r.kd_dokter");
+        $query->execute();
+        $data = $query->fetchAll(\PDO::FETCH_ASSOC);
+        // $data = $query->toArray();
+
+        $return = [
+            'labels_today'  => [],
+            'visits_today'  => [],
+            'labels_thismonth'  => [],
+            'visits_thismonth'  => [],
+        ];
+
+        foreach ($data as $value) {
+            $return['labels_today'][] = $value['nm_dokter'];
+            $return['visits_today'][] = $value['today'];
+            $return['labels_thismonth'][] = $value['nm_dokter'];
+            $return['visits_thismonth'][] = $value['thismonth'];
+        }
+        return $return;
+    }
+
+    public function countPasienDrRI()
+    {
+        $thismonth = date('Y-m');
+        $query = $this->db()->pdo()->prepare("SELECT d.nm_dokter,
+                    SUM(CASE WHEN  ki.tgl_keluar = '0000-00-00' THEN 1 ELSE 0 END) today,
+                    SUM(CASE WHEN  ki.tgl_masuk LIKE '$thismonth%'  THEN 1 ELSE 0 END) thismonth
+                    FROM reg_periksa r
+                    INNER JOIN kamar_inap ki ON ki.no_rawat = r.no_rawat
+                    INNER JOIN dokter d ON d.kd_dokter = r.kd_dokter 
+                    WHERE r.tgl_registrasi LIKE '$thismonth%' AND d.nm_dokter <> '-' GROUP BY r.kd_dokter");
+        $query->execute();
+        $data = $query->fetchAll(\PDO::FETCH_ASSOC);
+        // $data = $query->toArray();
+
+        $return = [
+            'labels_today'  => [],
+            'visits_today'  => [],
+            'labels_thismonth'  => [],
+            'visits_thismonth'  => [],
+        ];
+
+        foreach ($data as $value) {
+            $return['labels_today'][] = $value['nm_dokter'];
+            $return['visits_today'][] = $value['today'];
+            $return['labels_thismonth'][] = $value['nm_dokter'];
+            $return['visits_thismonth'][] = $value['thismonth'];
+        }
+        return $return;
+    }
+
     public function countPxDrRj()
     {
         $date = date('Y-m-d');
@@ -1372,15 +1547,15 @@ class Admin extends AdminModule
         $hariini = date('Y-m-d');
         $kemarin = date('Y-m-d', strtotime('-1 days'));
         $query = $this->db()->pdo()->prepare("SELECT 
-                    SUM(CASE WHEN stts <> 'Belum' OR stts <> 'Batal' THEN 1 ELSE 0 END) Belum,
-                    SUM(CASE WHEN stts = 'Sudah' THEN 1 ELSE 0 END) Sudah,
-                    SUM(CASE WHEN stts = 'Batal' THEN 1 ELSE 0 END) Batal
+                    SUM(CASE WHEN stts <> 'Sudah' AND stts <> 'Batal' AND status_lanjut = 'Ralan' THEN 1 ELSE 0 END) Belum,
+                    SUM(CASE WHEN stts = 'Sudah' AND status_lanjut = 'Ralan' THEN 1 ELSE 0 END) Sudah,
+                    SUM(CASE WHEN stts = 'Batal' AND status_lanjut = 'Ralan' THEN 1 ELSE 0 END) Batal
                 FROM reg_periksa WHERE tgl_registrasi = '$hariini'
                 UNION 
                 SELECT 
-                    SUM(CASE WHEN stts <> 'Belum' OR stts <> 'Batal' THEN 1 ELSE 0 END) Belum,
-                    SUM(CASE WHEN stts = 'Sudah' THEN 1 ELSE 0 END) Sudah,
-                    SUM(CASE WHEN stts = 'Batal' THEN 1 ELSE 0 END) Batal
+                    SUM(CASE WHEN stts <> 'Sudah' AND stts <> 'Batal' AND status_lanjut = 'Ralan' THEN 1 ELSE 0 END) Belum,
+                    SUM(CASE WHEN stts = 'Sudah' AND status_lanjut = 'Ralan' THEN 1 ELSE 0 END) Sudah,
+                    SUM(CASE WHEN stts = 'Batal' AND status_lanjut = 'Ralan' THEN 1 ELSE 0 END) Batal
                 FROM reg_periksa WHERE tgl_registrasi = '$kemarin'");
         $query->execute();
         $data = $query->fetchAll(\PDO::FETCH_ASSOC);
@@ -1432,6 +1607,210 @@ class Admin extends AdminModule
         $query->execute();
         $data = $query->fetchAll(\PDO::FETCH_ASSOC);
         return $data[0];
+    }
+
+    public function getPiutangRIRJ($date)
+    {
+        $query = $this->db()->pdo()->prepare("SELECT 
+            SUM(CASE WHEN r.status_lanjut = 'Ralan' THEN p.totalpiutang ELSE 0 END) Ralan,
+            SUM(CASE WHEN r.status_lanjut = 'Ranap' THEN p.totalpiutang ELSE 0 END) Ranap 
+            FROM piutang_pasien p INNER JOIN reg_periksa r ON r.no_rawat = p.no_rawat  
+            where p.tgl_piutang LIKE '$date%'");
+        $query->execute();
+        $data = $query->fetchAll(\PDO::FETCH_ASSOC);
+        return $data[0];
+    }
+
+    public function kasirChartRevenue()
+    {
+        $year = date("Y");
+        $query = $this->db()->pdo()->prepare("SELECT LEFT(b.tgl_byr, 7) AS bulan,
+                        SUM(CASE WHEN  r.status_lanjut = 'Ralan' THEN b.totalbiaya ELSE 0 END) Ralan,
+                        SUM(CASE WHEN  r.status_lanjut = 'Ranap' THEN b.totalbiaya ELSE 0 END) Ranap
+                        FROM billing b INNER JOIN reg_periksa r ON r.no_rawat = b.no_rawat  where b.tgl_byr LIKE '$year%' 
+                        GROUP BY LEFT(b.tgl_byr, 7)");
+        $query->execute();
+        $data = $query->fetchAll(\PDO::FETCH_ASSOC);
+
+        $dataralan_1 = 0;
+        $dataralan_2 = 0;
+        $dataralan_3 = 0;
+        $dataralan_4 = 0;
+        $dataralan_5 = 0;
+        $dataralan_6 = 0;
+        $dataralan_7 = 0;
+        $dataralan_8 = 0;
+        $dataralan_9 = 0;
+        $dataralan_10 = 0;
+        $dataralan_11 = 0;
+        $dataralan_12 = 0;
+
+        $dataranap_1 = 0;
+        $dataranap_2 = 0;
+        $dataranap_3 = 0;
+        $dataranap_4 = 0;
+        $dataranap_5 = 0;
+        $dataranap_6 = 0;
+        $dataranap_7 = 0;
+        $dataranap_8 = 0;
+        $dataranap_9 = 0;
+        $dataranap_10 = 0;
+        $dataranap_11 = 0;
+        $dataranap_12 = 0;
+        foreach ($data as $value) {
+            switch ($value['bulan']) {
+                case $year . '-01':
+                    $dataralan_1 = $value['Ralan'];
+                    $dataranap_1 = $value['Ranap'];
+                    break;
+                case $year . '-02':
+                    $dataralan_2 = $value['Ralan'];
+                    $dataranap_2 = $value['Ranap'];
+                    break;
+                case $year . '-03':
+                    $dataralan_3 = $value['Ralan'];
+                    $dataranap_3 = $value['Ranap'];
+                    break;
+                case $year . '-04':
+                    $dataralan_4 = $value['Ralan'];
+                    $dataranap_4 = $value['Ranap'];
+                    break;
+                case $year . '-05':
+                    $dataralan_5 = $value['Ralan'];
+                    $dataranap_5 = $value['Ranap'];
+                    break;
+                case $year . '-06':
+                    $dataralan_6 = $value['Ralan'];
+                    $dataranap_6 = $value['Ranap'];
+                    break;
+                case $year . '-07':
+                    $dataralan_7 = $value['Ralan'];
+                    $dataranap_7 = $value['Ranap'];
+                    break;
+                case $year . '-08':
+                    $dataralan_8 = $value['Ralan'];
+                    $dataranap_8 = $value['Ranap'];
+                    break;
+                case $year . '-09':
+                    $dataralan_9 = $value['Ralan'];
+                    $dataranap_9 = $value['Ranap'];
+                    break;
+                case $year . '-10':
+                    $dataralan_10 = $value['Ralan'];
+                    $dataranap_10 = $value['Ranap'];
+                    break;
+                case $year . '-11':
+                    $dataralan_11 = $value['Ralan'];
+                    $dataranap_11 = $value['Ranap'];
+                    break;
+                case $year . '-12':
+                    $dataralan_12 = $value['Ralan'];
+                    $dataranap_12 = $value['Ranap'];
+                    break;
+            }
+        }
+        $return = [
+            'labels'  => ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'Nopember', 'Desember'],
+            'ralan'  => [$dataralan_1, $dataralan_2, $dataralan_3, $dataralan_4, $dataralan_5, $dataralan_6, $dataralan_7, $dataralan_8, $dataralan_9, $dataralan_10, $dataralan_11, $dataralan_12],
+            'ranap'  => [$dataranap_1, $dataranap_2, $dataranap_3, $dataranap_4, $dataranap_5, $dataranap_6, $dataranap_7, $dataranap_8, $dataranap_9, $dataranap_10, $dataranap_11, $dataranap_12]
+        ];
+        return $return;
+    }
+
+    public function kasirChartPiutang()
+    {
+        $year = date("Y");
+        $query = $this->db()->pdo()->prepare("SELECT LEFT(p.tgl_piutang, 7) AS bulan,
+                            SUM(CASE WHEN r.status_lanjut = 'Ralan' THEN p.totalpiutang ELSE 0 END) Ralan,
+                            SUM(CASE WHEN r.status_lanjut = 'Ranap' THEN p.totalpiutang ELSE 0 END) Ranap 
+                            FROM piutang_pasien p INNER JOIN reg_periksa r ON r.no_rawat = p.no_rawat  
+                            where p.tgl_piutang LIKE '$year%' GROUP BY LEFT(p.tgl_piutang, 7)");
+        $query->execute();
+        $data = $query->fetchAll(\PDO::FETCH_ASSOC);
+
+        $dataralan_1 = 0;
+        $dataralan_2 = 0;
+        $dataralan_3 = 0;
+        $dataralan_4 = 0;
+        $dataralan_5 = 0;
+        $dataralan_6 = 0;
+        $dataralan_7 = 0;
+        $dataralan_8 = 0;
+        $dataralan_9 = 0;
+        $dataralan_10 = 0;
+        $dataralan_11 = 0;
+        $dataralan_12 = 0;
+
+        $dataranap_1 = 0;
+        $dataranap_2 = 0;
+        $dataranap_3 = 0;
+        $dataranap_4 = 0;
+        $dataranap_5 = 0;
+        $dataranap_6 = 0;
+        $dataranap_7 = 0;
+        $dataranap_8 = 0;
+        $dataranap_9 = 0;
+        $dataranap_10 = 0;
+        $dataranap_11 = 0;
+        $dataranap_12 = 0;
+        foreach ($data as $value) {
+            switch ($value['bulan']) {
+                case $year . '-01':
+                    $dataralan_1 = $value['Ralan'];
+                    $dataranap_1 = $value['Ranap'];
+                    break;
+                case $year . '-02':
+                    $dataralan_2 = $value['Ralan'];
+                    $dataranap_2 = $value['Ranap'];
+                    break;
+                case $year . '-03':
+                    $dataralan_3 = $value['Ralan'];
+                    $dataranap_3 = $value['Ranap'];
+                    break;
+                case $year . '-04':
+                    $dataralan_4 = $value['Ralan'];
+                    $dataranap_4 = $value['Ranap'];
+                    break;
+                case $year . '-05':
+                    $dataralan_5 = $value['Ralan'];
+                    $dataranap_5 = $value['Ranap'];
+                    break;
+                case $year . '-06':
+                    $dataralan_6 = $value['Ralan'];
+                    $dataranap_6 = $value['Ranap'];
+                    break;
+                case $year . '-07':
+                    $dataralan_7 = $value['Ralan'];
+                    $dataranap_7 = $value['Ranap'];
+                    break;
+                case $year . '-08':
+                    $dataralan_8 = $value['Ralan'];
+                    $dataranap_8 = $value['Ranap'];
+                    break;
+                case $year . '-09':
+                    $dataralan_9 = $value['Ralan'];
+                    $dataranap_9 = $value['Ranap'];
+                    break;
+                case $year . '-10':
+                    $dataralan_10 = $value['Ralan'];
+                    $dataranap_10 = $value['Ranap'];
+                    break;
+                case $year . '-11':
+                    $dataralan_11 = $value['Ralan'];
+                    $dataranap_11 = $value['Ranap'];
+                    break;
+                case $year . '-12':
+                    $dataralan_12 = $value['Ralan'];
+                    $dataranap_12 = $value['Ranap'];
+                    break;
+            }
+        }
+        $return = [
+            'labels'  => ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'Nopember', 'Desember'],
+            'ralan'  => [$dataralan_1, $dataralan_2, $dataralan_3, $dataralan_4, $dataralan_5, $dataralan_6, $dataralan_7, $dataralan_8, $dataralan_9, $dataralan_10, $dataralan_11, $dataralan_12],
+            'ranap'  => [$dataranap_1, $dataranap_2, $dataranap_3, $dataranap_4, $dataranap_5, $dataranap_6, $dataranap_7, $dataranap_8, $dataranap_9, $dataranap_10, $dataranap_11, $dataranap_12]
+        ];
+        return $return;
     }
 
     public function getRevenueRJ($date)
@@ -1512,11 +1891,13 @@ class Admin extends AdminModule
 
     public function getBORMonth()
     {
-        $date = date('Y-m', strtotime('-1 month'));
-        $query = $this->db()->pdo()->prepare("SELECT SUM(lama) AS lama FROM kamar_inap where tgl_masuk LIKE '$date%'");
-        $query->execute();
-        $data = $query->fetchAll(\PDO::FETCH_ASSOC);
-        $lama = $data[0]['lama'];
+        // $date = date('Y-m', strtotime('-1 month'));
+        // $query = $this->db()->pdo()->prepare("SELECT SUM(lama) AS lama FROM kamar_inap where tgl_masuk LIKE '$date%'");
+        // $query->execute();
+        // $data = $query->fetchAll(\PDO::FETCH_ASSOC);
+        // $lama = $data[0]['lama'];
+
+        $lama = $this->getHariPerawatan(date('m', strtotime('-1 month')), date('Y'));
 
         $query = $this->db()->pdo()->prepare("select count(*) as jmlbed from kamar where statusdata='1'");
         $query->execute();
@@ -1527,6 +1908,30 @@ class Admin extends AdminModule
         $bor = ($lama / ($jmlbed * $jmlhari)) * 100;
 
         return $bor;
+    }
+
+    public function getHariPerawatan(int $month, int $year)
+    {
+        $days = cal_days_in_month(CAL_GREGORIAN, $month, $year);
+        $d = '';
+        $lama = 0;
+        for ($i = 1; $i <= $days; $i++) {
+            if($i < 10){
+                $d = '0'.$days;
+            } else {
+                $d = $days;
+            }
+            $m = ($month < 10) ? '0'.$month : $month;
+            $query = $this->db()->pdo()->prepare("SELECT COUNT(ki.kd_kamar) AS jml FROM kamar_inap ki
+                                        INNER JOIN kamar k ON k.kd_kamar = ki.kd_kamar
+                                        WHERE ki.tgl_masuk < '$year-$m-$d' AND ki.tgl_keluar >= '$year-$m-$d'");
+            $query->execute();
+            $data = $query->fetchAll(\PDO::FETCH_ASSOC);
+            $lama += $data[0]['jml'];
+
+        }
+        
+        return $lama;
     }
 
     // public function getBORDays()
@@ -2625,5 +3030,53 @@ class Admin extends AdminModule
             // }
         }
         return $return;
+    }
+
+    public function postAccPengajuan()
+    {
+        $time = date('H:i:s');
+        $this->db('pengajuan_barang_medis')->where('no_pengajuan', $_POST['no_pengajuan'])->update('status', 'Disetujui');
+        $this->core->db()->pdo()->exec("INSERT INTO `validasi_pengajuan_barang_medis` 
+                                (no_pengajuan, nip, tgl_validasi, jam_validasi, status) 
+                                VALUES ('" . $_POST['no_pengajuan'] . "','" . $this->core->getUserInfo('username', null, true) . "','" . date('Y-m-d') . "','$time','Disetujui','')");
+
+        exit();
+    }
+
+    public function postTolakPengajuan()
+    {
+        $time = date('H:i:s');
+        $this->db('pengajuan_barang_medis')->where('no_pengajuan', $_POST['no_pengajuan'])->update('status', 'Ditolak');
+        $this->core->db()->pdo()->exec("INSERT INTO `validasi_pengajuan_barang_medis` 
+                                (no_pengajuan, nip, tgl_validasi, jam_validasi, status) 
+                                VALUES ('" . $_POST['no_pengajuan'] . "','" . $this->core->getUserInfo('username', null, true) . "','" . date('Y-m-d') . "','$time','Disetujui','" . $_POST['msg'] . "')");
+
+        exit();
+    }
+
+    public function getJavascript()
+    {
+        header('Content-type: text/javascript');
+        echo $this->draw(MODULES . '/manajemen/js/admin/manajemen.js');
+        exit();
+    }
+
+    private function _addHeaderFiles()
+    {
+        // CSS
+        $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
+
+        // JS
+        $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'), 'footer');
+        $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'), 'footer');
+
+        $this->core->addCSS(url('assets/css/bootstrap-datetimepicker.css'));
+        $this->core->addJS(url('assets/jscripts/moment-with-locales.js'));
+        $this->core->addJS(url('assets/jscripts/bootstrap-datetimepicker.js'));
+
+        // MODULE SCRIPTS
+        $this->core->addCSS(url([ADMIN, 'farmasi', 'css']));
+        $this->core->addJS(url([ADMIN, 'farmasi', 'javascript']), 'footer');
+        $this->core->addJS(url([ADMIN, 'manajemen', 'javascript']), 'footer');
     }
 }

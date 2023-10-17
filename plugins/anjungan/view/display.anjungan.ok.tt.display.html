@@ -1,0 +1,92 @@
+<div class="col-md-5" id="">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card bg-dark text-white" >
+                <div class="embed-responsive embed-responsive-4by3">
+                <iframe class="embed-responsive-item"
+                        src="https://www.youtube.com/embed/videoseries?list=PLPmeqhZaL6kwG_DST6wFFRGCx95piE8gf&rel=0&modestbranding=1&autohide=1&mute=0&showinfo=0&controls=1&loop=1&autoplay=1"
+                        allowfullscreen></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+    <br>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card bg-primary" style="border:2px solid #ddd;border-radius: 15px;height: 26.5vh;">
+                <h2 class="text-center">Jadwal Operasi</h2>
+                <marquee scrollamount="3" direction="up" height="200px">
+                    <div class="card-body" style="padding-left: 15px;padding-right: 15px;">
+                        {loop: $result_ok}
+                            <!-- <div class="col-md-12 text-center"> -->
+                                <div class="panel text-danger" style="background-color: #FFCC00;">
+                                    <div class="panel-body">
+                                        <div class="col-md-4 text-left">
+                                            <h3 class="header-title">Pasien</h3>
+                                            <h4 class="header-title">{$value.nm_pasien} </h4>
+                                            <h4 class="header-title">({$value.umur}) {$value.jk}</h4>
+                                        </div>
+                                        <div class="col-md-6 text-left">
+                                            <h3 class="header-title">Operator</h3>
+                                            <h4 class="header-title">{$value.nm_dokter}</h4>
+                                        </div>
+                                        <div class="col-md-2 text-left">
+                                            <h3 class="header-title">Ruang</h3>
+                                            <h4 class="header-title">{$value.nm_ruang_ok}</h4>
+                                        </div>
+                                    </div>
+                                </div>
+                            <!-- </div> -->
+                        {/loop}
+                    </div>
+                </marquee>
+            </div>
+        </div>
+    </div>
+    
+</div>
+<div class="col-md-7" id="">
+    <div class="card bg-primary" style="border:2px solid #ddd;border-radius: 15px;height: 80vh;">
+        <h1 class="text-center">Informasi Ketersediaan Tempat Tidur</h1>
+        <marquee scrollamount="4" direction="up" height="770px">
+            <div class="card-body" style="padding-left: 15px;padding-right: 15px;">
+                {loop: $result_tt}
+                <h2 class="text-center">{$value.nm_bangsal}</h2>
+                <div class="row">
+                    <div class="col-md-4 text-center">
+                        <div class="panel text-danger" style="background-color: #FFCC00;">
+                            <div class="pane-header">
+                            <h2 class="header-title">Total</h4>
+                            </div>
+                            <div class="panel-body">
+                            <div style="font-size:70px;">{$value.bed_total}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <div class="panel text-danger" style="background-color: #FFCC00;">
+                            <div class="pane-header">
+                            <h2 class="header-title">Terisi</h2>
+                            </div>
+                            <div class="panel-body">
+                            <div style="font-size:70px;">{$value.bed_terisi}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <div class="panel text-danger" style="background-color: #FFCC00;">
+                        <div class="pane-header">
+                            <h2 class="header-title">Kosong</h2>
+                        </div>
+                        <div class="panel-body">
+                            <div style="font-size:70px;">{$value.bed_kosong}</div>
+                        </div>
+                        </div>
+                    </div>
+                </div>
+                {/loop}
+            </div>
+        </marquee>
+    </div>
+</div>
+<div style="display:none">{$powered}</div>

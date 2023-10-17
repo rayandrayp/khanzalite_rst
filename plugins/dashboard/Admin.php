@@ -190,7 +190,7 @@ class Admin extends AdminModule
 
     $valid_2 = $this->db('rekap_presensi')->where('id', $idpeg['id'])->like('jam_datang', '%' . date('Y-m-d') . '%')->oneArray();
 
-    if (($valid_2) || (!$jadwal_pegawai)) {
+    if (($valid_2) || (!$jadwal_pegawai)) { //jika ada di rekap presensi |atau| tidak ada di jadwal_pegawai
       $jadwal_tambahan = $this->db('jadwal_tambahan')->where('id', $idpeg['id'])->where('h' . $hari, $shift)->where('bulan', $bulan)->where('tahun', $tahun)->oneArray();
 
       if (!$jadwal_tambahan) {
@@ -230,21 +230,24 @@ class Admin extends AdminModule
               $diff = $akhir->diff($awal, true); // to make the difference to be always positive.
               $keterlambatan = $diff->format('%H:%I:%S');
             }
+            $this->core->db()->pdo()->exec("INSERT INTO `temporary_presensi` 
+              VALUES ('" . $idpeg['id'] . "','".$jam_jaga['shift']."','".date('Y-m-d H:i:s')."','0000-00-00 00:00:00','$status','$keterlambatan','','$keterangan')");
 
-            $insert = $this->db('temporary_presensi')
-              ->save([
-                'id' => $idpeg['id'],
-                'shift' => $jam_jaga['shift'],
-                'jam_datang' => date('Y-m-d H:i:s'),
-                'jam_pulang' => NULL,
-                'status' => $status,
-                'keterlambatan' => $keterlambatan,
-                'durasi' => '',
-                'photo' => $keterangan //$urlnya untuk sementara menggunakan kolom foto untuk menyimpan alasan
-              ]);
-
-            if ($insert) {
+            // $insert = $this->db('temporary_presensi')
+            //   ->save([
+            //     'id' => $idpeg['id'],
+            //     'shift' => $jam_jaga['shift'],
+            //     'jam_datang' => date('Y-m-d H:i:s'),
+            //     'jam_pulang' => NULL,
+            //     'status' => $status,
+            //     'keterlambatan' => $keterlambatan,
+            //     'durasi' => '',
+            //     'photo' => $keterangan //$urlnya untuk sementara menggunakan kolom foto untuk menyimpan alasan
+            //   ]);
+            $cek = $this->db('temporary_presensi')->where('id', $idpeg['id'])->oneArray();
+            if ($cek) {
               $this->notify('success', 'Presensi Masuk jam ' . $jam_jaga['jam_masuk'] . ' ' . $status . ' ' . $keterlambatan);
+              // $this->notify('success', "INSERT INTO `temporary_presensi` VALUES ('" . $idpeg['id'] . "','".$jam_jaga['shift']."','".date('Y-m-d H:i:s')."','0000-00-00 00:00:00','$status','$keterlambatan','','$keterangan')");
             } else {
               $this->notify('failure', 'Query Insert1 is failed');
             }
@@ -294,7 +297,7 @@ class Admin extends AdminModule
       } else {
         $this->notify('failure', 'Anda sudah presensi untuk tanggal ' . date('Y-m-d'));
       }
-    } elseif ((!empty($idpeg['id'])) && (!empty($jam_jaga['shift'])) && ($jadwal_pegawai) && (!$valid)) {
+    } elseif ((!empty($idpeg['id'])) && (!empty($jam_jaga['shift'])) && ($jadwal_pegawai) && (!$valid)) { //jika tidak ada di rekap presensi |dan| ada di jadwal_pegawai
       $cek = $this->db('temporary_presensi')->where('id', $idpeg['id'])->oneArray();
 
       if (!$cek) { //Absensi datang
@@ -320,20 +323,22 @@ class Admin extends AdminModule
             $diff = $akhir->diff($awal, true); // to make the difference to be always positive.
             $keterlambatan = $diff->format('%H:%I:%S');
           }
+          $this->core->db()->pdo()->exec("INSERT INTO `temporary_presensi` 
+              VALUES ('" . $idpeg['id'] . "','".$jam_jaga['shift']."','".date('Y-m-d H:i:s')."','0000-00-00 00:00:00','$status','$keterlambatan','','$keterangan')");
 
-          $insert = $this->db('temporary_presensi')
-            ->save([
-              'id' => $idpeg['id'],
-              'shift' => $jam_jaga['shift'],
-              'jam_datang' => date('Y-m-d H:i:s'),
-              'jam_pulang' => NULL,
-              'status' => $status,
-              'keterlambatan' => $keterlambatan,
-              'durasi' => '',
-              'photo' => $keterangan //$urlnya untuk sementara menggunakan kolom foto untuk menyimpan alasan
-            ]);
-
-          if ($insert) {
+          // $insert = $this->db('temporary_presensi')
+          //   ->save([
+          //     'id' => $idpeg['id'],
+          //     'shift' => $jam_jaga['shift'],
+          //     'jam_datang' => date('Y-m-d H:i:s'),
+          //     'jam_pulang' => NULL,
+          //     'status' => $status,
+          //     'keterlambatan' => $keterlambatan,
+          //     'durasi' => '',
+          //     'photo' => $keterangan //$urlnya untuk sementara menggunakan kolom foto untuk menyimpan alasan
+          //   ]);
+          $cek = $this->db('temporary_presensi')->where('id', $idpeg['id'])->oneArray();
+          if ($cek) {
             $this->notify('success', 'Presensi Masuk jam ' . $jam_jaga['jam_masuk'] . ' ' . $status . ' ' . $keterlambatan);
           } else {
             $this->notify('failure', 'Query Insert3 is failed');
@@ -361,19 +366,23 @@ class Admin extends AdminModule
 
         if ($ubah) {
           $presensi = $this->db('temporary_presensi')->where('id', $cek['id'])->oneArray();
-          $insert = $this->db('rekap_presensi')
-            ->save([
-              'id' => $presensi['id'],
-              'shift' => $presensi['shift'],
-              'jam_datang' => $presensi['jam_datang'],
-              'jam_pulang' => $presensi['jam_pulang'],
-              'status' => $presensi['status'],
-              'keterlambatan' => $presensi['keterlambatan'],
-              'durasi' => $presensi['durasi'],
-              'keterangan' => 'Alasan terlambat: ' . $presensi['photo'] . '; Alasan PSW: ' . $keterangan,
-              'photo' => '-' //$presensi['photo']
-            ]);
-          if ($insert) {
+          $this->core->db()->pdo()->exec("INSERT INTO `rekap_presensi` 
+              VALUES ('" . $presensi['id'] . "','".$presensi['shift']."','".$presensi['jam_datang']."','".$presensi['jam_pulang']."','".$presensi['status']."',
+              '".$presensi['keterlambatan']."','".$presensi['durasi']."','".'Alasan terlambat: ' . $presensi['photo'] . '; Alasan PSW: ' . $keterangan."','-')");
+          // $insert = $this->db('rekap_presensi')
+          //   ->save([
+          //     'id' => $presensi['id'],
+          //     'shift' => $presensi['shift'],
+          //     'jam_datang' => $presensi['jam_datang'],
+          //     'jam_pulang' => $presensi['jam_pulang'],
+          //     'status' => $presensi['status'],
+          //     'keterlambatan' => $presensi['keterlambatan'],
+          //     'durasi' => $presensi['durasi'],
+          //     'keterangan' => 'Alasan terlambat: ' . $presensi['photo'] . '; Alasan PSW: ' . $keterangan,
+          //     'photo' => '-' //$presensi['photo']
+          //   ]);
+          $cek = $this->db('rekap_presensi')->where('id', $presensi['id'])->oneArray();
+          if ($cek) {
             $this->notify('success', 'Presensi pulang telah disimpan');
             $this->db('temporary_presensi')->where('id', $cek['id'])->delete();
           } else {

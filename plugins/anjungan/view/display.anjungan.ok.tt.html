@@ -41,19 +41,7 @@
 <body>
 <div class="container-fluid">
   <h1 class="display-3 text-center text-white m-3"><img class="logo" src="{?=url()?}/{$logo}" alt="" width="60px"> Antrian Poliklinik {$settings.nama_instansi}</h1>
-  <div class="col-md-6">
-    <div class="card bg-dark text-white">
-      <div class="embed-responsive embed-responsive-4by3">
-        <iframe class="embed-responsive-item"
-              src="https://www.youtube.com/embed/videoseries?list=PLPmeqhZaL6kwG_DST6wFFRGCx95piE8gf&rel=0&modestbranding=1&autohide=1&mute=0&showinfo=0&controls=1&loop=1&autoplay=1"
-              allowfullscreen></iframe>
-              <!-- <iframe class="embed-responsive-item"
-              src="https://www.youtube.com/embed/{$vidio}?rel=0&modestbranding=1&autohide=1&mute=0&showinfo=0&controls=1&loop=1&autoplay=1&playlist={$vidio}"
-              allowfullscreen></iframe> -->
-      </div>
-    </div>
-  </div>
-  <div class="col-md-6" id="antrian_perpoli">
+  <div class="col-md-12" id="display_ok_tt">
   </div>
 </div>
 <div class="row" style="bottom:0;position:absolute;width:100%;background-color:#fff;color:#ff0000;margin-top:20px;margin-bottom:40px;margin-left:0;margin-right:0;">
@@ -76,11 +64,7 @@
 </footer>
 <script>
 function loadlink(){
-    {if: empty($slug[3])}
-    $("#antrian_perpoli").show().load(mlite.url + '/anjungan/display/poli/{$slug[2]}/');
-    {else}
-    $("#antrian_perpoli").show().load(mlite.url + '/anjungan/display/poli/{$slug[2]}/{$slug[3]}');
-    {/if}
+    $("#display_ok_tt").show().load(mlite.url + '/anjungan/display/ok-tt');
 }
 loadlink(); // This will run on page load
 setInterval(function(){

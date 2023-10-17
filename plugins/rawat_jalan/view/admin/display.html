@@ -1,3 +1,4 @@
+
 <div id="display">
     <div class="table-responsive no-margin">
         <table class="table table-striped no-padding dataTables" width="100%">
@@ -7,6 +8,7 @@
                     <th style="white-space: nowrap;">Nama Pasien</th>
                     <th style="white-space: nowrap;">ID Kunjungan</th>
                     <th style="white-space: nowrap;">No. BPJS</th>
+                    <th style="white-space: nowrap;">No. SEP</th>
                     <th style="white-space: nowrap;">Antrian</th>
                     <th style="white-space: nowrap;">Poliklinik</th>
                     <th style="white-space: nowrap;">Dokter</th>
@@ -46,6 +48,7 @@
                     <td style="white-space: nowrap;"><a href="{?=url([ADMIN, 'pasien', 'riwayatperawatan', $value.no_rkm_medis])?}" data-toggle="modal" data-target="#riwayatModal">{$value.nm_pasien}</a></td>
                     <td class="edit" data-no_rawat="{$value.no_rawat}">{$value.no_rawat}</td>
                     <td class="edit" data-no_rawat="{$value.no_rawat}" {if: $value.finger=='true' } style="background-color: #bcfdb4 !important;" {else} style="background-color: #fdeb9b !important;" {/if}>{$value.no_peserta}</td>
+                    <td class="edit" data-no_rawat="{$value.no_rawat}" title="{$value.catatan} | {$value.katarak} | {$value.peserta} | KELAS {$value.klsrawat}">{$value.no_sep}</td>
                     <td style="white-space: nowrap;">
                         <button type="button" name="button" class="btn btn-xs btn-warning antrian" data-no_rawat="{$value.no_rawat}" {if: $this->core->getUserInfo('role') == 'medis' || $this->core->getUserInfo('role') == 'paramedis'}
               disabled
@@ -69,6 +72,8 @@
                     <td class="edit" data-no_rawat="{$value.no_rawat}" style="white-space: nowrap;">{$value.jam_reg}</td>
                     <td class="edit" data-no_rawat="{$value.no_rawat}" style="white-space: nowrap;">{$value.mulai}</td>
                     <td class="edit" data-no_rawat="{$value.no_rawat}" style="white-space: nowrap;">{$value.selesai}</td>
+                    <!-- <td class="edit" data-no_rawat="{$value.no_rawat}" style="white-space: nowrap;">{$value.mulai}</td>
+                    <td class="edit" data-no_rawat="{$value.no_rawat}" style="white-space: nowrap;">{$value.selesai}</td> -->
                     <!-- <td class="edit" data-no_rawat="{$value.no_rawat}" style="white-space: nowrap;">{$value.status_lanjut}</td> -->
                     <!-- <td class="edit" data-no_rawat="{$value.no_rawat}" style="white-space: nowrap;">{$value.status_bayar}</td> -->
                     </tr>
@@ -216,28 +221,74 @@
                 value: 'Pulang Paksa',
             }],
             callback: function(result) {
-                console.log(result);
+                console.log('status rawat ' . result);
                 // ketika ditekan tombol ok
                 if (result) {
-                    // mengirimkan perintah penghapusan
-                    $.post(url, {
-                        no_rawat: no_rawat,
-                        stts: result
-                    }, function(data) {
-                        const res = JSON.parse(data);
-                        console.log(res);
-                        if (res.status == "error"){
-                            alert(res.message);
-                        } else {
-                            alert(res.message);
-                            // sembunyikan form, tampilkan data yang sudah di perbaharui, tampilkan notif
-                            $("#display").load(baseURL + '/rawat_jalan/display?t=' + mlite.token);
-                            $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">" +
-                                "Status lanjut pasien telah disimpan!" +
-                                "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>" +
-                                "</div>").show();
-                        }
-                    });
+                    if (result == 'Sudah'){
+                        bootbox.prompt({
+                            title: "Status lanjut pasien.",
+                            message: '',
+                            inputType: 'radio',
+                            inputOptions: [{
+                                    text: 'Tidak ada',
+                                    value: 'tidak ada',
+                                }, {
+                                    text: 'Non racikan',
+                                    value: 'non racikan',
+                                }, {
+                                    text: 'Racikan',
+                                    value: 'racikan',
+                                }],
+                            callback: function(jenisObat) {
+                                console.log('jenisobat ' . jenisObat);
+                                // ketika ditekan tombol ok
+                                if (jenisObat) {
+                                    $.post(url, {
+                                        no_rawat: no_rawat,
+                                        stts: result,
+                                        jenisObat: jenisObat
+                                    }, function(data) {
+                                        const res = JSON.parse(data);
+                                        console.log(res);
+                                        if (res.status == "error"){
+                                            alert(res.message);
+                                        } else {
+                                            alert(res.message);
+                                            // sembunyikan form, tampilkan data yang sudah di perbaharui, tampilkan notif
+                                            $("#display").load(baseURL + '/rawat_jalan/display?t=' + mlite.token);
+                                            $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">" +
+                                                "Status lanjut pasien telah disimpan!" +
+                                                "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>" +
+                                                "</div>").show();
+                                        }
+                                    });
+                                }
+                            }
+                            
+                        });
+                    } else {
+                        // mengirimkan perintah penghapusan
+                        $.post(url, {
+                            no_rawat: no_rawat,
+                            stts: result
+                        }, function(data) {
+                            const res = JSON.parse(data);
+                            console.log(res);
+                            if (res.status == "error"){
+                                alert(res.message);
+                            } else {
+                                alert(res.message);
+                                // sembunyikan form, tampilkan data yang sudah di perbaharui, tampilkan notif
+                                $("#display").load(baseURL + '/rawat_jalan/display?t=' + mlite.token);
+                                $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">" +
+                                    "Status lanjut pasien telah disimpan!" +
+                                    "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>" +
+                                    "</div>").show();
+                            }
+                        });
+                    }
+
+                    
                 }
             }
         });

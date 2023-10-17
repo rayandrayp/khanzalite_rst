@@ -139,58 +139,31 @@
 <body>
   <div class="mx-auto text-center text-white">
     <img src="{?=url()?}/{$logo}" width="150"><br>
-    <h2 class="display-6">Console Antrean Farmasi</h2>
+    <h3 class="display-6">Anjungan Cetak Surat Eligibilitas Peserta BPJS</h3>
     <h2 class="display-5">{$settings.nama_instansi}</h2>
   </div>
 
-  <br><br>
+  <br><br><br>
   <div class="container">
-    
-    <input type="text" style=" margin: auto; width: 50%; padding: 10px;" class="form-control form-control-lg" name="kdbooking" id="kdbooking" placeholder="Kode Booking" value="">
-    <br>
-    <div class="card-deck text-center">
-        <div class="card mb-6 shadow-sm">
-            <form class="card" role="form" id="formobat" name="formobat">
-              <button type="submit" class="btn btn-lg btn-success btn-block" style="padding: 30px;font-size:42px;" id="btnKRMObat" value="Submit" name="btnKRMObat" onclick="printDiv('printAntrianObat');">
-                <ul class="list-unstyled mt-3 mb-4" >
-                  <div id="display_antrean_obat"></div>
-                </ul>
-                <h1 class="display-4">Antrean Obat</h1>
-              </button>
-            </form>
+    <div class="card-deck mb-3 text-center">
+      <div class="card mb-4 shadow-sm" data-toggle="modal" data-target="#antrian">
+        <div class="card-body btn btn-lg btn-success">
+          <ul class="list-unstyled mt-3 mb-4">
+            <span style="font-size: 100px; color: white;"><i class="fa fa-question"></i></span>
+          </ul>
+          <a href="#" style="text-decoration: none; color: white;"><h1 class="display-4">CETAK SEP</h1></a>
         </div>
-        <div class="card mb-6 shadow-sm">
-            <form class="card" role="form" id="formracikan" name="formracikan">
-              <button type="submit" class="btn btn-lg btn-primary btn-block" style="padding: 30px;font-size:42px;" id="btnKRMRacikan" value="Submit" name="btnKRMRacikan" onclick="printDiv('printAntrianRacikan');">
-                <ul class="list-unstyled mt-3 mb-4" >
-                  <div id="display_antrean_racikan"></div>
-                </ul>
-                <h1 class="display-4">Antrean Racikan</h1>
-              </button>
-            </form>
+      </div>
+      <div class="card mb-4 shadow-sm" data-toggle="modal" data-target="#daftar">
+        <div class="card-body btn btn-lg btn-primary">
+          <ul class="list-unstyled mt-3 mb-4">
+            <span style="font-size: 100px; color: white;"><i class="fa fa-stethoscope"></i></span>
+          </ul>
+          <h1 class="display-4">CHECK IN</h1>
         </div>
+      </div>
     </div>
   </div>
-  <!-- <div class="container">
-    <div class="card-deck mb-3 text-center">
-        <a  class="card mb-4 shadow-sm" style="padding: 30px;font-size:42px;" id="btnKRMObat" value="Submit" name="btnKRMObat" onclick="printDiv('printAntrianObat');">
-            <div class="card-body btn btn-lg btn-success">
-                <ul class="list-unstyled mt-3 mb-4">
-                <div id="display_antrean_obat"></div>
-                </ul>
-                <h1 class="display-4">OBAT</h1>
-            </div>
-        </a>
-        <a class="card mb-4 shadow-sm" style="padding: 30px;font-size:42px;" id="btnKRMRck" value="Submit" name="btnKRMRck" onclick="printDiv('printAntrianRacikan');">
-            <div class="card-body btn btn-lg btn-primary">
-                <ul class="list-unstyled mt-3 mb-4">
-                <div id="display_antrean_racikan"></div>
-                </ul>
-                <h1 class="display-4">RACIKAN</h1>
-            </div>
-        </a>
-    </div>
-  </div> -->
   <br>
   <div class="pricing-header mt-5 px-3 py-3 pt-md-3 pb-md-2 mx-auto text-center text-danger bg-white">
     <h3 class="display-6"><marquee>{$running_text}</marquee></h3>
@@ -210,46 +183,47 @@
   <div class="modal fade" id="antrian" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
       <div class="modal-content">
+        <form class="form-signin" action="{?=url('anjungan/sep/cek')?}" method="post">
         <div class="modal-header">
-          <h5 class="modal-title" id="exampleModalCenterTitle">Antrian Farmasi</h5>
+          <h5 class="modal-title" id="exampleModalCenterTitle">Cek Kartu Berobat</h5>
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
-        <div class="modal-body" style="padding-top:30px;">
-          <div class="row justify-content-around">
-          <div class="col-6 pt-3 pb-x3">
-            <div id="printAntrianObat" style="display: none;" class="cetak">
-              <div style="width: 200px; font-family: Tahoma; margin-top: 10px; margin-right: 5px; margin-bottom: 100px; margin-left: 15px; font-size: 21px !important;border: 0px solid #000;">
-                <p style="font-size:12px;" align="center">{$settings.nama_instansi}<br><span class="small">{$settings.alamat}<br>Telp: {$settings.nomor_telepon}</span></p>
-                <hr>
-                <div id="print_antrean_obat"></div>
-                <p align="center">Loket Obat</p>
-              </div>
+        <div class="modal-body">
+            <div class="form-group">
+              <input type="text" name="no_rkm_medis" id="cek_norm" class="form-control form-control-lg text-white" placeholder="Nomor Kartu Berobat" required>
             </div>
-            <!-- <div id="display_nomor_loket"></div>
-            <form role="form" id="formloket" name="formloket">
-              <button type="submit" class="btn btn-lg btn-danger btn-block" style="padding: 30px;font-size:42px;" id="btnKRM" value="Submit" name="btnKRM" onclick="printDiv('printAntrianLoket');">ANTRIAN LOKET</button>
-            </form> -->
-          </div>
-          <div class="col-6 pt-3 pb-3">
-            <div id="printAntrianRacikan" style="display: none;" class="cetak">
-              <div style="width: 200px; font-family: Tahoma; margin-top: 10px; margin-right: 5px; margin-bottom: 100px; margin-left: 15px; font-size: 21px !important;border: 0px solid #000;">
-                <p style="font-size:12px;" align="center">{$settings.nama_instansi}<br><span class="small">{$settings.alamat}<br>Telp: {$settings.nomor_telepon}</span></p>
-                <hr>
-                <div id="print_antrean_racikan"></div>
-                <p align="center">Loket Obat Racikan</p>
-              </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-lg btn-secondary" data-dismiss="modal">Tutup</button>
+          <button class="btn btn-lg btn-success shadow" name="cekrm" onclick="this.value=\'cekrm\'" type="submit">Cek Kartu Berobat</button>
+        </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Daftar -->
+  <div class="modal fade" id="daftar" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalCenterTitle">Check In Pendaftaran</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+        <div>
+            <div class="form-group">
+              <input type="text" class="form-control form-control-lg" id="norm" placeholder="Nomor Booking">
             </div>
-            <!-- <div id="display_nomor_cs"></div>
-            <form role="form" id="formcs" name="formcs">
-              <button type="submit" class="btn btn-lg btn-danger btn-block" style="padding: 30px;font-size:42px;" id="btnKRMCS" value="Submit" name="btnKRMCS" onclick="printDiv('printAntrianCS');">ANTRIAN CS</button>
-            </form> -->
-          </div>
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+          <button type="button" class="btn btn-lg btn-secondary" data-dismiss="modal">Tutup</button>
+          <button type="submit" id="checkin" class="btn btn-lg btn-primary">Check In</button>
         </div>
       </div>
     </div>
@@ -264,32 +238,104 @@
   <script src="{?=url(MODULES)?}/anjungan/js/jquery.keyboard.js"></script>
   <script src="{?=url(MODULES)?}/anjungan/js/jquery.mousewheel.js"></script>
   <script>
-  $(document).ready(function() {
+  $( function() {
+    $( '#tanggal' ).datepicker({
+      format: 'yyyy-mm-dd'
+    });
+  } );
+  $(function() {
+      $('#norm')
+      .keyboard({
+        layout: 'custom',
+        customLayout: {
+          'normal' : [
+            '8 9 . {b}',
+            '4 5 6 7',
+            '0 1 2 3',
+            '{accept} {cancel}'
+          ]
+        },
+        maxLength : 6,
+        // Prevent keys not in the displayed keyboard from being typed in
+        restrictInput : true,
+        // include lower case characters (added v1.25.7)
+        restrictInclude : 'a b c d e f',
+        // don't use combos or A+E could become a ligature
+        useCombos : false,
+        // activate the "validate" callback function
+        acceptValid : true,
+        validate : function(keyboard, value, isClosing){
+          // only make valid if input is 6 characters in length
+          return value.length === 6;
+        }
+      })
+      //.addTyping();
+  });
 
-    // $("#display_antrean_obat").load("{?=url()?}/anjungan/ajax?show=tampilobat");
-    // $("#print_antrean_obat").load("{?=url()?}/anjungan/ajax?show=printobat");
-    // $("#display_antrean_racikan").load("{?=url()?}/anjungan/ajax?show=tampilracikan");
-    // $("#print_antrean_racikan").load("{?=url()?}/anjungan/ajax?show=printracikan");
-    setInterval(function(){
-      $("#display_antrean_obat").load("{?=url()?}/anjungan/ajax?show=tampilobat");
-      $("#print_antrean_obat").load("{?=url()?}/anjungan/ajax?show=printobat");
-      $("#display_antrean_racikan").load("{?=url()?}/anjungan/ajax?show=tampilracikan");
-      $("#print_antrean_racikan").load("{?=url()?}/anjungan/ajax?show=printracikan");
-    }, 1000);
-  })
+  $(function() {
+      $('.norm')
+      .keyboard({
+        layout: 'custom',
+        customLayout: {
+          'normal' : [
+            '8 9 . {b}',
+            '4 5 6 7',
+            '0 1 2 3',
+            '{accept} {cancel}'
+          ]
+        },
+        maxLength : 6,
+        // Prevent keys not in the displayed keyboard from being typed in
+        restrictInput : true,
+        // include lower case characters (added v1.25.7)
+        restrictInclude : 'a b c d e f',
+        // don't use combos or A+E could become a ligature
+        useCombos : false,
+        // activate the "validate" callback function
+        acceptValid : true,
+        validate : function(keyboard, value, isClosing){
+          // only make valid if input is 6 characters in length
+          return value.length === 6;
+        }
+      })
+      //.addTyping();
+  });
 
-  function printDiv(eleId){
-    var kdbooking = document.getElementById("kdbooking").value;
-    console.log(kdbooking);
-    var PW = window.open('', '_blank', 'Print content');
-    PW.document.write(document.getElementById(eleId).innerHTML + 'Kode Booking: ' + kdbooking + '</p>');
-    PW.document.close();
-    PW.focus();
-    PW.print();
-    PW.close();
-    // window.location.href = "{?=url('anjungan/farmasi-console')?}";
-  }
+  $(function() {
+      $('#cek_norm')
+      .keyboard({
+        layout: 'custom',
+        customLayout: {
+          'normal' : [
+            '8 9 . {b}',
+            '4 5 6 7',
+            '0 1 2 3',
+            '{accept} {cancel}'
+          ]
+        },
+        maxLength : 6,
+        // Prevent keys not in the displayed keyboard from being typed in
+        restrictInput : true,
+        // include lower case characters (added v1.25.7)
+        restrictInclude : 'a b c d e f',
+        // don't use combos or A+E could become a ligature
+        useCombos : false,
+        // activate the "validate" callback function
+        acceptValid : true,
+        validate : function(keyboard, value, isClosing){
+          // only make valid if input is 6 characters in length
+          return value.length === 6;
+        }
+      })
+      //.addTyping();
+  });
 
+  </script>
+  <script>
+  $("#daftar").on("click","#checkin", function(event){
+    alert('Terima kasih telah melakukan check in pendaftaran rawat jalan. Silahkan lakukan cetak mandiri Surat Eligibilitas Peserta (SEP) anda pada menu CETAK SEP.');
+    $('#daftar').modal('hide');
+  });
   </script>
 
 </body>

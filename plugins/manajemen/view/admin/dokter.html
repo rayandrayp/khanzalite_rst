@@ -7,7 +7,7 @@
     <!-- <li><a href="{?=url([ADMIN,'manajemen','laboratorium'])?}">Laboratorium</a></li> -->
     <!-- <li><a href="{?=url([ADMIN,'manajemen','radiologi'])?}">Radiologi</a></li> -->
     <li><a href="{?=url([ADMIN,'manajemen','apotek'])?}">Apotek</a></li>
-    <!-- <li><a href="{?=url([ADMIN,'manajemen','farmasi'])?}">Farmasi</a></li> -->
+    <li><a href="{?=url([ADMIN,'manajemen','farmasi'])?}">Farmasi</a></li>
     <li><a href="{?=url([ADMIN,'manajemen','kasir'])?}">Kasir</a></li>
     <!-- <li><a href="{?=url([ADMIN,'manajemen','presensi'])?}">Presensi</a></li> -->
     <li><a href="{?=url([ADMIN,'manajemen','mutu'])?}">Indikator Mutu</a></li>
@@ -152,7 +152,7 @@
         var myChart = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: ["{?= implode('","', $stats.poliChart.labels) ?}"],
+                labels: ["{?= implode('","', $stats.poliChart.labels_today) ?}"],
                 datasets: [{
                         label: "Pasien",
                         borderColor: "#34316E",
@@ -160,7 +160,7 @@
                         backgroundColor: "rgba(30, 30, 45, 0.2)",
                         pointHighlightStroke: "#1e1e2d",
                         pointRadius: 0,
-                        data: ["{?= implode('","', $stats.poliChart.visits) ?}"],
+                        data: ["{?= implode('","', $stats.poliChart.visits_today) ?}"],
                     }
                 ]
             },
@@ -185,7 +185,7 @@
         var myChart = new Chart(ctx2, {
             type: 'bar',
             data: {
-                labels: ["{?= implode('","', $stats.poliChart.labels) ?}"],
+                labels: ["{?= implode('","', $stats.poliChart.labels_thismonth) ?}"],
                 datasets: [{
                         label: "Pasien",
                         borderColor: "#34316E",
@@ -193,7 +193,7 @@
                         backgroundColor: "rgba(30, 30, 45, 0.2)",
                         pointHighlightStroke: "#1e1e2d",
                         pointRadius: 0,
-                        data: ["{?= implode('","', $stats.poliChart.visits) ?}"],
+                        data: ["{?= implode('","', $stats.poliChart.visits_thismonth) ?}"],
                     }
                 ]
             },
@@ -218,7 +218,7 @@
         var myChart = new Chart(ctx3, {
             type: 'bar',
             data: {
-                labels: ["{?= implode('","', $stats.ranapChart.labels) ?}"],
+                labels: ["{?= implode('","', $stats.ranapChart.labels_today) ?}"],
                 datasets: [{
                         label: "Pasien",
                         borderColor: "#34316E",
@@ -226,7 +226,7 @@
                         backgroundColor: "rgba(30, 30, 45, 0.2)",
                         pointHighlightStroke: "#1e1e2d",
                         pointRadius: 0,
-                        data: ["{?= implode('","', $stats.ranapChart.visits) ?}"],
+                        data: ["{?= implode('","', $stats.ranapChart.visits_today) ?}"],
                     }
                 ]
             },
@@ -251,7 +251,7 @@
         var myChart = new Chart(ctx4, {
             type: 'bar',
             data: {
-                labels: ["{?= implode('","', $stats.ranapChart.labels) ?}"],
+                labels: ["{?= implode('","', $stats.ranapChart.labels_thismonth) ?}"],
                 datasets: [{
                         label: "Pasien",
                         borderColor: "#34316E",
@@ -259,7 +259,7 @@
                         backgroundColor: "rgba(30, 30, 45, 0.2)",
                         pointHighlightStroke: "#1e1e2d",
                         pointRadius: 0,
-                        data: ["{?= implode('","', $stats.ranapChart.visits) ?}"],
+                        data: ["{?= implode('","', $stats.ranapChart.visits_thismonth) ?}"],
                     }
                 ]
             },
